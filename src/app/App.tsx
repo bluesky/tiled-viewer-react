@@ -5,7 +5,7 @@ import Tiled from '../components/Tiled/Tiled';
 function App() {
 
   return (
-    <Tiled isButtonMode={true}/>
+    <Tiled isButtonMode={true} />
   )
 
 }

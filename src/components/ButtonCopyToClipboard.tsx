@@ -44,10 +44,10 @@ export default function ButtonCopyToClipboard({
     return (
                 <button
                     {...props} 
-                    className={`${isCopied ? 'text-sky-500' : 'text-slate-400'} ${sizes[size]} aspect-square hover:text-sky-300 hover:cursor-pointer`}
+                    className={`${isCopied ? 'text-sky-500' : 'text-slate-400'} ${sizes[size]} hover:text-sky-300 hover:cursor-pointer flex`}
                     onClick={e => handleCopyClick(e)}
                 >
-                    {isCopied ? clipBoardDocumentCheck : clipBoardDocument}
+                    {isCopied ? <>{clipBoardDocumentCheck} <p>Copied</p></>: <>{clipBoardDocument} <p>copy meta link</p></>}
                 </button>
     )
 }
