@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base {
+    :root {
+      --radius: 0.5rem
+    }
+}
+
+
+/* These styles will help remove the scroll border and make the scrollbar thinner */
+/*      If you're trying to make the external part of the scrollbar rounded to avoid conflicts with rounded parent divs, */
+/*      it is easier to wrap the scrollable component in a separate child div with padding applied to the parent instead of trying to style the track itself */
+.rounded-scrollbar::-webkit-scrollbar {
+    width: 8px; /* Width of the scrollbar */
+    height: 8px; /* Height of the scrollbar (for horizontal scrollbars) */
+}
+
+.rounded-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* Thumb color */
+    border-radius: 9999px; /* Fully round edges */
+    border: 2px solid #ffffff; /* White border to match white backgrounds */
+}
+
+.rounded-scrollbar::-webkit-scrollbar-track {
+    background-color: #f8fafc; /* Track color */
+    border-radius: 9999px; /* Fully round edges */
+}
+
+/* For modern browsers supporting scrollbar properties */
+.rounded-scrollbar {
+    scrollbar-width: thin; /* Thin scrollbar */
+    scrollbar-color: #cbd5e1 #f8fafc; /* Thumb color and track color */
+}

@@ -1,0 +1,57 @@
+import { Meta } from "@storybook/blocks";
+import FinchBannerLarge from "./assets/finchBannerLarge.png";
+import FinchArchitecture from "./assets/FinchArchitecture.png";
+import FinchCompatibility from "./assets/FinchCompatibility.png";
+import FinchConstruction from "./assets/FinchConstruction.png";
+import FinchCommunication from "./assets/FinchCommunication.png";
+
+
+
+<Meta title="About" />
+<div className="mainContainer">
+  <img src={FinchConstruction} alt="bird logo" className="banner" />
+  <p>Finch UI is a set of web components for beamline controls, analysis, and data acquisition. It relies on Bluesky for backend services that integrate with your beamline. Our primary goal is to make it easier to provide Bluesky functionality to end users through convenient web browser interfaces.</p>
+  
+  <section className=""> 
+    <h2 className="">Bluesky Integration</h2>
+    <img src={FinchCommunication} alt="diagram of technologies" className="banner " />
+    <p>Finch UI makes http requests and websocket connections to Tiled, Ophyd Websocket, and the Queue Server. Without additional configuration, components will make requests to the default ports for each service assumed to be running on localhost.    </p>
+  </section>
+
+  <section className=""> 
+    <h2 className="">Compatibility</h2>
+    <img src={FinchCompatibility} alt="various ui logos" className="banner " />
+    <p>For React developers that want to use another external component library (MUI, ChakraUI, Mantine, etc) there should be no major compatibility issues when loading in a Finch component. While Finch does provide layout templates, a global Finch wrapper around your app is not required to use individual components. </p>
+    <p>Components come styled with Tailwind base classes, which generally don’t conflict with existing style names from popular UI component libraries. </p>
+  </section>
+</div>
+
+<style>
+{`
+  .banner {
+    max-width: 650px;
+    margin: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .diagram {
+    width: 650px;
+  }
+
+  .mainContainer {
+    max-width: 700px;
+    margin: auto;
+    height: 100%;
+    display: flex;
+    gap: 2rem;
+    flex-direction: column;
+  }
+
+  section {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+`}
+</style>
+

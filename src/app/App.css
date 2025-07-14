@@ -1,0 +1,11 @@
+/* Remove default spinner styling for WebKit-based browsers (Chrome, Edge, Safari) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none; /* Remove spinner appearance */
+  margin: 0; /* Remove margin */
+}
+
+/* Remove default spinner styling for Firefox */
+input[type="number"] {
+  -moz-appearance: textfield; /* Remove spinner in Firefox */
+}
