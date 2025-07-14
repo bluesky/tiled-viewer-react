@@ -55,7 +55,12 @@ export default function Tiled({
         onSelectCallback && onSelectCallback(links);
         closeOnSelect && setIsClosed(true);
         isButtonMode && setIsViewerOpen(false);
-    }
+    };
+
+    const handleClickOutside = (event: React.MouseEvent<HTMLDivElement>) => {
+        console.log({event})
+        setIsViewerOpen(false);
+    };
 
     const sizeClassMap = {
         small: 'w-[600px] h-[500px]',
@@ -98,6 +103,7 @@ export default function Tiled({
                             } ${(size && isExpanded) && expandedSizeClassMap[size]}`,
                         backgroundClassName
                     )}
+                    onClick={handleClickOutside}
                     {...props}
                 >
                     <div
@@ -107,6 +113,7 @@ export default function Tiled({
                         } ${isFullWidth && 'w-full'} ${isExpanded && 'h-full w-full'}`,
                         contentClassName
                         )}
+                        onClick={(e) => e.stopPropagation()}
                     >
                         {enableStartupScreen && showStartupScreen ? (
                         <StartupScreen
@@ -115,15 +122,18 @@ export default function Tiled({
                             handleSubmit={handleStartupScreenSubmit}
                         />
                         ) : (
-                        <TiledContainer
-                            url={url}
-                            handleSelectClick={handleSelectClick}
-                            singleColumnMode={singleColumnMode}
-                            handleExpandClick={handleExpandClick}
-                            isExpanded={isExpanded}
-                            apiKey={apiKey}
-                            bearerToken={bearerToken}
-                        />
+                            <>
+                                <TiledContainer
+                                    url={url}
+                                    handleSelectClick={handleSelectClick}
+                                    singleColumnMode={singleColumnMode}
+                                    handleExpandClick={handleExpandClick}
+                                    isExpanded={isExpanded}
+                                    apiKey={apiKey}
+                                    bearerToken={bearerToken}
+                                />
+                                <p className="absolute top-12 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                            </>
                         )}
                     </div>
                 </div>

@@ -59,9 +59,9 @@ export default defineConfig(({ mode }) => {
     build: {
       lib: {
         entry: resolve('src', 'index.ts'),
-        name: 'Finch',
+        name: 'Tiled',
         formats: ['es', 'umd'],
-        fileName: (format) => `finch.${format}.js`,
+        fileName: (format) => `tiled.${format}.js`,
       },
       rollupOptions: {
         external: [...Object.keys(packageJson.peerDependencies)],
