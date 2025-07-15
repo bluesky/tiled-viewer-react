@@ -53,7 +53,6 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        console.log('doing search')
         const baseUrl = url ? url : defaultTiledUrl;
         const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : ''));
         cb && cb(response.data as TiledSearchResult);

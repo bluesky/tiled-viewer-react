@@ -1,5 +1,5 @@
 import { tiledStructureIcons } from "./icons";
-import { TiledSearchItem, TiledStructures } from "./types";
+import { TiledSearchItem, TiledStructures,  } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
 const defaultTiledUrl = getDefaultTiledUrl();
@@ -38,8 +38,6 @@ export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra
     }
     return searchPath;
 };
-
-
 
 export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
     const stackString = stack ? stack.join(',') : '';
@@ -101,4 +99,22 @@ export const createSliders = (sliderCount:number, shape:number[]) => {
         initialSliders.push(newSlider);
     };
     return initialSliders;
+}
+
+export const getLastSearchFromLocalStorage = () => {
+    const lastSearch = localStorage.getItem('lastSearchHistory');
+    if (lastSearch) {
+        return lastSearch;
+    }
+    return undefined;
+}
+
+export const writeSearchPathToLocalStorage = (item:TiledSearchItem<TiledStructures> | '') => {
+    if (typeof item === 'string' || !item) {
+        localStorage.setItem('lastSearchHistory', '');
+    } else if (item) {
+        const searchPath = generateSearchPath(item);
+        localStorage.setItem('lastSearchHistory', searchPath);
+        return searchPath;
+    }
 }

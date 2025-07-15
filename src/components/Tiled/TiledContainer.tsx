@@ -21,6 +21,7 @@ type TiledContainerProps = {
     isExpanded: boolean,
     apiKey?: string,
     bearerToken?: string,
+    initialSearchPath?: string,
 }
 export default function TiledContainer({
     url,
@@ -30,9 +31,16 @@ export default function TiledContainer({
     isExpanded,
     apiKey,
     bearerToken,
+    initialSearchPath,
     ...props
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    const tiledData = useTiled({ url, apiKey, bearerToken,  });
+
+    if (!tiledData) {
+        return <div>Error: Unable to load tiled data. Check console for error logs.</div>;
+    }
 
     const { 
         columns, 
@@ -43,7 +51,9 @@ export default function TiledContainer({
         handleLeftArrowClick, 
         handleRightArrowClick,
         resetAllData,
-    } = useTiled(url, apiKey, bearerToken);
+    } = tiledData;
+
+
 
     return (
         <>

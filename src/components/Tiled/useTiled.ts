@@ -14,16 +14,19 @@ import {
     isContainerStructure,
     isTableStructure,
  } from "./types";
-import { getTiledStructureIcon, generateSearchPath, } from "./utils";
+import { getTiledStructureIcon, generateSearchPath, getLastSearchFromLocalStorage, writeSearchPathToLocalStorage} from "./utils";
+import { get } from "http";
+import { write } from "fs";
 export type useTiledProps = {
     url?: string,
     apiKey?: string,
     searchPath?: string,
     bearerToken?: string,
+    initialSearchPath?: string,
 }
 type Url = string;
-export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerToken?:string) => {
-
+export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath}:useTiledProps) => {
+    
     const [ columns, setColumns ] = useState<TiledSearchResult[]>([]);
     const [ breadcrumbs, setBreadcrumbs ] = useState<Breadcrumb[]>([]);
     const [ imageUrl, setImageUrl ] = useState<string | undefined>();
@@ -31,9 +34,12 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
     const [ previewSize, setPreviewSize ] = useState<PreviewSize>('hidden');
     const [ previewItem, setPreviewItem ]  = useState<TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | null >(null);
     const [ warning, setWarning ] = useState<string | undefined>(undefined);
+    const [ remainingHistoryArray, setRemainingHistoryArray ] = useState<string[] | null>(null);
     const ancestorStack = useRef<TiledSearchItem<TiledStructures>[]>([]);
     const currentAncestorId = useRef<number>(-1);
-
+    
+    const localStorageHistoryPath = useMemo(()=>getLastSearchFromLocalStorage(),[]);
+    const preloadedColumnsPath = useMemo(() => initialSearchPath ? initialSearchPath : (localStorageHistoryPath ? localStorageHistoryPath : null), [initialSearchPath]);
 
     var handleLeftArrowClick:Function;
     var handleRightArrowClick:Function;
@@ -43,7 +49,6 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
     //from needing to know anything related to the business logic.
     if (currentAncestorId.current > -1) {
         handleLeftArrowClick = () => {
-            console.log('current ID before subtracting is: ' + currentAncestorId.current)
             currentAncestorId.current = currentAncestorId.current - 1;
             if (currentAncestorId.current < 0) {
                 //uesr has clicked back onto the root directory
@@ -52,10 +57,12 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
                 setImageUrl('');
                 setPopoutUrl('');
                 setPreviewSize('hidden');
+                writeSearchPathToLocalStorage('');
             } else {
                 //user has clicked back onto a container.
                 const item = ancestorStack.current[currentAncestorId.current]; 
                 updateCurrentSelectedItem(item);
+                writeSearchPathToLocalStorage(item);
             }
         };
     }
@@ -65,6 +72,7 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
             currentAncestorId.current = currentAncestorId.current + 1;
             const item = ancestorStack.current[currentAncestorId.current];
             updateCurrentSelectedItem(item);
+            writeSearchPathToLocalStorage(item);
         }
 
     }
@@ -82,9 +90,6 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
             return newState;
         });
     }, []);
-
-
-
 
     const updateBreadcrumbs = useCallback((clickedItem:TiledSearchItem<TiledStructures>) => {
         //function assumes users may only click on items that exist in the current search 'stack' and cannot jump to a different branch
@@ -104,7 +109,6 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
         })
     }, []);
 
-
     const closePreview = () => {
         //remove the preview component from 
         setImageUrl(undefined);
@@ -121,6 +125,7 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
     const handleColumnItemClick = useCallback((item:TiledSearchItem<TiledStructures>) => {
         updateAncestorRefs(item);
         updateCurrentSelectedItem(item);
+        writeSearchPathToLocalStorage(item);
     }, []);
 
     const updateCurrentSelectedItem = (item:TiledSearchItem<TiledStructures>) => {
@@ -134,7 +139,6 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
             console.error('Error: No matching structure family found for: ' + item.attributes.structure_family);
           }
     }
-
 
     const handleArrayClick = useCallback((item:TiledSearchItem<ArrayStructure>) => {
         setPreviewItem(item);
@@ -188,6 +192,21 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
         }
     }
 
+    const reloadLastSearch = (searchPath:string) => {
+            //make a search for the searchPath id in the last column
+            let lastColumn = columns[columns.length - 1];
+
+            //columns contains an array of objects, each object has an id, if the id matches the searchPath then call handleColumnItemClick(matchingItem)
+            const matchingItem = lastColumn.data.find((item: TiledSearchItem<TiledStructures>) => item.id === searchPath);
+            if (matchingItem) {
+                handleColumnItemClick(matchingItem);
+                setRemainingHistoryArray((prev) => prev ? prev.slice(1) : null); //return the original array with the first element removed. returns empty array on last search
+            } else {
+                console.warn(`No matching item found for search path: ${searchPath}`);
+                setRemainingHistoryArray(null);
+            }
+    }
+
     useEffect(() => {
         //get first set of results from root
         try{
@@ -196,7 +215,31 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
             console.error('error getting first tiled request: ', e);
             setWarning('Error initializing Tiled data. Please check the console for more details.');
         }
+
+        //kick off the calls to populate the viewer from optional user defined initial path or localStorage history
+        if (preloadedColumnsPath) {
+            let searchArray = preloadedColumnsPath.split('/').filter(Boolean); 
+            setRemainingHistoryArray(searchArray);
+        }
     }, []);
+
+    useEffect(() => {
+        //keeps triggering to simulate a user clicking a column element until every subpath of preloadedColumnsPath is displayed in the viewer
+        //this must be done sequentially so that various state vars can update properly before each successive search
+
+        if (columns.length <= 0) return; //base case when this runs prior to columns initialized with data
+        if (!remainingHistoryArray || remainingHistoryArray.length === 0) return; //base case when there are no more subpaths to display
+
+        if (preloadedColumnsPath && remainingHistoryArray) {
+            let fullHistoryArray = preloadedColumnsPath.split('/').filter(Boolean); 
+            let currentHistoryIndex = fullHistoryArray.length - remainingHistoryArray.length; //get the column index we should be searching in
+            if (columns.length === currentHistoryIndex + 1) { //only do the search if the column state is ready
+                reloadLastSearch(remainingHistoryArray[0]);
+            }
+        }
+
+    }
+    , [remainingHistoryArray, columns]);
 
     return useMemo(() => ({
         columns,
@@ -211,5 +254,4 @@ export const useTiled = (url?:Url, apiKey?:string, searchPath?:string, bearerTok
         resetAllData,
         warning,
     }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, handleColumnItemClick, warning])
-
 }

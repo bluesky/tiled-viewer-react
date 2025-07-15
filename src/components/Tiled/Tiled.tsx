@@ -58,7 +58,6 @@ export default function Tiled({
     };
 
     const handleClickOutside = (event: React.MouseEvent<HTMLDivElement>) => {
-        console.log({event})
         setIsViewerOpen(false);
     };
 
