@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TiledContainer from "./TiledContainer";
 import StartupScreen from "./StartupScreen";
 import ButtonCopyToClipboard from "../ButtonCopyToClipboard";
@@ -6,7 +6,7 @@ import './Tiled.css'
 
 import { cn } from "@/lib/utils";
 import { TiledItemLinks, TiledSearchItem, TiledStructures } from "./types";
-import { generateLinksForCallback } from "./utils";
+import { generateLinksForCallback, getApiKeyFromLocalStorage } from "./utils";
 
 
 export type TiledProps = {
@@ -48,6 +48,7 @@ export default function Tiled({
     const [ url, setUrl ] = useState<undefined | string>(tiledBaseUrl);
     const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
     const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
+    const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
         const links = generateLinksForCallback(item, url);
@@ -75,17 +76,29 @@ export default function Tiled({
 
     const handleExpandClick = () => {
         setIsExpanded(!isExpanded);
-    }
+    };
 
     const handleStartupScreenSubmit = () => {
         setShowStartupScreen(false);
-    }
+    };
+
+    const handleApiKeyChange = (newApiKey: string) => {
+        setUserInputApiKey(newApiKey);
+        localStorage.setItem('tiledApiKey', newApiKey);
+    };
 
 
     if (!isClosed) {
         if (isButtonMode && !isViewerOpen) {
             return (
                 <span className="flex gap-2">
+                    <input
+                        type="text"
+                        className="border border-gray-300 rounded-md px-2 py-1 h-fit"
+                        placeholder="Enter API Key (optional)"
+                        value={userInputApiKey || ''}
+                        onChange={(e) => handleApiKeyChange(e.target.value)}
+                    />
                     <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-md px-2 py-1 h-fit" onClick={()=>setIsViewerOpen(true)}>{buttonModeText}</button>
                     <p className=" text-black text-nowrap overflow-x-auto max-w-72 min-w-36 w-fit bg-white hover:cursor-text px-1 py-1">{selectedData && selectedData.self.split("/").pop()}</p>
                     <ButtonCopyToClipboard size="small" copyText={selectedData ? selectedData.self : ''} />
@@ -128,7 +141,7 @@ export default function Tiled({
                                     singleColumnMode={singleColumnMode}
                                     handleExpandClick={handleExpandClick}
                                     isExpanded={isExpanded}
-                                    apiKey={apiKey}
+                                    apiKey={userInputApiKey}
                                     bearerToken={bearerToken}
                                 />
                                 <p className="absolute top-12 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>

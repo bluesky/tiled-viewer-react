@@ -118,3 +118,15 @@ export const writeSearchPathToLocalStorage = (item:TiledSearchItem<TiledStructur
         return searchPath;
     }
 }
+
+export const getApiKeyFromLocalStorage = () => {
+    const apiKey = localStorage.getItem('tiledApiKey');
+    if (apiKey) {
+        if (apiKey.length === 0) {
+            return undefined;
+        } else {
+            return apiKey;
+        }
+    }
+    return undefined;
+}
