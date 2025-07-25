@@ -40,9 +40,10 @@ export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra
 };
 
 export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
-    const stackString = stack ? stack.join(',') : '';
+    console.log({stack})
+    const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
     const baseUrl = url ? url : defaultTiledUrl;
-    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + ',::' + stepY + ',::' + stepX);
+    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX);
 };
 
 export const numpyTypeSizesBytes: Record<string, number> = {
