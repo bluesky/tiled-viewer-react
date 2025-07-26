@@ -111,7 +111,7 @@ export default function Tiled({
                             handleInputChange={handleApiKeyChange}
                         />
                     )}
-                    
+
                     { isViewerOpen && (
                         <div
                             className={cn(
@@ -127,9 +127,9 @@ export default function Tiled({
                         >
                             <div
                                 className={cn(
-                                `flex flex-col border border-slate-400 shadow-lg rounded-md bg-white ${
-                                    size ? `w-full h-full` : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`
-                                } ${isFullWidth && 'w-full'} ${isExpanded && 'h-full w-full'}`,
+                                `flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full ${
+                                    size ? sizeClassMap[size] : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`
+                                } ${isFullWidth && 'w-full'} ${isExpanded && (size ? expandedSizeClassMap[size] : 'h-full w-full')}`,
                                 contentClassName
                                 )}
                                 onClick={(e) => e.stopPropagation()}

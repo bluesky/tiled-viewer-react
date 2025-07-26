@@ -3,6 +3,7 @@ import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
 import { getTableData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSlider from "../InputSlider";
+import ScatterPlot from "../ScatterPlot";
 
 type PreviewTableProps = {
     tableItem: TiledSearchItem<TableStructure>;
@@ -11,9 +12,13 @@ type PreviewTableProps = {
 
 export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const [tableData, setTableData] = useState<TiledTableRow[]>([]);
+    console.log({tableData})
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [partition, setPartition] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [showScatterPlot, setShowScatterPlot] = useState<boolean>(true);
+    const [xColumn, setXColumn] = useState<string>('');
+    const [yColumn, setYColumn] = useState<string>('');
     
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
@@ -69,6 +74,13 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         return () => observer.disconnect();
     }, [loadMoreRows]);
 
+    useEffect(() => {
+        if (columns.length >= 2) {
+            setXColumn(columns[0]);
+            setYColumn(columns[1]);
+        }
+    }, [columns]);
+
     return (
         <div className="w-full px-12">
             <p className="text-sky-900 text-center mb-4">{tableItem.id}</p>
@@ -115,6 +127,47 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                     <InputSlider label="Partition Index" max={partitionCount - 1} min={0} value={partition} onChange={handlePartitionChange} />
                 </div>
             }
+            {/* scatter plot goes here from visx */}
+            {showScatterPlot && columns.length >= 2 && (
+                <div className="mb-4">
+                    {/* Column selectors */}
+                    <div className="flex justify-center space-x-4 mb-4">
+                        <div>
+                            <label className="block text-sm font-medium mb-1">X Axis:</label>
+                            <select
+                                value={xColumn}
+                                onChange={(e) => setXColumn(e.target.value)}
+                                className="border rounded px-2 py-1"
+                            >
+                                {columns.map(col => (
+                                    <option key={col} value={col}>{col}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium mb-1">Y Axis:</label>
+                            <select
+                                value={yColumn}
+                                onChange={(e) => setYColumn(e.target.value)}
+                                className="border rounded px-2 py-1"
+                            >
+                                {columns.map(col => (
+                                    <option key={col} value={col}>{col}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    {/* Scatter plot */}
+                    <ScatterPlot
+                        data={tableData}
+                        xKey={xColumn}
+                        yKey={yColumn}
+                        width={600}
+                        height={400}
+                    />
+                </div>
+            )}
 
         </div>
     );
