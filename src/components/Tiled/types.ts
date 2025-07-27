@@ -56,7 +56,7 @@ export interface TiledSearchItem<StructureType> {
     id: string; // Identifier for the item
     attributes: {
         ancestors: string[]; // Array of ancestor IDs
-        structure_family: "array" | "table" | "container" | "awkward" | "sparse"; // Enum for structure families
+        structure_family: "array" | "table" | "container" | "awkward" | "sparse" | "composite"; // Enum for structure families
         specs: Spec[]; // Optional specs
         metadata: Record<string, unknown>; // Metadata as a dictionary
         structure: StructureType;
@@ -174,5 +174,5 @@ export const isTableStructure = (item: TiledSearchItem<any>): item is TiledSearc
 };
 
 export const isContainerStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ContainerStructure> => {
-    return item.attributes.structure_family === 'container';
+    return (item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite');
 };

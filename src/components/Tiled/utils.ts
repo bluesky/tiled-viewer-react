@@ -22,7 +22,7 @@ export const getTiledStructureIcon = (structureFamily:string) => {
     if (structureFamily === 'table') {
         icon = tiledStructureIcons.table;
     }
-    if (structureFamily === 'container') {
+    if (structureFamily === 'container' || structureFamily === 'composite') {
         icon = tiledStructureIcons.folder;
     }
 

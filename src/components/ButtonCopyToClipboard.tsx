@@ -11,13 +11,15 @@ const clipBoardDocumentCheck = <svg xmlns="http://www.w3.org/2000/svg" fill="non
 export type ButtonCopyToClipboardProps = {
     copyText: string;
     cb?: Function;
-    size?: 'small' | 'medium' | 'large'
+    size?: 'small' | 'medium' | 'large',
+    showText?: boolean;
 }
 
 export default function ButtonCopyToClipboard({
     copyText,
     cb,
     size='medium',
+    showText=false,
     ...props
 }: ButtonCopyToClipboardProps) {
     const [ isCopied, setIsCopied ] = useState<boolean>(false);
@@ -47,7 +49,7 @@ export default function ButtonCopyToClipboard({
                     className={`${isCopied ? 'text-sky-500' : 'text-slate-400'} ${sizes[size]} hover:text-sky-300 hover:cursor-pointer flex`}
                     onClick={e => handleCopyClick(e)}
                 >
-                    {isCopied ? <>{clipBoardDocumentCheck} <p>Copied</p></>: <>{clipBoardDocument} <p>copy meta link</p></>}
+                    {isCopied ? <>{clipBoardDocumentCheck} {showText && <p>Copied</p>}</> : <>{clipBoardDocument} {showText && <p>copy meta link</p>}</>}
                 </button>
     )
 }

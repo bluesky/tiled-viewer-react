@@ -29,7 +29,7 @@ const renderIcon = (structureFamily:string) => {
     if (structureFamily === 'table') {
         icon = table;
     }
-    if (structureFamily === 'container') {
+    if (structureFamily === 'container' || structureFamily === 'composite') {
         icon = folder;
         lineColor = 'text-sky-700';
     }
@@ -48,7 +48,7 @@ export function TiledColumn ({data, index, onItemClick, breadcrumbs, handleSelec
             </div>     */}        
             <ul className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
                 {data.map((item:TiledSearchItem<TiledStructures>) => {
-                    let id = item.id+index;
+                    let id = `item-${item.id}${index}`;
                     return (
                         <li 
                             className={`${ (breadcrumbs.length > index) && breadcrumbs[index].label === item.id ? 'bg-sky-200 hover:bg-sky-300' : 'hover:bg-sky-300'} flex space-x-2 px-2 rounded-sm hover:cursor-pointer relative`} 
@@ -58,7 +58,7 @@ export function TiledColumn ({data, index, onItemClick, breadcrumbs, handleSelec
                         >
                             {renderIcon(item.attributes.structure_family)}
                             <p className="truncate max-w-full">{item.id}</p>
-                            {item.attributes.structure_family === 'container' ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
+                            {(item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite') ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
                             {(handleSelectClick && showTooltip) &&
                                 <Tooltip 
                                     children={

@@ -138,6 +138,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             handleContainerClick(item); 
           } else {
             console.error('Error: No matching structure family found for: ' + item.attributes.structure_family);
+            console.log({item});
           }
     }
 
