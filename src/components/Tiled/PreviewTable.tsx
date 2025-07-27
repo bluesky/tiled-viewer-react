@@ -12,7 +12,7 @@ type PreviewTableProps = {
 
 export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const [tableData, setTableData] = useState<TiledTableRow[]>([]);
-    console.log({tableData})
+    //console.log({tableData})
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [partition, setPartition] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
