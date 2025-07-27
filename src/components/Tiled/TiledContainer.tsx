@@ -22,6 +22,7 @@ type TiledContainerProps = {
     apiKey?: string,
     bearerToken?: string,
     initialSearchPath?: string,
+    reverseSort?: boolean,
 }
 export default function TiledContainer({
     url,
@@ -32,11 +33,12 @@ export default function TiledContainer({
     apiKey,
     bearerToken,
     initialSearchPath,
+    reverseSort,
     ...props
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const tiledData = useTiled({ url, apiKey, bearerToken,  });
+    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort  });
 
     if (!tiledData) {
         return <div>Error: Unable to load tiled data. Check console for error logs.</div>;

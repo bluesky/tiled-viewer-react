@@ -24,6 +24,7 @@ export type TiledProps = {
     isFullWidth?: boolean,
     isButtonMode?: boolean,
     buttonModeText?: string,
+    reverseSort?: boolean,
 }
 export default function Tiled({
     onSelectCallback,
@@ -40,6 +41,7 @@ export default function Tiled({
     isFullWidth=false,
     isButtonMode=false,
     buttonModeText="Select Data",
+    reverseSort=true,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -49,6 +51,7 @@ export default function Tiled({
     const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
     const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
     const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
+    const [ userInputReverseSort, setUserInputReverseSort ] = useState<boolean>(reverseSort || false);
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
         const links = generateLinksForCallback(item, url);
@@ -108,6 +111,8 @@ export default function Tiled({
                             setIsViewerOpen={setIsViewerOpen}
                             buttonModeText={buttonModeText}
                             selectedData={selectedData}
+                            userInputReverseSort={userInputReverseSort}
+                            handleReverseSortChange={setUserInputReverseSort}
                             handleInputChange={handleApiKeyChange}
                         />
                     )}
@@ -150,6 +155,7 @@ export default function Tiled({
                                             isExpanded={isExpanded}
                                             apiKey={userInputApiKey}
                                             bearerToken={bearerToken}
+                                            reverseSort={userInputReverseSort}
                                         />
                                         <p className="absolute top-12 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
                                     </>

@@ -8,6 +8,8 @@ import { getApiKeyFromLocalStorage } from "./utils";
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
 
+var globalReverseSort:boolean = false;
+
 // Getting a CORS error?
 // when you start tiled, need to pass in CORS
 //ex) TILED_ALLOW_ORIGINS=http://localhost:5174 tiled serve demo
@@ -58,8 +60,25 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
+        // const baseUrl = url ? url : defaultTiledUrl;
+        // const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalReverseSort ? '&sort=-' : '') + (globalApiKey ? '?api_key=' + globalApiKey : ''));
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalApiKey ? '?api_key=' + globalApiKey : ''));
+        
+        // Build URL with URLSearchParams
+        const params = new URLSearchParams();
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        if (globalReverseSort) {
+            params.append('sort', '-');
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + (queryString ? '?' + queryString : '');
+        
+        const response = await axios.get(fullUrl);
         cb && cb(response.data as TiledSearchResult);
         return response.data as TiledSearchResult;
     } catch (error) {
@@ -86,8 +105,22 @@ const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + '?api_key=' + apiKey);
+        // const baseUrl = url ? url : defaultTiledUrl;
+        // const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalReverseSort ? '&sort=-' : '') + '?api_key=' + apiKey);
+         const baseUrl = url ? url : defaultTiledUrl;
+        
+        // Build URL with URLSearchParams
+        const params = new URLSearchParams();
+        params.append('api_key', apiKey);
+        
+        if (globalReverseSort) {
+            params.append('sort', '-');
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + '?' + queryString;
+        
+        const response = await axios.get(fullUrl);
         return response.data;
     } catch (error) {
         console.error('Error searching path: ', error);
@@ -121,6 +154,10 @@ const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:numb
     const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
     const baseUrl = url ? url : defaultTiledUrl;
     return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+};
+
+const setReverseSort = (reverse:boolean | undefined) => {
+    globalReverseSort = reverse || false; //default to false if undefined
 };
 
 const sampleImgUrl = 'http://127.0.0.1:8000/api/v1/array/full/small_image?format=image/png&slice=';
@@ -297,4 +334,4 @@ const sampleColumnData = [
 ];
 
 
-export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath}
+export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath, setReverseSort}

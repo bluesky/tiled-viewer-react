@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, getFirstSearchWithApiKey, setBearerToken } from "./apiClient";
+import { getSearchResults, getFirstSearchWithApiKey, setBearerToken, setReverseSort } from "./apiClient";
 import { 
     TiledSearchResult, 
     TiledSearchItem, 
@@ -23,9 +23,10 @@ export type useTiledProps = {
     searchPath?: string,
     bearerToken?: string,
     initialSearchPath?: string,
+    reverseSort?: boolean,
 }
 type Url = string;
-export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath}:useTiledProps) => {
+export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort}:useTiledProps) => {
     
     const [ columns, setColumns ] = useState<TiledSearchResult[]>([]);
     const [ breadcrumbs, setBreadcrumbs ] = useState<Breadcrumb[]>([]);
@@ -180,6 +181,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //attempt to get data from base Tiled Url. Display error on UI if no data comes back
         let response = null;
         if (bearerToken) setBearerToken(bearerToken); //set the bearer token for all future requests
+        setReverseSort(reverseSort); //set the reverse sort for all future requests
         if (apiKey) {
             response = await getFirstSearchWithApiKey(apiKey, searchPath, url); //only need to use apiKey once to set cookie for future requests
         } else {
