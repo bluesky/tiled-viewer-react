@@ -9,6 +9,9 @@ import { RenderTooltipGlyphProps } from '@visx/xychart/lib/components/Tooltip';
 import customTheme from './customTheme';
 import userPrefersReducedMotion from './userPrefersReducedMotion';
 import getAnimatedOrUnanimatedComponents from './getAnimatedOrUnanimatedComponents';
+import PlotSettingsRow from './PlotSettingsRow';
+
+import './Controls.css';
 
 const linearScaleConfig = { type: 'linear' } as const;
 const numTicks = 4;
@@ -70,11 +73,13 @@ type ProvidedProps = {
 type ControlsProps = {
   children: (props: ProvidedProps) => React.ReactNode;
   data: DataPoint[];
+  dataKeys: string[];
+  setSelectedDataKeys: React.Dispatch<React.SetStateAction<string[]>>;
 };
 
-export default function ExampleControls({ children, data }: ControlsProps) {
+export default function ExampleControls({ children, data, dataKeys, setSelectedDataKeys }: ControlsProps) {
   const [useAnimatedComponents, setUseAnimatedComponents] = useState(!userPrefersReducedMotion());
-  const [theme, setTheme] = useState<XYChartTheme>(darkTheme);
+  const [theme, setTheme] = useState<XYChartTheme>(lightTheme);
   const [animationTrajectory, setAnimationTrajectory] = useState<AnimationTrajectory | undefined>('center');
   const [gridProps, setGridProps] = useState<[boolean, boolean]>([false, false]);
   const [showGridRows, showGridColumns] = gridProps;
@@ -101,8 +106,7 @@ export default function ExampleControls({ children, data }: ControlsProps) {
   const [enableTooltipGlyph, setEnableTooltipGlyph] = useState(false);
   const [tooltipGlyphComponent, setTooltipGlyphComponent] = useState<'star' | 'cross' | 'circle' | '🍍'>('star');
 
-  // Get data keys dynamically
-  const dataKeys = useMemo(() => {
+  const allowableDataKeys = useMemo(() => {
     if (!data || data.length === 0) return [];
     return Object.keys(data[0]).filter(key => key !== '__index');
   }, [data]);
@@ -231,7 +235,6 @@ console.log({data})
         dataKeys,
         ...getAnimatedOrUnanimatedComponents(useAnimatedComponents),
       })}
-
       <svg className="pattern-lines">
         <PatternLines
           id={selectedDatumPatternId}
@@ -243,167 +246,230 @@ console.log({data})
         />
       </svg>
 
-      <div className="controls">
-        {/* Theme */}
-        <div>
-          <strong>theme</strong>
-          <label>
-            <input type="radio" onChange={() => setTheme(lightTheme)} checked={theme === lightTheme} />
-            light
-          </label>
-          <label>
-            <input type="radio" onChange={() => setTheme(darkTheme)} checked={theme === darkTheme} />
-            dark
-          </label>
-          <label>
-            <input type="radio" onChange={() => setTheme(customTheme)} checked={theme === customTheme} />
-            custom
-          </label>
+      <div className="w-full flex flex-wrap border justify-center gap-12 border-blue-500">
+        <div className="min-w-[200px] border border-red-500 flex ">
+            {/* User input for the selectedData keys, user can select multiple */}
+            <div>
+              <p>Select Y Axis</p>
+              <select multiple value={dataKeys} onChange={(e) => {
+                const options = Array.from(e.target.options);
+                const selected = options.filter(option => option.selected).map(option => option.value);
+                setSelectedDataKeys(selected);
+              }}>
+                {allowableDataKeys.map(key => (
+                  <option key={key} value={key}>{key}</option>
+                ))}
+              </select>
+            </div>
         </div>
+            <div className="controls">
+          {/* Theme */}
+          <div>
+            <strong>theme</strong>
+            <label>
+              <input type="radio" onChange={() => setTheme(lightTheme)} checked={theme === lightTheme} />
+              light
+            </label>
+            <label>
+              <input type="radio" onChange={() => setTheme(darkTheme)} checked={theme === darkTheme} />
+              dark
+            </label>
+            <label>
+              <input type="radio" onChange={() => setTheme(customTheme)} checked={theme === customTheme} />
+              custom
+            </label>
+          </div>
 
-        {/* Series */}
-        <div>
-          <strong>line series</strong>
-          <label>
-            <input
-              type="radio"
-              onChange={() => setRenderAreaLineOrStack('line')}
-              checked={renderAreaLineOrStack === 'line'}
-            />
-            line
-          </label>
-          <label>
-            <input
-              type="radio"
-              onChange={() => setRenderAreaLineOrStack('area')}
-              checked={renderAreaLineOrStack === 'area'}
-            />
-            area
-          </label>
-          <label>
-            <input type="radio" onChange={() => setRenderAreaLineOrStack('none')} checked={renderAreaLineOrStack === 'none'} />
-            none
-          </label>
-        </div>
+          {/* Series */}
+          <div>
+            <strong>line series</strong>
+            <label>
+              <input
+                type="radio"
+                onChange={() => {
+                  if (renderBarStackOrGroup === 'barstack' || renderBarStackOrGroup === 'bargroup') {
+                    setRenderBarStackOrGroup('none');
+                  }
+                  setRenderAreaLineOrStack('line');
+                }}
+                checked={renderAreaLineOrStack === 'line'}
+              />
+              line
+            </label>
+            <label>
+              <input
+                type="radio"
+                onChange={() => {
+                  if (renderBarStackOrGroup === 'barstack' || renderBarStackOrGroup === 'bargroup') {
+                    setRenderBarStackOrGroup('none');
+                  }
+                  setRenderAreaLineOrStack('area');
+                }}
+                checked={renderAreaLineOrStack === 'area'}
+              />
+              area
+            </label>
+            <label>
+              <input
+                type="radio"
+                onChange={() => {
+                  setRenderBarStackOrGroup('none');
+                  setRenderAreaLineOrStack('areastack');
+                }}
+                checked={renderAreaLineOrStack === 'areastack'}
+              />
+              area stack
+            </label>
+            <label>
+              <input
+                type="radio"
+                onChange={() => setRenderAreaLineOrStack('none')}
+                checked={renderAreaLineOrStack === 'none'}
+              />
+              none
+            </label>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+          </div>
 
-        {/* Curve */}
-        <div>
-          <strong>curve shape</strong>
-          <label>
-            <input
-              type="radio"
-              disabled={renderAreaLineOrStack === 'none'}
-              onChange={() => setCurveType('linear')}
-              checked={curveType === 'linear'}
-            />
-            linear
-          </label>
-          <label>
-            <input
-              type="radio"
-              disabled={renderAreaLineOrStack === 'none'}
-              onChange={() => setCurveType('cardinal')}
-              checked={curveType === 'cardinal'}
-            />
-            cardinal (smooth)
-          </label>
-          <label>
-            <input
-              type="radio"
-              disabled={renderAreaLineOrStack === 'none'}
-              onChange={() => setCurveType('step')}
-              checked={curveType === 'step'}
-            />
-            step
-          </label>
-        </div>
+          {/* Curve */}
+          <div>
+            <strong>curve shape</strong>
+            <label>
+              <input
+                type="radio"
+                disabled={renderAreaLineOrStack === 'none'}
+                onChange={() => setCurveType('linear')}
+                checked={curveType === 'linear'}
+              />
+              linear
+            </label>
+            <label>
+              <input
+                type="radio"
+                disabled={renderAreaLineOrStack === 'none'}
+                onChange={() => setCurveType('cardinal')}
+                checked={curveType === 'cardinal'}
+              />
+              cardinal (smooth)
+            </label>
+            <label>
+              <input
+                type="radio"
+                disabled={renderAreaLineOrStack === 'none'}
+                onChange={() => setCurveType('step')}
+                checked={curveType === 'step'}
+              />
+              step
+            </label>
+          </div>
 
-        {/* Glyph */}
-        <div>
-          <strong>glyph series</strong>
-          <label>
-            <input type="checkbox" onChange={() => setRenderGlyphSeries(!renderGlyphSeries)} checked={renderGlyphSeries} />
-            render glyphs
-          </label>
-        </div>
+          {/* Glyph */}
+          <div>
+            <strong>glyph series</strong>
+            <label>
+              <input
+                type="checkbox"
+                onChange={() => setRenderGlyphSeries(!renderGlyphSeries)}
+                checked={renderGlyphSeries}
+              />
+              render glyphs
+            </label>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <label>
+              <input
+                type="radio"
+                disabled={!renderGlyphSeries}
+                onChange={() => setGlyphComponent('circle')}
+                checked={glyphComponent === 'circle'}
+              />
+              circle
+            </label>
+            <label>
+              <input
+                type="radio"
+                disabled={!renderGlyphSeries}
+                onChange={() => setGlyphComponent('star')}
+                checked={glyphComponent === 'star'}
+              />
+              star
+            </label>
+            <label>
+              <input
+                type="radio"
+                disabled={!renderGlyphSeries}
+                onChange={() => setGlyphComponent('cross')}
+                checked={glyphComponent === 'cross'}
+              />
+              cross
+            </label>
+            <label>
+              <input
+                type="radio"
+                disabled={!renderGlyphSeries}
+                onChange={() => setGlyphComponent('🍍')}
+                checked={glyphComponent === '🍍'}
+              />
+              🍍
+            </label>
+          </div>
 
-        {/* Tooltip */}
-        <div>
-          <strong>tooltip</strong>
-          <label>
-            <input type="checkbox" onChange={() => setShowTooltip(!showTooltip)} checked={showTooltip} />
-            show tooltip
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              disabled={!showTooltip}
-              onChange={() => setShowVerticalCrosshair(!showVerticalCrosshair)}
-              checked={showTooltip && showVerticalCrosshair}
-            />
-            vertical crosshair
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              disabled={!showTooltip}
-              onChange={() => setShowHorizontalCrosshair(!showHorizontalCrosshair)}
-              checked={showTooltip && showHorizontalCrosshair}
-            />
-            horizontal crosshair
-          </label>
-        </div>
+          {/* Tooltip */}
+          <div>
+            <strong>tooltip</strong>
+            <label>
+              <input type="checkbox" onChange={() => setShowTooltip(!showTooltip)} checked={showTooltip} />
+              show tooltip
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                disabled={!showTooltip}
+                onChange={() => setShowVerticalCrosshair(!showVerticalCrosshair)}
+                checked={showTooltip && showVerticalCrosshair}
+              />
+              vertical crosshair
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                disabled={!showTooltip}
+                onChange={() => setShowHorizontalCrosshair(!showHorizontalCrosshair)}
+                checked={showTooltip && showHorizontalCrosshair}
+              />
+              horizontal crosshair
+            </label>
+          </div>
 
-        {/* Grid */}
-        <div>
-          <strong>grid</strong>
-          <label>
-            <input type="radio" onChange={() => setGridProps([true, false])} checked={showGridRows && !showGridColumns} />
-            rows
-          </label>
-          <label>
-            <input type="radio" onChange={() => setGridProps([false, true])} checked={!showGridRows && showGridColumns} />
-            columns
-          </label>
-          <label>
-            <input type="radio" onChange={() => setGridProps([true, true])} checked={showGridRows && showGridColumns} />
-            both
-          </label>
-          <label>
-            <input type="radio" onChange={() => setGridProps([false, false])} checked={!showGridRows && !showGridColumns} />
-            none
-          </label>
-        </div>
+          {/* Grid */}
+          <div>
+            <strong>grid</strong>
+            <label>
+              <input type="radio" onChange={() => setGridProps([true, false])} checked={showGridRows && !showGridColumns} />
+              rows
+            </label>
+            <label>
+              <input type="radio" onChange={() => setGridProps([false, true])} checked={!showGridRows && showGridColumns} />
+              columns
+            </label>
+            <label>
+              <input type="radio" onChange={() => setGridProps([true, true])} checked={showGridRows && showGridColumns} />
+              both
+            </label>
+            <label>
+              <input type="radio" onChange={() => setGridProps([false, false])} checked={!showGridRows && !showGridColumns} />
+              none
+            </label>
+          </div>
 
-        {/* Animation */}
-        <div>
-          <label>
-            <input type="checkbox" onChange={() => setUseAnimatedComponents(!useAnimatedComponents)} checked={useAnimatedComponents} />
-            use animated components
-          </label>
+          {/* Animation */}
+          <div>
+            <label>
+              <input type="checkbox" onChange={() => setUseAnimatedComponents(!useAnimatedComponents)} checked={useAnimatedComponents} />
+              use animated components
+            </label>
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .controls {
-          font-size: 13px;
-          line-height: 1.5em;
-        }
-        .controls > div {
-          margin-bottom: 4px;
-        }
-        label {
-          font-size: 12px;
-        }
-        input[type='radio'] {
-          height: 10px;
-        }
-        .pattern-lines {
-          position: absolute;
-          pointer-events: none;
-          opacity: 0;
-        }
-      `}</style>
     </>
   );
 }

@@ -2,6 +2,11 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // allow cookies to be sent with requests
 import { sampleTiledSearchData } from "./sampleData";
 import { TiledSearchResult } from "./types";
+import { getApiKeyFromLocalStorage } from "./utils";
+
+//save an apikey that exists only in this file
+//if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
+var globalApiKey:string | null = null;
 
 // Getting a CORS error?
 // when you start tiled, need to pass in CORS
@@ -22,7 +27,7 @@ const getDefaultTiledUrl = () => {
     }
 };
 
-const getTiledApiKey = () => {
+const getTiledApiKeyFromEnv = () => {
     try{
         if (import.meta.env.VITE_API_TILED_API_KEY) {
             return import.meta.env.VITE_API_TILED_API_KEY;
@@ -45,7 +50,7 @@ const setBearerToken = (token:string) => {
 // const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
 
 const defaultTiledUrl = getDefaultTiledUrl();
-const tiledApiKey = getTiledApiKey();
+const tiledApiKey = getTiledApiKeyFromEnv();
 //add return type of tiledresponse or null
 const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean):Promise<TiledSearchResult | null> => {
     if (mock) {
@@ -54,7 +59,7 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
     }
     try {
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : ''));
+        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalApiKey ? '?api_key=' + globalApiKey : ''));
         cb && cb(response.data as TiledSearchResult);
         return response.data as TiledSearchResult;
     } catch (error) {
@@ -65,7 +70,17 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
 };
 
 const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
-    //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests
+    //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests. This doesn't work for CORS cookies though
+    
+    //overwrite any local storage apiKey, which could be stale if the dev calls Tiled with a new apiKey prop and a previous different apiKey was stored in localstorage
+    const localStorageApiKey = getApiKeyFromLocalStorage();
+    if (localStorageApiKey && localStorageApiKey !== apiKey) {
+        localStorage.removeItem('tiledApiKey');
+        localStorage.setItem('tiledApiKey', apiKey);
+    }
+
+    globalApiKey = apiKey;  //makes this available to all other functions that make api calls or generate image paths, technically a cookie is not required when this is used
+    
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
@@ -84,7 +99,7 @@ const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:
 const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq');
+        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
         //the data comes as a long string that unfortunately does not comply with JSON.parse(data)
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
@@ -99,7 +114,14 @@ const getTableData = async(searchPath:string, partition:number, url?:string, cb?
         console.error('Error searching table data: ', error);
         return null;
     }
-}
+};
+
+const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
+    //console.log({stack})
+    const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
+    const baseUrl = url ? url : defaultTiledUrl;
+    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+};
 
 const sampleImgUrl = 'http://127.0.0.1:8000/api/v1/array/full/small_image?format=image/png&slice=';
 const sample3dCubeUrlat50thStack = 'http://127.0.0.1:8000/api/v1/array/full/tiny_cube?format=image/png&slice=49,::1,::1'
@@ -275,4 +297,4 @@ const sampleColumnData = [
 ];
 
 
-export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken}
+export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath}

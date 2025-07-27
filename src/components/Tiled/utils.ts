@@ -2,13 +2,13 @@ import { tiledStructureIcons } from "./icons";
 import { TiledSearchItem, TiledStructures,  } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
-const defaultTiledUrl = getDefaultTiledUrl();
+//const defaultTiledUrl = getDefaultTiledUrl();
 
 export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>, url?:string) => {
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
     var links= {...item.links};
-    const baseUrl = url ? url : defaultTiledUrl;
+    const baseUrl = url ? url : getDefaultTiledUrl();
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
     return links;
@@ -39,12 +39,7 @@ export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra
     return searchPath;
 };
 
-export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
-    console.log({stack})
-    const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
-    const baseUrl = url ? url : defaultTiledUrl;
-    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX);
-};
+
 
 export const numpyTypeSizesBytes: Record<string, number> = {
     // Numerical Data Types

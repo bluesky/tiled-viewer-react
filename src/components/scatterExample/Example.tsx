@@ -1,4 +1,5 @@
 import React from 'react';
+import { useMemo } from 'react';
 import ExampleControls from './ExampleControls';
 import CustomChartBackground from './CustomChartBackground';
 
@@ -6,11 +7,24 @@ export type XYChartProps = {
   width: number;
   height: number;
   sampleData: Record<string, number>[];
+  dataKeys: string[];
 };
 
 export default function Example({ height, sampleData }: XYChartProps) {
+      // Get data keys dynamically
+    const dataKeys = useMemo(() => {
+      if (!sampleData || sampleData.length === 0) return [];
+      return Object.keys(sampleData[0]).filter(key => key !== '__index');
+    }, [sampleData]);
+
+    const [ selectedDataKeys, setSelectedDataKeys ] = React.useState<string[]>([]);
+
+
   return (
-    <ExampleControls data={sampleData}>
+    <>
+
+
+    <ExampleControls data={sampleData} dataKeys={selectedDataKeys} setSelectedDataKeys={setSelectedDataKeys}>
       {({
         accessors,
         animationTrajectory,
@@ -115,9 +129,26 @@ export default function Example({ height, sampleData }: XYChartProps) {
                   xAccessor={accessors.x[key]}
                   yAccessor={accessors.y[key]}
                   curve={curve}
+                  fillOpacity={0.4}
+
                 />
               ))}
             </>
+          )}
+
+          {renderAreaStack && (
+            <AreaStack offset={stackOffset}>
+              {dataKeys.map((key) => (
+                <AreaSeries
+                  key={key}
+                  dataKey={key}
+                  data={data}
+                  xAccessor={accessors.x[key]}
+                  yAccessor={accessors.y[key]}
+                  curve={curve}
+                />
+              ))}
+            </AreaStack>
           )}
 
           {renderGlyphSeries && (
@@ -227,5 +258,6 @@ export default function Example({ height, sampleData }: XYChartProps) {
         </XYChart>
       )}
     </ExampleControls>
+    </>
   );
 }

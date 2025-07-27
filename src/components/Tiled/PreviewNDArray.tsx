@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import InputSlider from "../InputSlider";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
-import { generateSearchPath, generateFullImagePngPath, numpyTypeSizesBytes, onPopoutClick, createSliders  } from './utils';
+import { generateSearchPath, numpyTypeSizesBytes, onPopoutClick, createSliders  } from './utils';
+import { generateFullImagePngPath } from "./apiClient";
 import {  } from "./apiClient";
 import { tailwindIcons } from "@/assets/icons";
 
