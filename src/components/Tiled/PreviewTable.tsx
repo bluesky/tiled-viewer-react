@@ -128,7 +128,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                 </div>
             }
             {/* scatter plot goes here from visx */}
-            {showScatterPlot && columns.length >= 2 && (
+            {false && showScatterPlot && columns.length >= 2 && (
                 <div className="mb-4">
                     {/* Column selectors */}
                     <div className="flex justify-center space-x-4 mb-4">
