@@ -54,17 +54,13 @@ const setBearerToken = (token:string) => {
 const defaultTiledUrl = getDefaultTiledUrl();
 const tiledApiKey = getTiledApiKeyFromEnv();
 //add return type of tiledresponse or null
-const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean):Promise<TiledSearchResult | null> => {
+const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        // const baseUrl = url ? url : defaultTiledUrl;
-        // const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalReverseSort ? '&sort=-' : '') + (globalApiKey ? '?api_key=' + globalApiKey : ''));
         const baseUrl = url ? url : defaultTiledUrl;
-        
-        // Build URL with URLSearchParams
         const params = new URLSearchParams();
         
         if (globalApiKey) {
@@ -73,6 +69,12 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
         
         if (globalReverseSort) {
             params.append('sort', '-');
+        }
+
+        if (parameters) {
+            Object.keys(parameters).forEach(key => {
+                params.append(key, parameters[key]);
+            });
         }
         
         const queryString = params.toString();

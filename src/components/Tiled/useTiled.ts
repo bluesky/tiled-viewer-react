@@ -205,10 +205,40 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
                 handleColumnItemClick(matchingItem);
                 setRemainingHistoryArray((prev) => prev ? prev.slice(1) : null); //return the original array with the first element removed. returns empty array on last search
             } else {
-                console.warn(`No matching item found for search path: ${searchPath}`);
+                console.warn(`Attempted to load previous search, no matching item found for search path: ${searchPath} in the current page offset, initializing at root.`);
                 setRemainingHistoryArray(null);
             }
     }
+
+    const handleNewPageClick = (link:Url, columnIndex:number, nextPageIndex?:number) => {
+        //in a column if results exceed page limit the left/right arrows are enabled for making subsequent requests at the same path with different page offsets
+        if (!link) return; //if no link is provided, do nothing
+        //we don't want to use the exact hostname in case the user has any sort of proxy setup, therefore strip off the page offset and limit as a single string
+        const newPageUrl = new URL(link);
+        const pageOffset = nextPageIndex ? nextPageIndex : parseInt(newPageUrl.searchParams.get('page[offset]') || '0');
+        const pageLimit = parseInt(newPageUrl.searchParams.get('page[limit]') || '100');
+        //use apiClient to get next page of results with pageOffset + pageLimit
+        const parameters = {
+            'page[offset]': pageOffset,
+            'page[limit]': pageLimit
+        };
+
+        //grab the search path after /search and before the query params
+        const searchPath = newPageUrl.pathname.split('/search/')[1].split('?')[0];
+        getSearchResults(searchPath, url, (res: TiledSearchResult) => updateColumnWithNewPage(res, columnIndex), false, parameters);
+    };
+
+    const updateColumnWithNewPage = (newColumn:TiledSearchResult, columnIndex:number) => {
+        if (newColumn === null || newColumn.data.length === 0) {
+            console.warn('No data returned for the new page.');
+            return;
+        }
+        setColumns((prevState) => {
+            const newState = [...prevState];
+            newState[columnIndex] = newColumn;
+            return newState;
+        });
+    };
 
     useEffect(() => {
         //get first set of results from root
@@ -256,5 +286,6 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         handleRightArrowClick,
         resetAllData,
         warning,
-    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, handleColumnItemClick, warning])
+        handleNewPageClick
+    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, handleColumnItemClick, warning, handleNewPageClick])
 }

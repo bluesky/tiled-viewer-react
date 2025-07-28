@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 
 import TiledHeader from "./TiledHeader";
-import TiledColumns from "./TiledColumns";
 import TiledPreview from "./TiledPreview";
 import TiledFooter from "./TiledFooter";
 import TiledBody from "./TiledBody";
@@ -53,6 +52,8 @@ export default function TiledContainer({
         handleLeftArrowClick, 
         handleRightArrowClick,
         resetAllData,
+        warning,
+        handleNewPageClick
     } = tiledData;
 
 
@@ -79,12 +80,15 @@ export default function TiledContainer({
                     <TiledColumn 
                         handleSelectClick={handleSelectClick} 
                         data={column.data} 
+                        meta={column.meta}
+                        links={column.links}
                         key={index} 
                         index={index} 
                         onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick} 
                         breadcrumbs={breadcrumbs}
                         className={singleColumnMode ? "w-full max-w-full" : ""}
                         showTooltip={singleColumnMode ? false : true}
+                        handleNewPageClick={handleNewPageClick}
                     />
                 )}
                 {previewItem && 
