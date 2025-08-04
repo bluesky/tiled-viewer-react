@@ -82,7 +82,7 @@ type PlotSettingsProps = {
 export default function PlotSettings({ children, data, dataKeys, setSelectedDataKeys }: PlotSettingsProps) {
 
   const [settings, setSettings] = useState({
-    xAxisKey: '__index' as string,
+    xAxisKey: Object.keys(data[0]).includes('time') ? 'time' : '__index' as string,
     theme: lightTheme,
     useAnimatedComponents: !userPrefersReducedMotion(),
     animationTrajectory: 'center' as AnimationTrajectory | undefined,
@@ -263,17 +263,6 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
     return ['__index', ...allowableDataKeys];
   }, [allowableDataKeys]);
 
-  // const accessors = useMemo(() => {
-  //   const xAccessors: Record<string, Accessor> = {};
-  //   const yAccessors: Record<string, Accessor> = {};
-
-  //   dataKeys.forEach(key => {
-  //     xAccessors[key] = (d, index = 0) => d?.__index || index;
-  //     yAccessors[key] = (d) => Number(d[key]) || 0;
-  //   });
-
-  //   return { x: xAccessors, y: yAccessors };
-  // }, [dataKeys]);
   const accessors = useMemo(() => {
     const xAccessors: Record<string, Accessor> = {};
     const yAccessors: Record<string, Accessor> = {};

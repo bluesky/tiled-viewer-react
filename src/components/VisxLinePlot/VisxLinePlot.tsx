@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import PlotSettings from './PlotSettings';
 import CustomChartBackground from './CustomChartBackground';
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-
+import Portal from '@visx/tooltip/lib/Portal';
 
 export type XYChartProps = {
   width?: number;
@@ -24,7 +24,9 @@ export default function VisxLinePlot({ width, height, plotData }: XYChartProps) 
       return Object.keys(dataWithIndex[0]).filter(key => key !== '__index');
     }, [dataWithIndex]);
 
-    const [ selectedDataKeys, setSelectedDataKeys ] = React.useState<string[]>([]);
+    console.log({plotData})
+
+    const [ selectedDataKeys, setSelectedDataKeys ] = React.useState<string[]>( plotData ? [Object.keys(plotData[0])[0] as string] : []); //auto display the first key
 
 
   return (
@@ -218,48 +220,49 @@ export default function VisxLinePlot({ width, height, plotData }: XYChartProps) 
             )}
 
             {showTooltip && (
-              <Tooltip
-                showHorizontalCrosshair={showHorizontalCrosshair}
-                showVerticalCrosshair={showVerticalCrosshair}
-                snapTooltipToDatumX={snapTooltipToDatumX}
-                snapTooltipToDatumY={snapTooltipToDatumY}
-                showDatumGlyph={(snapTooltipToDatumX || snapTooltipToDatumY) && !renderBarGroup}
-                showSeriesGlyphs={sharedTooltip && !renderBarGroup}
-                renderGlyph={enableTooltipGlyph ? renderTooltipGlyph : undefined}
-                renderTooltip={({ tooltipData, colorScale }) => {
-                  const nearestDatum = tooltipData?.nearestDatum;
-                  if (!nearestDatum) return null;
-
-                  const index = data.indexOf(nearestDatum.datum);
-                  const keysToShow = sharedTooltip 
-                    ? Object.keys(tooltipData?.datumByKey ?? {}).filter(key => dataKeys.includes(key))
-                    : [nearestDatum.key].filter(key => key && dataKeys.includes(key));
-
-                  return (
-                    <div style={{ padding: '8px', background: 'white', border: '1px solid #ccc', borderRadius: '4px' }}>
-                      <div><strong>Index:</strong> {index}</div>
-                      <br />
-                      {keysToShow.map((key) => {
-                        const value = nearestDatum.datum[key];
-                        return (
-                          <div key={key}>
-                            <span
-                              style={{
-                                color: colorScale?.(key),
-                                fontWeight: nearestDatum.key === key ? 'bold' : 'normal',
-                                textDecoration: nearestDatum.key === key ? 'underline' : 'none',
-                              }}
-                            >
-                              {key}:
-                            </span>{' '}
-                            {value == null || Number.isNaN(Number(value)) ? '–' : Number(value).toFixed(2)}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                }}
-              />
+                <Tooltip
+                  
+                  showHorizontalCrosshair={showHorizontalCrosshair}
+                  showVerticalCrosshair={showVerticalCrosshair}
+                  snapTooltipToDatumX={snapTooltipToDatumX}
+                  snapTooltipToDatumY={snapTooltipToDatumY}
+                  showDatumGlyph={(snapTooltipToDatumX || snapTooltipToDatumY) && !renderBarGroup}
+                  showSeriesGlyphs={sharedTooltip && !renderBarGroup}
+                  renderGlyph={enableTooltipGlyph ? renderTooltipGlyph : undefined}
+                  renderTooltip={({ tooltipData, colorScale }) => {
+                    const nearestDatum = tooltipData?.nearestDatum;
+                    if (!nearestDatum) return null;
+  
+                    const index = data.indexOf(nearestDatum.datum);
+                    const keysToShow = sharedTooltip 
+                      ? Object.keys(tooltipData?.datumByKey ?? {}).filter(key => dataKeys.includes(key))
+                      : [nearestDatum.key].filter(key => key && dataKeys.includes(key));
+  
+                    return (
+                      <div style={{ padding: '8px', background: 'white', border: '1px solid #ccc', borderRadius: '4px' }}>
+                        <div><strong>Index:</strong> {index}</div>
+                        <br />
+                        {keysToShow.map((key) => {
+                          const value = nearestDatum.datum[key];
+                          return (
+                            <div key={key}>
+                              <span
+                                style={{
+                                  color: colorScale?.(key),
+                                  fontWeight: nearestDatum.key === key ? 'bold' : 'normal',
+                                  textDecoration: nearestDatum.key === key ? 'underline' : 'none',
+                                }}
+                              >
+                                {key}:
+                              </span>{' '}
+                              {value == null || Number.isNaN(Number(value)) ? '–' : Number(value).toFixed(2)}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  }}
+                />
             )}
           </XYChart>
         )}
