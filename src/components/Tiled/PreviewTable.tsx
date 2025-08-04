@@ -4,6 +4,7 @@ import { getTableData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSlider from "../InputSlider";
 import ScatterPlot from "../ScatterPlot";
+import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
 
 type PreviewTableProps = {
     tableItem: TiledSearchItem<TableStructure>;
@@ -128,43 +129,11 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                 </div>
             }
             {/* scatter plot goes here from visx */}
-            {false && showScatterPlot && columns.length >= 2 && (
-                <div className="mb-4">
-                    {/* Column selectors */}
-                    <div className="flex justify-center space-x-4 mb-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-1">X Axis:</label>
-                            <select
-                                value={xColumn}
-                                onChange={(e) => setXColumn(e.target.value)}
-                                className="border rounded px-2 py-1"
-                            >
-                                {columns.map(col => (
-                                    <option key={col} value={col}>{col}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Y Axis:</label>
-                            <select
-                                value={yColumn}
-                                onChange={(e) => setYColumn(e.target.value)}
-                                className="border rounded px-2 py-1"
-                            >
-                                {columns.map(col => (
-                                    <option key={col} value={col}>{col}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    
+            {showScatterPlot && columns.length >= 2 && (
+                <div className="mt-8 mb-4 shadow-md p-2 rounded border border-slate-100">
                     {/* Scatter plot */}
-                    <ScatterPlot
-                        data={tableData}
-                        xKey={xColumn}
-                        yKey={yColumn}
-                        width={600}
-                        height={400}
+                    <VisxLinePlot
+                        plotData={tableData}
                     />
                 </div>
             )}

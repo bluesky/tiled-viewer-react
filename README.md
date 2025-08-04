@@ -48,18 +48,20 @@ You will only need to import '@blueskyproject/tiled/style.css' once.
 Hint: To quickly check the props that a component takes on typescript apps, press 'ctrl+space' when clicked inside a component.
 
 # Bluesky Requirements
-Components in this library require network access to the Bluesky Queue Server, Tiled, and Ophyd-Websocket. The components are designed to work out of the box with the default ports for each service. 
-
-Specific paths/ports can be set at runtime with environment variables, or alternatively passed in as props to components that need them. 
-
-Documentation for env variables in progress.
-
-https://github.com/bluesky/bluesky-queueserver
+This component requires a Bluesky Tiled server to be setup and reachable from the host url.
 
 https://github.com/bluesky/tiled
 
-https://github.com/bluesky/ophyd-websocket
+## Common issues connecting to Tiled
 
+A very common issue with making the Tiled React component work properly is improper authorization setup on the Tiled server. There are two main requirements to satisfy.
+
+1. CORS
+2. Authentication
+
+CORS issues are solved by instantiating your Tiled server with an allowed origins list. In this list should be the url from which your React website is hosted. You cannot use wildcards in a CORS allow origins list if your tiled server requires an api key (as in not set to public).
+
+Authentication can come in different formats. If you make it past CORS, but you get an authorization error from Tiled Server, then you probably need authentication on the requests. You can add an apiKey prop to <Tiled>, this will add an apiKey parameter to every request to Tiled Server thereafter. You can also add an auth bearer token which will have similar effect. It is most convenient to use a static apiKey during Tiled Server startup.
 
 # Installation - Developer
 To check out the project without creating your own React app, or for development, you can pull down the repo and install with npm.
@@ -73,7 +75,7 @@ git clone https://github.com/bluesky/tiled-viewer-react.git
 ```
 
 ```
-cd finch
+cd tiled-viewer-react
 npm install
 ```
 
