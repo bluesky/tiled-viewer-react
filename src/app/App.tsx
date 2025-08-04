@@ -25,16 +25,12 @@ function App() {
       [sampleData]
   );
 
-    // Get data keys dynamically
-  const dataKeys = useMemo(() => {
-    if (!dataWithIndex || dataWithIndex.length === 0) return [];
-    return Object.keys(dataWithIndex[0]).filter(key => key !== '__index');
-  }, [dataWithIndex]);
+
 
   return (
     <>
       <Tiled isButtonMode={true} size='medium'/>
-      <ParentSize>{({ width, height }) => <Example width={width} height={height} sampleData={dataWithIndex} dataKeys={dataKeys} />}</ParentSize>,
+      <Tiled isPopup={true}/>
     </>
   )
 

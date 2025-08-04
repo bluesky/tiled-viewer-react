@@ -92,17 +92,6 @@ export default function Tiled({
 
 
     if (!isClosed) {
-        // if (isButtonMode && !isViewerOpen) {
-        //     return (
-        //         <OpenTiledRow
-        //             userInputApiKey={userInputApiKey}
-        //             setIsViewerOpen={setIsViewerOpen}
-        //             buttonModeText={buttonModeText}
-        //             selectedData={selectedData}
-        //             handleInputChange={handleApiKeyChange}   
-        //         />        
-        //     )
-        // } else {
             return (
                 <>
                     { isButtonMode && (
@@ -157,7 +146,9 @@ export default function Tiled({
                                             bearerToken={bearerToken}
                                             reverseSort={userInputReverseSort}
                                         />
-                                        <p className="absolute top-12 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                                        {(isPopup || isButtonMode) && (
+                                            <p className="absolute top-12 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                                        )}
                                     </>
                                 )}
                             </div>
