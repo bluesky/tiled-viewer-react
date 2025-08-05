@@ -1,8 +1,8 @@
-import { ArrayStructure, TableStructure, TiledSearchItem } from "./types";
+import { ArrayStructure, TableStructure, TiledSearchItem, TiledStructures } from "./types";
 import ButtonCopyToClipboard from "../ButtonCopyToClipboard";
 
 type TiledPreviewMetadataProps = {
-    item: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> ;
+    item: TiledSearchItem<TiledStructures>;
 }
 export default function TiledPreviewMetadata({
     item,

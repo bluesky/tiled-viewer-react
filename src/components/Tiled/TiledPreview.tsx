@@ -4,13 +4,13 @@ import PreviewNDArray from './PreviewNDArray';
 import PreviewTable from './PreviewTable';
 import PreviewAwkward from './PreviewAwkward';
 import PreviewSparse from './PreviewSparse';
-import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, isArrayStructure, isTableStructure, isAwkwardStructure, isSparseStructure } from './types';
+import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, AwkwardStructure, SparseStructure, isArrayStructure, isTableStructure, isAwkwardStructure, isSparseStructure } from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
 import { tailwindIcons } from '@/assets/icons';
 
 
 type TiledPreviewProps = {
-    previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure>
+    previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure>;
     previewSize: PreviewSize;
     handleSelectClick?:Function;
     url?: string;
