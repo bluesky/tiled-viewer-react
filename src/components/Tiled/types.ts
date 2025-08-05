@@ -67,30 +67,8 @@ export interface TiledSearchItem<StructureType> {
     meta: unknown | null; // Optional metadata
 }
 
-/* // Definition for a single search item
-export interface TiledSearchItem<StructureType> {
-    id: string; // Identifier for the item
-    attributes: {
-        ancestors: string[]; // Array of ancestor IDs
-        structure_family: "array" | "table" | "container" | "awkward" | "sparse"; // Enum for structure families
-        specs: Spec[]; // Optional specs
-        metadata: Record<string, unknown>; // Metadata as a dictionary
-        structure: ArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure;
-        sorting: Sorting[] | null; // Sorting details, if applicable
-        data_sources: string | null; // Data source, if any
-    };
-    links: {
-        self: string;
-        full?: string;
-        block?: string;
-        buffers?: string;
-        partition?: string;
-        search?: string;
-    };
-    meta: unknown | null; // Optional metadata
-} */
+
 export type TiledStructures = ArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure
-//export type GeneralTiledStructure extends TiledStructures
 
 // Specs type
 export interface Spec {
@@ -175,4 +153,12 @@ export const isTableStructure = (item: TiledSearchItem<any>): item is TiledSearc
 
 export const isContainerStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ContainerStructure> => {
     return (item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite');
+};
+
+export const isAwkwardStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<AwkwardStructure> => {
+    return item.attributes.structure_family === 'awkward';
+};
+
+export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<SparseStructure> => {
+    return item.attributes.structure_family === 'sparse';
 };

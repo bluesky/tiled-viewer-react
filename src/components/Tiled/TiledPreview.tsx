@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import Button from '../Button';
 import PreviewNDArray from './PreviewNDArray';
 import PreviewTable from './PreviewTable';
-import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, isArrayStructure, isTableStructure } from './types';
+import PreviewAwkward from './PreviewAwkward';
+import PreviewSparse from './PreviewSparse';
+import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, isArrayStructure, isTableStructure, isAwkwardStructure, isSparseStructure } from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
 import { tailwindIcons } from '@/assets/icons';
 
@@ -50,6 +52,8 @@ export default function TiledPreview({
             <div className="w-full flex flex-col items-center space-y-8 py-4">
                 {isArrayStructure(previewItem) && <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth}/>}
                 {isTableStructure(previewItem) && <PreviewTable tableItem={previewItem} url={url} />}
+                {isAwkwardStructure(previewItem) && <PreviewAwkward awkwardItem={previewItem} url={url} />}
+                {isSparseStructure(previewItem) && <PreviewSparse sparseItem={previewItem} url={url} />}
                 { handleSelectClick && <Button text="Select" size="medium" cb={()=>handleSelectClick(previewItem)} />}
             </div>
             <TiledPreviewMetadata item={previewItem}/>

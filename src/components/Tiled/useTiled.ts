@@ -5,7 +5,8 @@ import {
     TiledSearchResult, 
     TiledSearchItem, 
     Breadcrumb, 
-    ArrayStructure, 
+    ArrayStructure,
+    AwkwardStructure, 
     ContainerStructure, 
     TableStructure, 
     TiledStructures,
@@ -13,10 +14,12 @@ import {
     isArrayStructure,
     isContainerStructure,
     isTableStructure,
+    isAwkwardStructure,
+    isSparseStructure,
+    SparseStructure
  } from "./types";
 import { getTiledStructureIcon, generateSearchPath, getLastSearchFromLocalStorage, writeSearchPathToLocalStorage} from "./utils";
-import { get } from "http";
-import { write } from "fs";
+
 export type useTiledProps = {
     url?: string,
     apiKey?: string,
@@ -33,7 +36,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const [ imageUrl, setImageUrl ] = useState<string | undefined>();
     const [ popoutUrl, setPopoutUrl ] = useState<string | undefined>();
     const [ previewSize, setPreviewSize ] = useState<PreviewSize>('hidden');
-    const [ previewItem, setPreviewItem ]  = useState<TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | null >(null);
+    const [ previewItem, setPreviewItem ]  = useState<TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | null >(null);
     const [ warning, setWarning ] = useState<string | undefined>(undefined);
     const [ remainingHistoryArray, setRemainingHistoryArray ] = useState<string[] | null>(null);
     const ancestorStack = useRef<TiledSearchItem<TiledStructures>[]>([]);
@@ -136,6 +139,10 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             handleTableClick(item); 
           } else if (isContainerStructure(item)) {
             handleContainerClick(item); 
+          } else if (isAwkwardStructure(item)) {
+            handleAwkwardClick(item);
+          } else if (isSparseStructure(item)) {
+            handleSparseClick(item);
           } else {
             console.error('Error: No matching structure family found for: ' + item.attributes.structure_family);
             console.log({item});
@@ -162,6 +169,20 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         const searchPath = generateSearchPath(item);
         getSearchResults(searchPath, url, (res:TiledSearchResult) => handleSearchResponse(item, res));
         closePreview();
+    };
+
+    const handleAwkwardClick = (item:TiledSearchItem<AwkwardStructure>) => {
+        setPreviewItem(item);
+        updateBreadcrumbs(item);
+        setPreviewSize(defaultPreviewSize);
+        updateColumns(item);
+    };
+
+    const handleSparseClick = (item:TiledSearchItem<SparseStructure>) => {
+        setPreviewItem(item);
+        updateBreadcrumbs(item);
+        setPreviewSize(defaultPreviewSize);
+        updateColumns(item);
     };
 
     const handleSearchResponse = useCallback((clickedItem:TiledSearchItem<TiledStructures>, res:TiledSearchResult) => {

@@ -23,7 +23,7 @@ export default function TiledPreviewMetadata({
         sanitizedItem.attributes.structure.arrow_schema = sanitizedItem.attributes.structure.arrow_schema.split(',')[0];
     }
     return (
-        <div {...props} className="border border-red-500">
+        <div {...props} className="">
 
             <h3 className="m-auto text-left pl-4 text-sky-950">Links</h3>
             <ul className="flex w-full justify-start pl-8 space-x-6">
@@ -40,7 +40,7 @@ export default function TiledPreviewMetadata({
             </ul>
 
             <h3 className="m-auto text-left pl-4 mt-2 text-sky-950">Metadata</h3>
-            <div className="px-8 border border-blue-500" {...props}>
+            <div className="px-8 " {...props}>
                 <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap break-words text-ellipsis">{JSON.stringify(sanitizedItem, null, 2)}</pre>
             </div>
 
