@@ -1,18 +1,14 @@
 import axios from "axios";
-axios.defaults.withCredentials = true; // allow cookies to be sent with requests
+axios.defaults.withCredentials = true; // ensure cookies are sent with requests
+
 import { sampleTiledSearchData } from "./sampleData";
 import { TiledSearchResult } from "./types";
 import { getApiKeyFromLocalStorage } from "./utils";
 
-//save an apikey that exists only in this file
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
 
 var globalReverseSort:boolean = false;
-
-// Getting a CORS error?
-// when you start tiled, need to pass in CORS
-//ex) TILED_ALLOW_ORIGINS=http://localhost:5174 tiled serve demo
 
 const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
@@ -28,20 +24,16 @@ const getDefaultTiledUrl = () => {
         return `http://${address}:8000/api/v1`;
     }
 };
+const defaultTiledUrl = getDefaultTiledUrl();
 
-const getTiledApiKeyFromEnv = () => {
-    try{
-        if (import.meta.env.VITE_API_TILED_API_KEY) {
-            return import.meta.env.VITE_API_TILED_API_KEY;
-        } else {
-            return null;
-        }
-    } catch(e) {
-        console.error('error parsing VITE_API_TILED_API_KEY: ', e)
-        return null;
-    }
-}
-
+/**
+ * Sets the Bearer token for authentication in axios requests
+ * @param token - The Bearer token string
+ * @example
+ * ```typescript
+ * setBearerToken('your-bearer-token-here');
+ * ```
+ */
 const setBearerToken = (token:string) => {
     if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -51,9 +43,22 @@ const setBearerToken = (token:string) => {
 };
 // const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
 
-const defaultTiledUrl = getDefaultTiledUrl();
-const tiledApiKey = getTiledApiKeyFromEnv();
+
 //add return type of tiledresponse or null
+
+/**
+ * Searches for data in a Tiled server instance
+ * @param searchPath - Optional path to search within (e.g., 'folder/subfolder')
+ * @param url - Optional custom Tiled server URL (defaults to environment variable or localhost:8000)
+ * @param cb - Optional callback function that receives the search results
+ * @param mock - If true, returns sample mock data instead of making API call
+ * @param parameters - Optional additional query parameters to include in the request
+ * @returns Promise that resolves to TiledSearchResult or null if error occurs
+ * @example
+ * ```typescript
+ * const results = await getSearchResults('my-data-folder');
+ * ```
+ */
 const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb && cb(sampleTiledSearchData);
@@ -90,6 +95,19 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
     }
 };
 
+/**
+ * Performs the first search with an API key, which sets up authentication for subsequent requests
+ * @param apiKey - The API key for authentication with the Tiled server
+ * @param searchPath - Optional path to search within
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the search results
+ * @param mock - If true, returns sample mock data instead of making API call
+ * @returns Promise that resolves to TiledSearchResult or null if error occurs
+ * @example
+ * ```typescript
+ * const results = await getFirstSearchWithApiKey('your-api-key', 'data-folder');
+ * ```
+ */
 const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
     //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests. This doesn't work for CORS cookies though
     
@@ -131,6 +149,19 @@ const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:
     }
 };
 
+/**
+ * Retrieves table data from a Tiled server for a specific partition
+ * @param searchPath - The path to the table data
+ * @param partition - The partition number to retrieve (0-based index)
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to an array of parsed table rows or null if error occurs
+ * @example
+ * ```typescript
+ * const tableData = await getTableData('my-table', 0);
+ * // Returns: [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
+ * ```
+ */
 const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
@@ -151,6 +182,19 @@ const getTableData = async(searchPath:string, partition:number, url?:string, cb?
     }
 };
 
+/**
+ * Generates a URL path for retrieving a full PNG image from a Tiled array
+ * @param searchPath - The path to the array data
+ * @param stepY - Step size for Y-axis sampling (default: 1)
+ * @param stepX - Step size for X-axis sampling (default: 1)
+ * @param stack - Optional array of stack indices for multi-dimensional arrays
+ * @param url - Optional custom Tiled server URL
+ * @returns Complete URL string for the PNG image
+ * @example
+ * ```typescript
+ * const imageUrl = generateFullImagePngPath('my-image', 1, 1, [0, 5]);
+ * ```
+ */
 const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
     //console.log({stack})
     const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
@@ -158,182 +202,18 @@ const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:numb
     return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX + (globalApiKey ? '&api_key=' + globalApiKey : ''));
 };
 
+/**
+ * Configures whether search results should be returned in reverse order
+ * @param reverse - If true, results will be sorted in descending order
+ * @example
+ * ```typescript
+ * setReverseSort(true); // Enable reverse sorting
+ * ```
+ */
 const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
 };
 
-const sampleImgUrl = 'http://127.0.0.1:8000/api/v1/array/full/small_image?format=image/png&slice=';
-const sample3dCubeUrlat50thStack = 'http://127.0.0.1:8000/api/v1/array/full/tiny_cube?format=image/png&slice=49,::1,::1'
-
-const sampleSearchData = [
-    {
-        "id": "big_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        4096,
-                        4096,
-                        1808
-                    ],
-                    [
-                        4096,
-                        4096,
-                        1808
-                    ]
-                ],
-                "shape": [
-                    10000,
-                    10000
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/big_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/big_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/big_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "small_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        300
-                    ],
-                    [
-                        300
-                    ]
-                ],
-                "shape": [
-                    300,
-                    300
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/small_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/small_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/small_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "medium_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        1000
-                    ],
-                    [
-                        1000
-                    ]
-                ],
-                "shape": [
-                    1000,
-                    1000
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/medium_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/medium_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/medium_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "sparse_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "sparse",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "shape": [
-                    100,
-                    100
-                ],
-                "chunks": [
-                    [
-                        100
-                    ],
-                    [
-                        100
-                    ]
-                ],
-                "dims": null,
-                "resizable": false,
-                "layout": "COO"
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/sparse_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/sparse_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/sparse_image?block={0},{1}"
-        },
-        "meta": null
-    },
-];
-
-const paths:string[] = [
-    'structured_data',
-    'big_image'
-];
-
-
-const sampleColumnData = [
-    sampleTiledSearchData.data,
-    sampleTiledSearchData.data,
-    sampleTiledSearchData.data
-];
 
 
 export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath, setReverseSort}
