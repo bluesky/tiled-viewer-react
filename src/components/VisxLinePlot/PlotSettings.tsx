@@ -70,6 +70,7 @@ type ProvidedProps = {
   theme: XYChartTheme;
   xAxisOrientation: 'top' | 'bottom';
   yAxisOrientation: 'left' | 'right';
+  xAxisLabel: string;
   dataKeys: string[];
 } & ReturnType<typeof getAnimatedOrUnanimatedComponents>;
 
@@ -385,6 +386,7 @@ const canSnapTooltipToDatum = settings.renderBarStackOrGroup !== 'barstack' && s
       theme: settings.theme,
       xAxisOrientation: settings.xAxisOrientation,
       yAxisOrientation: settings.yAxisOrientation,
+      xAxisLabel: settings.xAxisKey === '__index' ? 'Index' : settings.xAxisKey, // Add this line
       dataKeys,
       ...getAnimatedOrUnanimatedComponents(settings.useAnimatedComponents),
       })}

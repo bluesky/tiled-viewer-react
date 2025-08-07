@@ -100,6 +100,7 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
           AnnotationLineSubject,
           Tooltip,
           XYChart,
+          xAxisLabel,
         }) => (
           <XYChart
             theme={theme}
@@ -191,11 +192,11 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
               orientation={renderHorizontally ? yAxisOrientation : xAxisOrientation}
               numTicks={numTicks}
               animationTrajectory={animationTrajectory}
-              label="Index"
+              label={xAxisLabel}
             />
             <Axis
               key={`y-axis-${animationTrajectory}-${renderHorizontally}`}
-              label="Value"
+              label="Values"
               orientation={renderHorizontally ? xAxisOrientation : yAxisOrientation}
               numTicks={numTicks}
               animationTrajectory={animationTrajectory}
