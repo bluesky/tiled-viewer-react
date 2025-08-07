@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
 import { getTableData } from "./apiClient";
 import { generateSearchPath } from "./utils";
-import InputSlider from "../InputSlider";
-import ScatterPlot from "../ScatterPlot";
+import InputSliderRange from "../InputSliderRange";
 import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
+import SelectInteger from "../SelectInteger";
 
 type PreviewTableProps = {
     tableItem: TiledSearchItem<TableStructure>;
@@ -13,14 +13,12 @@ type PreviewTableProps = {
 
 export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const [tableData, setTableData] = useState<TiledTableRow[]>([]);
-    //console.log({tableData})
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [partition, setPartition] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [showScatterPlot, setShowScatterPlot] = useState<boolean>(true);
-    const [xColumn, setXColumn] = useState<string>('');
-    const [yColumn, setYColumn] = useState<string>('');
-    
+    const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
+
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -34,6 +32,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         setTableData(newTableData);
         setVisibleData(newTableData.slice(0, rowLoadSize));
         setIsLoading(false);
+        setDomain([0, newTableData.length - 1]);
     };
 
     const handlePartitionChange = useCallback((newValue: number) => {
@@ -49,6 +48,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         const searchPath = generateSearchPath(tableItem);
         setPartition(0);
         getTableData(searchPath, 0, url, updateTable);
+
     }, [tableItem]);
 
     const loadMoreRows = useCallback(() => {
@@ -75,19 +75,12 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         return () => observer.disconnect();
     }, [loadMoreRows]);
 
-    useEffect(() => {
-        if (columns.length >= 2) {
-            setXColumn(columns[0]);
-            setYColumn(columns[1]);
-        }
-    }, [columns]);
-
     return (
         <div className="w-full px-12">
             <p className="text-sky-900 text-center mb-4">{tableItem.id}</p>
 
             
-            <div ref={tableContainerRef} className="h-96 overflow-auto max-w-[100%] w-fit m-auto">
+            <div ref={tableContainerRef} className="h-96 overflow-auto max-w-[100%] w-fit m-auto shadow-inner">
                 {isLoading ? (
                     <div className="flex items-center justify-center w-full h-20 overflow-hidden">
                         {/* Loading Wheel */}
@@ -97,9 +90,10 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                         </svg>
                     </div>
                 ) : (
-                    <table className="m-auto border border-gray-300 shadow-md h-full bg-white">
-                        <thead className="bg-gray-200">
-                            <tr>
+                    <table className="m-auto shadow-md h-full bg-white">
+                        <thead className="bg-gray-200 sticky -top-1">
+                            <tr className="relative">
+                                <th className="w-12 px-2 py-2 border-r border-gray-300 bg-white "></th>
                                 {columns.map((col) => (
                                     <th key={col} className="border border-gray-300 px-4 py-2 text-left">
                                         {col}
@@ -110,6 +104,9 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                         <tbody>
                             {visibleData.map((row, rowIndex) => (
                                 <tr key={rowIndex} className="hover:bg-gray-100">
+                                    <td className="w-12 px-2 py-2 text-xs text-gray-400 text-center border-r bg-white">
+                                        {rowIndex}
+                                    </td>
                                     {columns.map((col) => (
                                         <td key={col} className="border border-gray-300 px-4 py-2">
                                             {row[col].toFixed(4)}
@@ -120,20 +117,43 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                         </tbody>
                     </table>
                 )}
+
                 {/* when scroll approaches observerRef more values are loaded */}
-                <div ref={observerRef} className="h-4"></div>
+                <div ref={observerRef} className=""></div>
             </div>
+
+            {/* partition selector */}
             {partitionCount > 1 && 
-                <div className="pb-1 pt-4">
-                    <InputSlider label="Partition Index" max={partitionCount - 1} min={0} value={partition} onChange={handlePartitionChange} />
-                </div>
+                <SelectInteger
+                    value={partition}
+                    min={0}
+                    max={partitionCount - 1}
+                    onChange={handlePartitionChange}
+                    
+                    className="mt-4"
+                />
             }
             {/* scatter plot goes here from visx */}
             {showScatterPlot && columns.length >= 2 && (
-                <div className="mt-8 mb-4 shadow-md p-2 rounded border border-slate-100">
+                <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
+                    <h3 className="text-center mt-4">{tableItem.id}</h3>
+                    {partitionCount > 1 && (
+                        <p className="text-center text-sm text-gray-500">Partition: {partition}</p>
+                    )}
+
+                    <InputSliderRange
+                        min={0}
+                        max={tableData.length - 1}
+                        value={domain || [0, tableData.length - 1]}
+                        showSideInput={false}
+                        onChange={setDomain}
+                        className="px-12"
+                    />
+
                     {/* Scatter plot */}
                     <VisxLinePlot
                         plotData={tableData}
+                        domain={domain}
                     />
                 </div>
             )}

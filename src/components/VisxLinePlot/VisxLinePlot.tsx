@@ -3,20 +3,31 @@ import { useMemo } from 'react';
 import PlotSettings from './PlotSettings';
 import CustomChartBackground from './CustomChartBackground';
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
-import Portal from '@visx/tooltip/lib/Portal';
+//import Portal from '@visx/tooltip/lib/Portal';
 
 export type XYChartProps = {
   width?: number;
   height?: number;
   plotData: Record<string, number>[];
+  domain?: [number, number];
 };
 
-export default function VisxLinePlot({ width, height, plotData }: XYChartProps) {
+export default function VisxLinePlot({ width, height, plotData, domain }: XYChartProps) {
 
-    const dataWithIndex = useMemo(() => 
-        plotData.map((d, index) => ({ ...d, __index: index })), 
-        [plotData]
-    );
+    const dataWithIndex = useMemo(() => {
+        if (!domain) {
+            return plotData.map((d, index) => ({ ...d, __index: index }));
+        }
+        const [minIndex, maxIndex] = domain;
+        const startIndex = Math.max(0, Math.floor(minIndex));
+        const endIndex = Math.min(plotData.length - 1, Math.floor(maxIndex));
+        return plotData
+            .slice(startIndex, endIndex + 1) 
+            .map((d, arrayIndex) => ({ 
+                ...d, 
+                __index: startIndex + arrayIndex // Preserve original indices
+            }));
+    }, [plotData, domain]);
 
       // Get data keys dynamically
     const dataKeys = useMemo(() => {

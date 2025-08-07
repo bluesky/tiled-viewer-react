@@ -15,7 +15,7 @@ import PlotSettingsRow, { SettingConfig } from './PlotSettingsRow';
 
 import './Controls.css';
 
-const linearScaleConfig = { type: 'linear' } as const;
+const linearScaleConfig = { type: 'linear', zero: false } as const;
 const numTicks = 4;
 const selectedDatumPatternId = 'xychart-selected-datum';
 
@@ -23,6 +23,7 @@ type DataPoint = Record<string, number>;
 type Accessor = (d: DataPoint, index?: number) => number | string;
 
 type SimpleScaleConfig = { type: 'band' | 'linear'; paddingInner?: number };
+type CustomDomaineScaleConfig = { type: 'band' | 'linear'; domain: [number, number]; paddingInner?: number };
 
 type ProvidedProps = {
   accessors: {
@@ -36,7 +37,7 @@ type ProvidedProps = {
   annotationType?: 'line' | 'circle';
   colorAccessorFactory: (key: string) => (d: DataPoint) => string | null;
   config: {
-    x: SimpleScaleConfig;
+    x: SimpleScaleConfig | CustomDomaineScaleConfig;
     y: SimpleScaleConfig;
   };
   curve: typeof curveLinear | typeof curveCardinal | typeof curveStep;
@@ -77,9 +78,10 @@ type PlotSettingsProps = {
   data: DataPoint[];
   dataKeys: string[];
   setSelectedDataKeys: React.Dispatch<React.SetStateAction<string[]>>;
+  domain?: [number, number]
 };
 
-export default function PlotSettings({ children, data, dataKeys, setSelectedDataKeys }: PlotSettingsProps) {
+export default function PlotSettings({ children, data, dataKeys, setSelectedDataKeys, domain }: PlotSettingsProps) {
 
   const [settings, setSettings] = useState({
     xAxisKey: Object.keys(data[0]).includes('time') ? 'time' : '__index' as string,
@@ -283,9 +285,9 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
   }, [dataKeys, settings.xAxisKey]);
 
   const config = useMemo(() => ({
-    x: linearScaleConfig,
+    x: domain ? { type: 'linear', domain: domain, zero: false } as const : linearScaleConfig,
     y: linearScaleConfig,
-  }), []);
+  }), [domain]);
 
 const glyphOutline = settings.theme.gridStyles.stroke;
 
