@@ -114,7 +114,7 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
     enableTooltipGlyph: false,
     tooltipGlyphComponent: 'star' as 'star' | 'cross' | 'circle' | '🍍',
   });
-  const [ showSettings, setShowSettings ] = useState<boolean>(true);
+  const [ showSettings, setShowSettings ] = useState<boolean>(false);
 
   // Generic settings updater
   const updateSetting = useCallback((key: string, value: any) => {
