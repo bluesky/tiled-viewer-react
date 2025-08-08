@@ -432,29 +432,29 @@ const canSnapTooltipToDatum = settings.renderBarStackOrGroup !== 'barstack' && s
           </div>
         </PlotSettingsRow>
           <PlotSettingsRow title="Values" className="items-start">
-            <div className="flex">
-                <select 
-                  className="w-36 h-24 flex-shrink-0 border border-slate-200"
-                  multiple 
-                  value={dataKeys} 
-                  onChange={(e) => {
-                    const clickedValue = e.target.value;
-                    
-                    // Toggle the clicked item
-                    setSelectedDataKeys(prev => {
-                      if (prev.includes(clickedValue)) {
-                        // Remove if already selected
-                        return prev.filter(key => key !== clickedValue);
-                      } else {
-                        // Add if not selected
-                        return [...prev, clickedValue];
-                      }
-                    });
-                  }}
-                >
-                  {allowableDataKeys.map(key => (
-                    <option className="pl-2 text-ellipsis" key={key} value={key}>{key}</option>
-                  ))}
+            <div className="flex flex-wrap">
+              <select 
+                className="w-36 h-24 flex-shrink-0 border border-slate-200"
+                multiple 
+                value={dataKeys} 
+                onChange={(e) => {
+                  const clickedValue = e.target.value;
+                  
+                  // Toggle the clicked item
+                  setSelectedDataKeys(prev => {
+                    if (prev.includes(clickedValue)) {
+                      // Remove if already selected
+                      return prev.filter(key => key !== clickedValue);
+                    } else {
+                      // Add if not selected
+                      return [...prev, clickedValue];
+                    }
+                  });
+                }}
+              >
+                {allowableDataKeys.map(key => (
+                  <option className="pl-2 text-ellipsis" key={key} value={key}>{key}</option>
+                ))}
               </select>
               <div className="flex flex-wrap items-start">
                 {dataKeys.map((key) => (

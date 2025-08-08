@@ -31,8 +31,8 @@ export default function TiledPreview({
     const previewSizeMap = {
         'hidden': 'hidden',
         'small': 'min-w-72',
-        'medium': 'min-w-96',
-        'large': 'min-w-[30rem]'
+        'medium': 'min-w-[32rem]',
+        'large': 'min-w-[34rem]'
     }
 
     useEffect(() => {
