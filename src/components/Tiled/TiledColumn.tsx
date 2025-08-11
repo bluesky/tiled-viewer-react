@@ -64,7 +64,7 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                             onClick={()=>onItemClick(item)}
                             id={id}
                         >
-                            <div className={`w-6 aspect-square flex-shrink-0 ${item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite' ? 'text-sky-700' : ''}`}>{getTiledStructureIcon(item.attributes.structure_family)}</div>
+                            <div className={`w-6 aspect-square flex-shrink-0 ${item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite' ? 'text-sky-700' : ''}`}>{getTiledStructureIcon(item)}</div>
                             <p className="truncate max-w-full">{item.id}</p>
                             {(item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite') ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
                             {(handleSelectClick && showTooltip) &&

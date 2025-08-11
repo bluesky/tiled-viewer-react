@@ -78,7 +78,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     return (
         <div className="w-full px-12">
             <p className="text-sky-900 text-center mb-4">{tableItem.id}</p>
-
+            <p className="text-sm text-center">Rows: {tableData?.length && tableData.length} {partitionCount > 1 && '(in selected partition)'}</p>
             
             <Table
                 isLoading={isLoading}

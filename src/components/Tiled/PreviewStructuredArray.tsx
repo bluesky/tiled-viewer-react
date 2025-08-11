@@ -13,7 +13,6 @@ type PreviewStructuredArrayProps = {
 };
 
 export default function PreviewStructuredArray({ structuredArrayItem, url }: PreviewStructuredArrayProps) {
-    console.log({ structuredArrayItem });
     const [structuredArrayData, setStructuredArrayData] = useState<TiledTableRow[]>([]);
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [block, setBlock] = useState<number>(0);
@@ -32,7 +31,6 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
     const columns = structuredArrayItem.attributes.structure.data_type.fields.map(field => field.name);
 
     const updateStructuredArray = (newStructuredArrayData: TiledTableRow[]) => {
-        console.log({ newStructuredArrayData });
         setStructuredArrayData(newStructuredArrayData);
         setVisibleData(newStructuredArrayData.slice(0, rowLoadSize));
         setIsLoading(false);
@@ -46,7 +44,6 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
     }, [structuredArrayItem, searchPath, url]);
 
     useEffect(() => {
-        console.log('Fetching structured array data for block:', block);
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
@@ -103,8 +100,8 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
                 />
             }
 
-            {/* scatter plot */}
-            {columns.length >= 8 && (
+            {/* scatter plot, to be implemented later if it makes sense for structured data */}
+            {false && (
                 <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
                     <h3 className="text-center mt-4">{structuredArrayItem.id}</h3>
                     {blockCount > 1 && (

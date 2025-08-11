@@ -5,7 +5,22 @@ import PreviewTable from './PreviewTable';
 import PreviewAwkward from './PreviewAwkward';
 import PreviewSparse from './PreviewSparse';
 import PreviewStructuredArray from './PreviewStructuredArray';
-import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, AwkwardStructure, SparseStructure, StructuredArrayStructure, isArrayStructure, isTableStructure, isAwkwardStructure, isSparseStructure, isStructuredArrayStructure } from './types';
+import PreviewXArray from './PreviewXArray';
+import { 
+    PreviewSize, 
+    TiledSearchItem, 
+    ArrayStructure, 
+    TableStructure, 
+    AwkwardStructure, 
+    SparseStructure, 
+    StructuredArrayStructure, 
+    isArrayStructure, 
+    isTableStructure, 
+    isAwkwardStructure, 
+    isSparseStructure, 
+    isStructuredArrayStructure, 
+    isXArrayStructure
+} from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
 import { tailwindIcons } from '@/assets/icons';
 
@@ -43,6 +58,9 @@ export default function TiledPreview({
     }, [isFullWidth]);
 
     const renderPreviewComponent = () => {
+        if (isXArrayStructure(previewItem)) {
+            return <PreviewXArray xarrayItem={previewItem} url={url} />;
+        }
         if (isStructuredArrayStructure(previewItem)) {
             return <PreviewStructuredArray structuredArrayItem={previewItem} url={url} />;
         }

@@ -1,5 +1,5 @@
 import { tiledStructureIcons } from "./icons";
-import { TiledSearchItem, TiledStructures, ArrayStructure  } from "./types";
+import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure  } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
 //const defaultTiledUrl = getDefaultTiledUrl();
@@ -35,13 +35,23 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
  * // Returns: tiledStructureIcons.brackestSqaure
  * ```
  */
-export const getTiledStructureIcon = (structureFamily:string) => {
+export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) => {
+    var structureFamily = item.attributes.structure_family;
     var icon = tiledStructureIcons.question;
     if (structureFamily === 'array' || structureFamily === 'awkward' || structureFamily === 'sparse') {
-        icon = tiledStructureIcons.brackestSqaure;
+        //structured arrays technically are shown as arrays from tiled, but we visually display as a table
+        if (isStructuredArrayStructure(item)) {
+            icon = tiledStructureIcons.table;
+        } else {
+            if (isXArrayStructure(item)) {
+                icon = tiledStructureIcons.xarray;
+            } else {
+                icon = tiledStructureIcons.brackestSqaure;
+            }
+        }
     }
     if (structureFamily === 'table') {
-        icon = tiledStructureIcons.table;
+        icon = tiledStructureIcons.gridline;
     }
     if (structureFamily === 'container' || structureFamily === 'composite') {
         icon = tiledStructureIcons.folder;

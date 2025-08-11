@@ -235,10 +235,18 @@ export const getStructuredArrayData = async(searchPath: string, block: number, u
  * ```
  */
 export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
-    //console.log({stack})
+    const params = new URLSearchParams();
     const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
+    const fullSlice = stackString + `::${stepY},::${stepX}`;
+    if (globalApiKey) {
+        params.append('api_key', globalApiKey);
+    }
+    params.append('format', 'image/png');
+    params.append('slice', fullSlice);
     const baseUrl = url ? url : defaultTiledUrl;
-    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + '::' + stepY + ',::' + stepX + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+    const queryString = params.toString();
+    const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+    return fullUrl;
 };
 
 /**
@@ -251,4 +259,47 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
  */
 export const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
+};
+
+
+const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/structured_data/xarray_dataset/time?format=application/json&slice=0:3"
+
+/**
+ * Retrieves XArray data from a Tiled server for a specific stack
+ * @param searchPath - The path to the XArray data
+ * @param stack - Optional array of stack indices for multi-dimensional arrays
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to parsed XArray data or null if error occurs
+ * @example
+ * ```typescript
+ * const xarrayData = await getXArrayData('xarray_dataset/time', [0, 5]);
+ * ```
+ */
+export const getXArrayData = async(searchPath: string, stack:number[], url?: string, cb?: (parsedData: any) => void) => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
+        const params = new URLSearchParams();
+        params.append('slice', stackString);
+        params.append('format', 'application/json');
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+        
+        const response = await axios.get(fullUrl);
+        
+        // The response data should be the structured array data
+        const parsedData = response.data;
+        
+        cb && cb(parsedData);
+        return parsedData;
+    } catch (error) {
+        console.error('Error fetching structured array data: ', error);
+        return null;
+    }
 };

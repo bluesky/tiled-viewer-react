@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface TableProps {
     isLoading: boolean;
@@ -10,16 +10,16 @@ interface TableProps {
 }
 
 export default function Table({ isLoading, columns, visibleData, observerRef, precision, isStructuredArray=false }: TableProps) {
+    const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
 
-    //structured arrays are simple rows with string or number values, true table data are arrays containing objects for each element
-    const dataHasKeys = !isStructuredArray
-    const precisionValue = precision !== undefined ? precision : 4; // Default to 4 decimal places if not provided
+    const dataHasKeys = !isStructuredArray //structured arrays have data formatted as true arrays, tables on the other hand have objects for each element
+    const precisionValue = precision !== undefined ? precision : 4;
     const tableContainerRef = useRef<HTMLDivElement>(null);
 
     return (
-        <div ref={tableContainerRef} className="h-96 overflow-auto max-w-[100%] w-fit m-auto shadow-inner">
+        <div ref={tableContainerRef} className={`${isExpanded ? 'max-h-[48rem]' : 'max-h-96'} overflow-auto max-w-[100%] w-fit m-auto shadow-inner`}>
             {isLoading ? (
-                <div className="flex items-center justify-center w-full h-20 overflow-hidden">
+                <div className="flex items-center justify-center w-full h-96 overflow-hidden">
                     {/* Loading Wheel */}
                     <svg className="animate-spin h-10 w-10 overflow-hidden text-slate-400 m-auto my-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -40,7 +40,7 @@ export default function Table({ isLoading, columns, visibleData, observerRef, pr
                     </thead>
                     <tbody>
                         {visibleData.map((row, rowIndex) => (
-                            <tr key={rowIndex} className="hover:bg-gray-100">
+                            <tr key={rowIndex} className="hover:bg-gray-100 max-h-5">
                                 <td className="w-12 px-2 py-2 text-xs text-gray-400 text-center border-r bg-gray-50 sticky left-0 z-10">
                                     {rowIndex}
                                 </td>
@@ -70,7 +70,7 @@ export default function Table({ isLoading, columns, visibleData, observerRef, pr
                 </table>
             )}
 
-            {/* when scroll approaches observerRef more values are loaded */}
+            {/* infinite scroll effect - when scroll approaches observerRef more values are loaded */}
             <div ref={observerRef} className=""></div>
         </div>
     )

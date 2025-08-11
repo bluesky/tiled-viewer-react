@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import InputSlider from "../InputSlider";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
-import { generateSearchPath, numpyTypeSizesBytes, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
+import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
 import { generateFullImagePngPath } from "./apiClient";
 import {  } from "./apiClient";
 import { tailwindIcons } from "@/assets/icons";
@@ -29,7 +29,6 @@ export default function PreviewNDArray({
 
     const handleSliderChange = (newValue:number, slider:Slider) => {
         //make an API call to overwrite the current image
-
         var stack = sliders.map((slider) => slider.value);
         stack[slider.index] = newValue;
         updateImage(stack);

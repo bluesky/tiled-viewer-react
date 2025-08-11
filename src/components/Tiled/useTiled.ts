@@ -105,7 +105,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             }
             var newBreadcrumb:Breadcrumb = {
                 label: clickedItem.id,
-                icon: getTiledStructureIcon(clickedItem.attributes.structure_family),
+                icon: getTiledStructureIcon(clickedItem),
                 onClick: ()=>handleColumnItemClick(clickedItem)
             }
             stateCopy.push(newBreadcrumb);

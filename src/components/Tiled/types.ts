@@ -156,6 +156,19 @@ export interface SparseStructure {
     resizable: boolean;
 }
 
+export interface XArrayStructure {
+    data_type: {
+        endianness: string;
+        kind: string;
+        itemsize: number;
+        dt_units: string | null;
+    };
+    chunks: number[][];
+    shape: number[];
+    dims: string[]; // XArray always has dims (unlike regular arrays where dims can be null)
+    resizable: boolean;
+}
+
 export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
 
 export interface TiledTableRow {
@@ -191,4 +204,14 @@ export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSear
 export const isStructuredArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<StructuredArrayStructure> => {
     return item.attributes.structure_family === 'array' && 
            'fields' in item.attributes.structure.data_type;
+};
+
+export const isXArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<XArrayStructure> => {
+    return item.attributes.structure_family === 'array' && 
+           item.attributes.specs.some(spec => 
+               spec.name === 'xarray_coord' || 
+               spec.name === 'xarray_data_var' || 
+               spec.name.startsWith('xarray_')
+           ) &&
+           item.attributes.structure.dims !== null;
 };
