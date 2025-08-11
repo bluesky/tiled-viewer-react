@@ -10,7 +10,7 @@ var globalApiKey:string | null = null;
 
 var globalReverseSort:boolean = false;
 
-const getDefaultTiledUrl = () => {
+export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
     try{
         if (import.meta.env.VITE_API_TILED_URL) {
@@ -34,7 +34,7 @@ const defaultTiledUrl = getDefaultTiledUrl();
  * setBearerToken('your-bearer-token-here');
  * ```
  */
-const setBearerToken = (token:string) => {
+export const setBearerToken = (token:string) => {
     if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
@@ -59,7 +59,7 @@ const setBearerToken = (token:string) => {
  * const results = await getSearchResults('my-data-folder');
  * ```
  */
-const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any):Promise<TiledSearchResult | null> => {
+export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
@@ -108,7 +108,7 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
  * const results = await getFirstSearchWithApiKey('your-api-key', 'data-folder');
  * ```
  */
-const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
+export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
     //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests. This doesn't work for CORS cookies though
     
     //overwrite any local storage apiKey, which could be stale if the dev calls Tiled with a new apiKey prop and a previous different apiKey was stored in localstorage
@@ -162,7 +162,7 @@ const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:
  * // Returns: [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
  * ```
  */
-const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
+export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
@@ -183,6 +183,45 @@ const getTableData = async(searchPath:string, partition:number, url?:string, cb?
 };
 
 /**
+ * Retrieves structured array data from a Tiled server for a specific block
+ * @param searchPath - The path to the structured array data
+ * @param block - The block number to retrieve (0-based index)
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to an array of structured data rows or null if error occurs
+ * @example
+ * ```typescript
+ * const structuredData = await getStructuredArrayData('structured_data/pets', 0);
+ * // Returns: [{ name: "Fluffy", age: 3, weight: 4.2 }, ...]
+ * ```
+ */
+export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const params = new URLSearchParams();
+        params.append('block', block.toString());
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = `${baseUrl}/array/block/${searchPath}?${queryString}`;
+        
+        const response = await axios.get(fullUrl);
+        
+        // The response data should be the structured array data
+        const parsedData = response.data;
+        
+        cb && cb(parsedData);
+        return parsedData;
+    } catch (error) {
+        console.error('Error fetching structured array data: ', error);
+        return null;
+    }
+};
+
+/**
  * Generates a URL path for retrieving a full PNG image from a Tiled array
  * @param searchPath - The path to the array data
  * @param stepY - Step size for Y-axis sampling (default: 1)
@@ -195,7 +234,7 @@ const getTableData = async(searchPath:string, partition:number, url?:string, cb?
  * const imageUrl = generateFullImagePngPath('my-image', 1, 1, [0, 5]);
  * ```
  */
-const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
+export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
     //console.log({stack})
     const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
     const baseUrl = url ? url : defaultTiledUrl;
@@ -210,10 +249,6 @@ const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:numb
  * setReverseSort(true); // Enable reverse sorting
  * ```
  */
-const setReverseSort = (reverse:boolean | undefined) => {
+export const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
 };
-
-
-
-export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath, setReverseSort}

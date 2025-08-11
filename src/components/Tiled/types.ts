@@ -68,7 +68,7 @@ export interface TiledSearchItem<StructureType> {
 }
 
 
-export type TiledStructures = ArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure
+export type TiledStructures = ArrayStructure | StructuredArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure
 
 // Specs type
 export interface Spec {
@@ -94,6 +94,28 @@ export interface ArrayStructure {
     shape: number[];
     dims: string[] | null;
     resizable: boolean;
+}
+
+export interface StructuredArrayStructure {
+    data_type: {
+        itemsize: number;
+        fields: StructuredArrayField[];
+    };
+    chunks: number[][];
+    shape: number[];
+    dims: string[] | null;
+    resizable: boolean;
+}
+
+export interface StructuredArrayField {
+    name: string;
+    dtype: {
+        endianness: string;
+        kind: string;
+        itemsize: number;
+        dt_units: string | null;
+    };
+    shape: number[] | null;
 }
 
 
@@ -136,12 +158,15 @@ export interface SparseStructure {
 
 export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
 
-
 export interface TiledTableRow {
     [column: string]: number
 }
 
+export interface TiledStructuredArrayRow extends Array<string | number> {}
+
 export type TiledTableData = TiledTableRow[];
+
+export type TiledStructuredArrayData = TiledStructuredArrayRow[];
 
 export const isArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ArrayStructure> => {
     return item.attributes.structure_family === 'array';
@@ -161,4 +186,9 @@ export const isAwkwardStructure = (item: TiledSearchItem<any>): item is TiledSea
 
 export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<SparseStructure> => {
     return item.attributes.structure_family === 'sparse';
+};
+
+export const isStructuredArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<StructuredArrayStructure> => {
+    return item.attributes.structure_family === 'array' && 
+           'fields' in item.attributes.structure.data_type;
 };
