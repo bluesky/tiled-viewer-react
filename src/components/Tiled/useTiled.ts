@@ -167,7 +167,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //search container, put results into column, disable preview
         setPreviewItem(null)
         const searchPath = generateSearchPath(item);
-        getSearchResults(searchPath, url, (res:TiledSearchResult) => handleSearchResponse(item, res));
+        const firstSortKey = item.attributes.sorting ? item.attributes.sorting[0].key : undefined; //sort key may be 'time' for RE data or defaults to '_'
+        getSearchResults(searchPath, url, (res:TiledSearchResult) => handleSearchResponse(item, res), false, undefined, firstSortKey);
         closePreview();
     };
 

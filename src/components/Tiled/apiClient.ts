@@ -53,13 +53,14 @@ export const setBearerToken = (token:string) => {
  * @param cb - Optional callback function that receives the search results
  * @param mock - If true, returns sample mock data instead of making API call
  * @param parameters - Optional additional query parameters to include in the request
+ * @param sortingKey - Optional key to sort results by (prefix with '-' for descending)
  * @returns Promise that resolves to TiledSearchResult or null if error occurs
  * @example
  * ```typescript
  * const results = await getSearchResults('my-data-folder');
  * ```
  */
-export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any):Promise<TiledSearchResult | null> => {
+export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any, sortingKey?:string):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
@@ -73,7 +74,7 @@ export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res
         }
         
         if (globalReverseSort) {
-            params.append('sort', '-');
+            params.append('sort', sortingKey ? `-${sortingKey}` : '-');
         }
 
         if (parameters) {
