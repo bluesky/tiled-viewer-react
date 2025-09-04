@@ -1,12 +1,12 @@
 import { useState } from "react";
 import TiledContainer from "./TiledContainer";
 import StartupScreen from "./StartupScreen";
-import ButtonCopyToClipboard from "../ButtonCopyToClipboard";
+import OpenTiledRow from "./OpenTiledRow";
 import './Tiled.css'
 
 import { cn } from "@/lib/utils";
 import { TiledItemLinks, TiledSearchItem, TiledStructures } from "./types";
-import { generateLinksForCallback } from "./utils";
+import { generateLinksForCallback, getApiKeyFromLocalStorage } from "./utils";
 
 
 export type TiledProps = {
@@ -24,6 +24,7 @@ export type TiledProps = {
     isFullWidth?: boolean,
     isButtonMode?: boolean,
     buttonModeText?: string,
+    reverseSort?: boolean,
 }
 export default function Tiled({
     onSelectCallback,
@@ -40,6 +41,7 @@ export default function Tiled({
     isFullWidth=false,
     isButtonMode=false,
     buttonModeText="Select Data",
+    reverseSort=true,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -48,6 +50,8 @@ export default function Tiled({
     const [ url, setUrl ] = useState<undefined | string>(tiledBaseUrl);
     const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
     const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
+    const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
+    const [ userInputReverseSort, setUserInputReverseSort ] = useState<boolean>(reverseSort || false);
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
         const links = generateLinksForCallback(item, url);
@@ -55,7 +59,11 @@ export default function Tiled({
         onSelectCallback && onSelectCallback(links);
         closeOnSelect && setIsClosed(true);
         isButtonMode && setIsViewerOpen(false);
-    }
+    };
+
+    const handleClickOutside = (event: React.MouseEvent<HTMLDivElement>) => {
+        setIsViewerOpen(false);
+    };
 
     const sizeClassMap = {
         small: 'w-[600px] h-[500px]',
@@ -71,63 +79,85 @@ export default function Tiled({
 
     const handleExpandClick = () => {
         setIsExpanded(!isExpanded);
-    }
+    };
 
     const handleStartupScreenSubmit = () => {
         setShowStartupScreen(false);
-    }
+    };
+
+    const handleApiKeyChange = (newApiKey: string) => {
+        setUserInputApiKey(newApiKey);
+        localStorage.setItem('tiledApiKey', newApiKey);
+    };
 
 
     if (!isClosed) {
-        if (isButtonMode && !isViewerOpen) {
             return (
-                <span className="flex gap-2">
-                    <button className="bg-blue-600 hover:bg-blue-500 text-white rounded-md px-2 py-1 h-fit" onClick={()=>setIsViewerOpen(true)}>{buttonModeText}</button>
-                    <p className=" text-black text-nowrap overflow-x-auto w-72 bg-white hover:cursor-text px-1 py-1">{selectedData && selectedData.self}</p>
-                    <ButtonCopyToClipboard size="small" copyText={selectedData ? selectedData.self : ''} />
-                </span>            
-            )
-        } else {
-            return (
-                <div
-                    className={cn(
-                        (isPopup || isButtonMode)
-                        ? "fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
-                        : `flex w-full h-full min-w-[600px] min-h-[500px] justify-center items-center ${
-                            size && sizeClassMap[size]
-                            } ${(size && isExpanded) && expandedSizeClassMap[size]}`,
-                        backgroundClassName
+                <>
+                    { isButtonMode && (
+                        <OpenTiledRow
+                            userInputApiKey={userInputApiKey}
+                            setIsViewerOpen={setIsViewerOpen}
+                            buttonModeText={buttonModeText}
+                            selectedData={selectedData}
+                            userInputReverseSort={userInputReverseSort}
+                            handleReverseSortChange={setUserInputReverseSort}
+                            handleInputChange={handleApiKeyChange}
+                        />
                     )}
-                    {...props}
-                >
-                    <div
-                        className={cn(
-                        `flex flex-col border border-slate-400 shadow-lg rounded-md bg-white ${
-                            size ? `w-full h-full` : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`
-                        } ${isFullWidth && 'w-full'} ${isExpanded && 'h-full w-full'}`,
-                        contentClassName
-                        )}
-                    >
-                        {enableStartupScreen && showStartupScreen ? (
-                        <StartupScreen
-                            url={url}
-                            handleUrlChange={setUrl}
-                            handleSubmit={handleStartupScreenSubmit}
-                        />
-                        ) : (
-                        <TiledContainer
-                            url={url}
-                            handleSelectClick={handleSelectClick}
-                            singleColumnMode={singleColumnMode}
-                            handleExpandClick={handleExpandClick}
-                            isExpanded={isExpanded}
-                            apiKey={apiKey}
-                            bearerToken={bearerToken}
-                        />
-                        )}
-                    </div>
-                </div>
+
+                    { isViewerOpen && (
+                        <div
+                            className={cn(
+                                (isPopup || isButtonMode)
+                                ? "fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+                                : `flex w-full h-full min-w-[600px] min-h-[500px] justify-center items-center ${
+                                    size && sizeClassMap[size]
+                                    } ${(size && isExpanded) && expandedSizeClassMap[size]}`,
+                                backgroundClassName
+                            )}
+                            onClick={handleClickOutside}
+                            {...props}
+                        >
+                            <div
+                                className={cn(
+                                    `
+                                        flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
+                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)]' : (size ? sizeClassMap[size] : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`)} 
+                                        ${isFullWidth && 'w-full'} ${isExpanded && (size ? expandedSizeClassMap[size] : 'h-full w-full')}
+                                    `,
+                                    contentClassName
+                                )}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {enableStartupScreen && showStartupScreen ? (
+                                <StartupScreen
+                                    url={url}
+                                    handleUrlChange={setUrl}
+                                    handleSubmit={handleStartupScreenSubmit}
+                                />
+                                ) : (
+                                    <>
+                                        <TiledContainer
+                                            url={url}
+                                            handleSelectClick={handleSelectClick}
+                                            singleColumnMode={singleColumnMode}
+                                            handleExpandClick={handleExpandClick}
+                                            isExpanded={isExpanded}
+                                            apiKey={userInputApiKey}
+                                            bearerToken={bearerToken}
+                                            reverseSort={userInputReverseSort}
+                                        />
+                                        {(isPopup || isButtonMode) && (
+                                            <p className="absolute top-8 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </>
             ) 
-        }
+        // }
     }
 }

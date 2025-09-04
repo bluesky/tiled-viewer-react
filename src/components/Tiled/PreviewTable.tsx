@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
+import { TiledSearchItem, TableStructure, TiledTableRow, StructuredArrayStructure } from "./types";
 import { getTableData } from "./apiClient";
 import { generateSearchPath } from "./utils";
-import InputSlider from "../InputSlider";
+import InputSliderRange from "../InputSliderRange";
+import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
+import SelectInteger from "../SelectInteger";
+import Table from "./Table";
 
 type PreviewTableProps = {
     tableItem: TiledSearchItem<TableStructure>;
@@ -14,7 +17,8 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [partition, setPartition] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    
+    const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
+
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -28,6 +32,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         setTableData(newTableData);
         setVisibleData(newTableData.slice(0, rowLoadSize));
         setIsLoading(false);
+        setDomain([0, newTableData.length - 1]);
     };
 
     const handlePartitionChange = useCallback((newValue: number) => {
@@ -43,6 +48,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         const searchPath = generateSearchPath(tableItem);
         setPartition(0);
         getTableData(searchPath, 0, url, updateTable);
+
     }, [tableItem]);
 
     const loadMoreRows = useCallback(() => {
@@ -72,49 +78,50 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     return (
         <div className="w-full px-12">
             <p className="text-sky-900 text-center mb-4">{tableItem.id}</p>
-
+            <p className="text-sm text-center">Rows: {tableData?.length && tableData.length} {partitionCount > 1 && '(in selected partition)'}</p>
             
-            <div ref={tableContainerRef} className="h-96 overflow-auto max-w-[100%] w-fit m-auto">
-                {isLoading ? (
-                    <div className="flex items-center justify-center w-full h-20 overflow-hidden">
-                        {/* Loading Wheel */}
-                        <svg className="animate-spin h-10 w-10 overflow-hidden text-slate-400 m-auto my-12" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </div>
-                ) : (
-                    <table className="m-auto border border-gray-300 shadow-md h-full bg-white">
-                        <thead className="bg-gray-200">
-                            <tr>
-                                {columns.map((col) => (
-                                    <th key={col} className="border border-gray-300 px-4 py-2 text-left">
-                                        {col}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visibleData.map((row, rowIndex) => (
-                                <tr key={rowIndex} className="hover:bg-gray-100">
-                                    {columns.map((col) => (
-                                        <td key={col} className="border border-gray-300 px-4 py-2">
-                                            {row[col].toFixed(4)}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-                {/* when scroll approaches observerRef more values are loaded */}
-                <div ref={observerRef} className="h-4"></div>
-            </div>
+            <Table
+                isLoading={isLoading}
+                columns={columns}
+                visibleData={visibleData}
+                observerRef={observerRef}
+            />
+
+            {/* partition selector */}
             {partitionCount > 1 && 
-                <div className="pb-1 pt-4">
-                    <InputSlider label="Partition Index" max={partitionCount - 1} min={0} value={partition} onChange={handlePartitionChange} />
-                </div>
+                <SelectInteger
+                    value={partition}
+                    min={0}
+                    max={partitionCount - 1}
+                    onChange={handlePartitionChange}
+                    
+                    className="mt-4"
+                />
             }
+            {/* scatter plot goes here from visx */}
+            {columns.length >= 2 && (
+                <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
+                    <h3 className="text-center mt-4">{tableItem.id}</h3>
+                    {partitionCount > 1 && (
+                        <p className="text-center text-sm text-gray-500">Partition: {partition}</p>
+                    )}
+
+                    <InputSliderRange
+                        min={0}
+                        max={tableData.length - 1}
+                        value={domain || [0, tableData.length - 1]}
+                        showSideInput={false}
+                        onChange={setDomain}
+                        className="px-12"
+                    />
+
+                    {/* Scatter plot */}
+                    <VisxLinePlot
+                        plotData={tableData}
+                        domain={domain}
+                    />
+                </div>
+            )}
 
         </div>
     );

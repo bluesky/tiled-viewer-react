@@ -2,19 +2,36 @@ import { useState, useEffect } from 'react';
 import Button from '../Button';
 import PreviewNDArray from './PreviewNDArray';
 import PreviewTable from './PreviewTable';
-import { PreviewSize, TiledSearchItem, ArrayStructure, TableStructure, isArrayStructure, isTableStructure } from './types';
+import PreviewAwkward from './PreviewAwkward';
+import PreviewSparse from './PreviewSparse';
+import PreviewStructuredArray from './PreviewStructuredArray';
+import PreviewXArray from './PreviewXArray';
+import { 
+    PreviewSize, 
+    TiledSearchItem, 
+    ArrayStructure, 
+    TableStructure, 
+    AwkwardStructure, 
+    SparseStructure, 
+    StructuredArrayStructure, 
+    isArrayStructure, 
+    isTableStructure, 
+    isAwkwardStructure, 
+    isSparseStructure, 
+    isStructuredArrayStructure, 
+    isXArrayStructure
+} from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
 import { tailwindIcons } from '@/assets/icons';
 
-
 type TiledPreviewProps = {
-    previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure>
+    previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | TiledSearchItem<StructuredArrayStructure>;
     previewSize: PreviewSize;
-    handleSelectClick?:Function;
+    handleSelectClick?: Function;
     url?: string;
     scrollContainerRef: React.RefObject<HTMLDivElement>;
-
 }
+
 export default function TiledPreview({
     previewItem,
     handleSelectClick,
@@ -29,17 +46,38 @@ export default function TiledPreview({
     const previewSizeMap = {
         'hidden': 'hidden',
         'small': 'min-w-72',
-        'medium': 'min-w-96',
-        'large': 'min-w-[30rem]'
+        'medium': 'min-w-[32rem]',
+        'large': 'min-w-[34rem]'
     }
 
     useEffect(() => {
-        //when columns load scroll to the right
+        //when the preview element loads, scroll the viewer to the right so its always visible
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         } 
     }, [isFullWidth]);
 
+    const renderPreviewComponent = () => {
+        if (isXArrayStructure(previewItem)) {
+            return <PreviewXArray xarrayItem={previewItem} url={url} />;
+        }
+        if (isStructuredArrayStructure(previewItem)) {
+            return <PreviewStructuredArray structuredArrayItem={previewItem} url={url} />;
+        }
+        if (isTableStructure(previewItem)) {
+            return <PreviewTable tableItem={previewItem} url={url} />;
+        }
+        if (isArrayStructure(previewItem)) {
+            return <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth} />;
+        }
+        if (isAwkwardStructure(previewItem)) {
+            return <PreviewAwkward awkwardItem={previewItem} url={url} />;
+        }
+        if (isSparseStructure(previewItem)) {
+            return <PreviewSparse sparseItem={previewItem} url={url} />;
+        }
+                return <div className="text-red-500">Unsupported item type</div>;
+    };
 
     return (
         <div className={`${previewSizeMap[previewSize]} flex-grow h-full flex flex-col overflow-y-auto relative max-w-full ${isFullWidth && 'min-w-full'}`} {...props}>
@@ -48,12 +86,10 @@ export default function TiledPreview({
                 <div className="h-6 aspect-square hover:cursor-pointer hover:text-slate-600">{tailwindIcons.arrowDownTray}</div>
             </div>
             <div className="w-full flex flex-col items-center space-y-8 py-4">
-                {isArrayStructure(previewItem) && <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth}/>}
-                {isTableStructure(previewItem) && <PreviewTable tableItem={previewItem} url={url} />}
-                { handleSelectClick && <Button text="Select" size="medium" cb={()=>handleSelectClick(previewItem)} />}
+                {renderPreviewComponent()}
+                {handleSelectClick && <Button text="Select" size="medium" cb={()=>handleSelectClick(previewItem)} />}
             </div>
             <TiledPreviewMetadata item={previewItem}/>
         </div>
     )
 }
-

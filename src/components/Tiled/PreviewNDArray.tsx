@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import InputSlider from "../InputSlider";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
-import { generateSearchPath, generateFullImagePngPath, numpyTypeSizesBytes, onPopoutClick, createSliders  } from './utils';
+import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
+import { generateFullImagePngPath } from "./apiClient";
 import {  } from "./apiClient";
 import { tailwindIcons } from "@/assets/icons";
 
@@ -21,7 +22,6 @@ export default function PreviewNDArray({
     const [ imageUrl, setImageUrl ] = useState('');
     const [ popoutUrl, setPopoutUrl ] = useState('');
 
-    const maxBytesAllowed = 1000000;
     const shape = arrayItem.attributes.structure.shape;
     const dims = shape.length;
     const sliderCount = dims - 2; //2D array is an image, no slider needed, 3D array needs a single slider, etc.
@@ -29,7 +29,6 @@ export default function PreviewNDArray({
 
     const handleSliderChange = (newValue:number, slider:Slider) => {
         //make an API call to overwrite the current image
-
         var stack = sliders.map((slider) => slider.value);
         stack[slider.index] = newValue;
         updateImage(stack);
@@ -43,18 +42,7 @@ export default function PreviewNDArray({
     const searchPath = generateSearchPath(arrayItem);
 
     const updateImage = (stack?:number[]) => {
-        var stepX = 1;
-        var stepY = 1;
-        const letter = arrayItem.attributes.structure.data_type.kind[0] as keyof typeof numpyTypeSizesBytes;
-        const bytesPerElement = numpyTypeSizesBytes[letter];
-        const totalImageSizeBytes = shape[shape.length-1] * shape[shape.length-2] * bytesPerElement; //last two index are always the frame data to be displayed
-        if (totalImageSizeBytes > maxBytesAllowed) {
-            const ratio = totalImageSizeBytes / maxBytesAllowed;
-            let squareStep = Math.ceil(Math.sqrt(ratio));
-            //TO DO - downsamplke for rectangular images instead of assumed square
-            stepX = squareStep;
-            stepY = squareStep;
-        }
+        const { stepX, stepY } = generateStepsForImagePath(arrayItem);
         const reducedImagePath = generateFullImagePngPath(searchPath, stepY, stepX, stack, url);
         setImageUrl(reducedImagePath); 
         const fullSizeImagePath = generateFullImagePngPath(searchPath, 1, 1, stack, url);

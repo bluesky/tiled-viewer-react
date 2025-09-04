@@ -1,7 +1,6 @@
 import { useRef } from 'react';
 
 import TiledHeader from "./TiledHeader";
-import TiledColumns from "./TiledColumns";
 import TiledPreview from "./TiledPreview";
 import TiledFooter from "./TiledFooter";
 import TiledBody from "./TiledBody";
@@ -21,6 +20,8 @@ type TiledContainerProps = {
     isExpanded: boolean,
     apiKey?: string,
     bearerToken?: string,
+    initialSearchPath?: string,
+    reverseSort?: boolean,
 }
 export default function TiledContainer({
     url,
@@ -30,9 +31,17 @@ export default function TiledContainer({
     isExpanded,
     apiKey,
     bearerToken,
+    initialSearchPath,
+    reverseSort,
     ...props
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort  });
+
+    if (!tiledData) {
+        return <div>Error: Unable to load tiled data. Check console for error logs.</div>;
+    }
 
     const { 
         columns, 
@@ -43,7 +52,11 @@ export default function TiledContainer({
         handleLeftArrowClick, 
         handleRightArrowClick,
         resetAllData,
-    } = useTiled(url, apiKey, bearerToken);
+        warning,
+        handleNewPageClick
+    } = tiledData;
+
+
 
     return (
         <>
@@ -67,12 +80,15 @@ export default function TiledContainer({
                     <TiledColumn 
                         handleSelectClick={handleSelectClick} 
                         data={column.data} 
+                        meta={column.meta}
+                        links={column.links}
                         key={index} 
                         index={index} 
                         onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick} 
                         breadcrumbs={breadcrumbs}
                         className={singleColumnMode ? "w-full max-w-full" : ""}
                         showTooltip={singleColumnMode ? false : true}
+                        handleNewPageClick={handleNewPageClick}
                     />
                 )}
                 {previewItem && 

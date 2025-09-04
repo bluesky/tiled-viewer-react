@@ -1,16 +1,20 @@
-import { TiledSearchItem, TiledStructures, Breadcrumb } from "./types";
+import { TiledSearchItem, TiledStructures, Breadcrumb, TiledSearchResult } from "./types";
 import { Tooltip } from "react-tooltip";
 import { cn } from "@/lib/utils";
 import Button from "../Button";
+import { getTiledStructureIcon } from "./utils";
 
 type TiledColumnProps = {
     data: TiledSearchItem<TiledStructures>[];
+    links: TiledSearchResult['links'];
+    meta: TiledSearchResult['meta'];
     onItemClick: Function;
     index: number;
     breadcrumbs: Breadcrumb[];
     handleSelectClick?: Function;
     className?: string;
     showTooltip?: boolean;
+    handleNewPageClick: (link: string, columnIndex: number) => void;
 };
 
 
@@ -20,35 +24,39 @@ const brackestSqaure = <svg xmlns="http://www.w3.org/2000/svg" stroke="currentCo
 const table = <svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" viewBox="0 0 256 256"><path fill="currentColor" d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM40,112H80v32H40Zm56,0H216v32H96ZM216,64V96H40V64ZM40,160H80v32H40Zm176,32H96V160H216v32Z"></path></svg>;
 const question = <svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" viewBox="0 0 256 256"><path fill="currentColor" d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"></path></svg>;
 
-const renderIcon = (structureFamily:string) => {
-    var icon = question;
-    var lineColor = '';
-    if (structureFamily === 'array' || structureFamily === 'awkward' || structureFamily === 'sparse') {
-        icon = brackestSqaure;
-    }
-    if (structureFamily === 'table') {
-        icon = table;
-    }
-    if (structureFamily === 'container') {
-        icon = folder;
-        lineColor = 'text-sky-700';
-    }
+const exampleLinks = {
+    first: "http://localhost:8000/api/v1/search/5e782151-6f4d-4ad3-ab7a-983a4a85d860/streams/primary?page[offset]=0&page[limit]=100", 
+    last: "http://localhost:8000/api/v1/search/5e782151-6f4d-4ad3-ab7a-983a4a85d860/streams/primary?page[offset]=0&page[limit]=100",
+    next: null,
+    prev: null,
+    self: "http://localhost:8000/api/v1/search/5e782151-6f4d-4ad3-ab7a-983a4a85d860/streams/primary?page[offset]=0&page[limit]=100"
+}
 
-    return (
-        <div className={`w-6 aspect-square flex-shrink-0 ${lineColor}`}>{icon}</div>
-    )
-};
 
-export function TiledColumn ({data, index, onItemClick, breadcrumbs, handleSelectClick, className, showTooltip=true}: TiledColumnProps) {
 
+export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs, handleSelectClick, className, showTooltip=true, handleNewPageClick}: TiledColumnProps) {
+    //console.log({links})
+    //parse the links.self to get the value after ...page[offset]=
+    let currentOffset = links.self ? parseInt(links.self.split('page[offset]=')[1].split('&')[0]) : 1;
+    let pageLimit = links.self ? parseInt(links.self.split('page[limit]=')[1]) : 100;
+    let totalResults = meta.count;
+    let currentlyDisplayedStartIndex = currentOffset + (data.length > 0 ? 1 : 0);
+    let currentlyDisplayedEndIndex = currentlyDisplayedStartIndex + data.length - 1;
+    let nextResultsLink = links.next ? links.next : null;
+    let prevResultsLink = links.prev ? links.prev : null;
+    //console.log({currentOffset, pageLimit, totalResults, currentlyDisplayedStartIndex, currentlyDisplayedEndIndex});
     return (
         <div className={cn("flex flex-col-reverse border-r border-r-slate-300 min-w-56 w-fit max-w-xs px-4 h-auto pt-2", className)}>
-{/*             <div className={`${breadcrumbs.length  === index ? '' : 'hidden'} peer m-auto py-2 mt-1 w-full text-center border-t`}>
-                <Button text="Select Container" size="small" cb={handleSelectClick ? ()=>handleSelectClick(data) : () =>{}}/>
-            </div>     */}        
+            {nextResultsLink || prevResultsLink ? (
+                <p className="text-center text-sm py-1">
+                {`${currentlyDisplayedStartIndex} - ${currentlyDisplayedEndIndex} of ${totalResults}`}
+                <span onClick={prevResultsLink ? () => handleNewPageClick(prevResultsLink, index) : ()=>{}} className={`${prevResultsLink ? 'text-slate-600 hover:text-sky-500 hover:cursor-pointer' : 'text-slate-300'} text-base pl-4 pr-2`}>&lt;</span>
+                <span onClick={nextResultsLink ? () => handleNewPageClick(nextResultsLink, index) : ()=>{}} className={`${nextResultsLink ? 'text-slate-600 hover:text-sky-500 hover:cursor-pointer' : 'text-slate-300'} text-base`}>&gt;</span>
+                </p>
+            ) : null}
             <ul className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
                 {data.map((item:TiledSearchItem<TiledStructures>) => {
-                    let id = item.id+index;
+                    let id = `item-${item.id}${index}`;
                     return (
                         <li 
                             className={`${ (breadcrumbs.length > index) && breadcrumbs[index].label === item.id ? 'bg-sky-200 hover:bg-sky-300' : 'hover:bg-sky-300'} flex space-x-2 px-2 rounded-sm hover:cursor-pointer relative`} 
@@ -56,9 +64,9 @@ export function TiledColumn ({data, index, onItemClick, breadcrumbs, handleSelec
                             onClick={()=>onItemClick(item)}
                             id={id}
                         >
-                            {renderIcon(item.attributes.structure_family)}
+                            <div className={`w-6 aspect-square flex-shrink-0 ${item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite' ? 'text-sky-700' : ''}`}>{getTiledStructureIcon(item)}</div>
                             <p className="truncate max-w-full">{item.id}</p>
-                            {item.attributes.structure_family === 'container' ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
+                            {(item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite') ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
                             {(handleSelectClick && showTooltip) &&
                                 <Tooltip 
                                     children={

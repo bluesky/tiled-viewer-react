@@ -1,13 +1,16 @@
 import axios from "axios";
-axios.defaults.withCredentials = true; // allow cookies to be sent with requests
+axios.defaults.withCredentials = true; // ensure cookies are sent with requests
+
 import { sampleTiledSearchData } from "./sampleData";
 import { TiledSearchResult } from "./types";
+import { getApiKeyFromLocalStorage } from "./utils";
 
-// Getting a CORS error?
-// when you start tiled, need to pass in CORS
-//ex) TILED_ALLOW_ORIGINS=http://localhost:5174 tiled serve demo
+//if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
+var globalApiKey:string | null = null;
 
-const getDefaultTiledUrl = () => {
+var globalReverseSort:boolean = false;
+
+export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
     try{
         if (import.meta.env.VITE_API_TILED_URL) {
@@ -21,21 +24,17 @@ const getDefaultTiledUrl = () => {
         return `http://${address}:8000/api/v1`;
     }
 };
+const defaultTiledUrl = getDefaultTiledUrl();
 
-const getTiledApiKey = () => {
-    try{
-        if (import.meta.env.VITE_API_TILED_API_KEY) {
-            return import.meta.env.VITE_API_TILED_API_KEY;
-        } else {
-            return null;
-        }
-    } catch(e) {
-        console.error('error parsing VITE_API_TILED_API_KEY: ', e)
-        return null;
-    }
-}
-
-const setBearerToken = (token:string) => {
+/**
+ * Sets the Bearer token for authentication in axios requests
+ * @param token - The Bearer token string
+ * @example
+ * ```typescript
+ * setBearerToken('your-bearer-token-here');
+ * ```
+ */
+export const setBearerToken = (token:string) => {
     if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
@@ -44,18 +43,50 @@ const setBearerToken = (token:string) => {
 };
 // const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
 
-const defaultTiledUrl = getDefaultTiledUrl();
-const tiledApiKey = getTiledApiKey();
+
 //add return type of tiledresponse or null
-const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean):Promise<TiledSearchResult | null> => {
+
+/**
+ * Searches for data in a Tiled server instance
+ * @param searchPath - Optional path to search within (e.g., 'folder/subfolder')
+ * @param url - Optional custom Tiled server URL (defaults to environment variable or localhost:8000)
+ * @param cb - Optional callback function that receives the search results
+ * @param mock - If true, returns sample mock data instead of making API call
+ * @param parameters - Optional additional query parameters to include in the request
+ * @param sortingKey - Optional key to sort results by (prefix with '-' for descending)
+ * @returns Promise that resolves to TiledSearchResult or null if error occurs
+ * @example
+ * ```typescript
+ * const results = await getSearchResults('my-data-folder');
+ * ```
+ */
+export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any, sortingKey?:string):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        console.log('doing search')
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : ''));
+        const params = new URLSearchParams();
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        if (globalReverseSort) {
+            params.append('sort', sortingKey ? `-${sortingKey}` : '-');
+        }
+
+        if (parameters) {
+            Object.keys(parameters).forEach(key => {
+                params.append(key, parameters[key]);
+            });
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + (queryString ? '?' + queryString : '');
+        
+        const response = await axios.get(fullUrl);
         cb && cb(response.data as TiledSearchResult);
         return response.data as TiledSearchResult;
     } catch (error) {
@@ -65,15 +96,52 @@ const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledS
     }
 };
 
-const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
-    //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests
+/**
+ * Performs the first search with an API key, which sets up authentication for subsequent requests
+ * @param apiKey - The API key for authentication with the Tiled server
+ * @param searchPath - Optional path to search within
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the search results
+ * @param mock - If true, returns sample mock data instead of making API call
+ * @returns Promise that resolves to TiledSearchResult or null if error occurs
+ * @example
+ * ```typescript
+ * const results = await getFirstSearchWithApiKey('your-api-key', 'data-folder');
+ * ```
+ */
+export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void,  mock?:boolean):Promise<TiledSearchResult | null> => {
+    //after first successful GET using apikey, tiled stores a cookie and the apiKey is no longer required for subsequent requests. This doesn't work for CORS cookies though
+    
+    //overwrite any local storage apiKey, which could be stale if the dev calls Tiled with a new apiKey prop and a previous different apiKey was stored in localstorage
+    const localStorageApiKey = getApiKeyFromLocalStorage();
+    if (localStorageApiKey && localStorageApiKey !== apiKey) {
+        localStorage.removeItem('tiledApiKey');
+        localStorage.setItem('tiledApiKey', apiKey);
+    }
+
+    globalApiKey = apiKey;  //makes this available to all other functions that make api calls or generate image paths, technically a cookie is not required when this is used
+    
     if (mock) {
         cb && cb(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + '?api_key=' + apiKey);
+        // const baseUrl = url ? url : defaultTiledUrl;
+        // const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalReverseSort ? '&sort=-' : '') + '?api_key=' + apiKey);
+         const baseUrl = url ? url : defaultTiledUrl;
+        
+        // Build URL with URLSearchParams
+        const params = new URLSearchParams();
+        params.append('api_key', apiKey);
+        
+        if (globalReverseSort) {
+            params.append('sort', '-');
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + '?' + queryString;
+        
+        const response = await axios.get(fullUrl);
         return response.data;
     } catch (error) {
         console.error('Error searching path: ', error);
@@ -82,10 +150,23 @@ const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string, url?:
     }
 };
 
-const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
+/**
+ * Retrieves table data from a Tiled server for a specific partition
+ * @param searchPath - The path to the table data
+ * @param partition - The partition number to retrieve (0-based index)
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to an array of parsed table rows or null if error occurs
+ * @example
+ * ```typescript
+ * const tableData = await getTableData('my-table', 0);
+ * // Returns: [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
+ * ```
+ */
+export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq');
+        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
         //the data comes as a long string that unfortunately does not comply with JSON.parse(data)
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
@@ -100,180 +181,126 @@ const getTableData = async(searchPath:string, partition:number, url?:string, cb?
         console.error('Error searching table data: ', error);
         return null;
     }
-}
+};
 
-const sampleImgUrl = 'http://127.0.0.1:8000/api/v1/array/full/small_image?format=image/png&slice=';
-const sample3dCubeUrlat50thStack = 'http://127.0.0.1:8000/api/v1/array/full/tiny_cube?format=image/png&slice=49,::1,::1'
+/**
+ * Retrieves structured array data from a Tiled server for a specific block
+ * @param searchPath - The path to the structured array data
+ * @param block - The block number to retrieve (0-based index)
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to an array of structured data rows or null if error occurs
+ * @example
+ * ```typescript
+ * const structuredData = await getStructuredArrayData('structured_data/pets', 0);
+ * // Returns: [{ name: "Fluffy", age: 3, weight: 4.2 }, ...]
+ * ```
+ */
+export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const params = new URLSearchParams();
+        params.append('block', block.toString());
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = `${baseUrl}/array/block/${searchPath}?${queryString}`;
+        
+        const response = await axios.get(fullUrl);
+        
+        // The response data should be the structured array data
+        const parsedData = response.data;
+        
+        cb && cb(parsedData);
+        return parsedData;
+    } catch (error) {
+        console.error('Error fetching structured array data: ', error);
+        return null;
+    }
+};
 
-const sampleSearchData = [
-    {
-        "id": "big_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        4096,
-                        4096,
-                        1808
-                    ],
-                    [
-                        4096,
-                        4096,
-                        1808
-                    ]
-                ],
-                "shape": [
-                    10000,
-                    10000
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/big_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/big_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/big_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "small_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        300
-                    ],
-                    [
-                        300
-                    ]
-                ],
-                "shape": [
-                    300,
-                    300
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/small_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/small_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/small_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "medium_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "array",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "data_type": {
-                    "endianness": "little",
-                    "kind": "f",
-                    "itemsize": 8,
-                    "dt_units": null
-                },
-                "chunks": [
-                    [
-                        1000
-                    ],
-                    [
-                        1000
-                    ]
-                ],
-                "shape": [
-                    1000,
-                    1000
-                ],
-                "dims": null,
-                "resizable": false
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/medium_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/medium_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/medium_image?block={0},{1}"
-        },
-        "meta": null
-    },
-    {
-        "id": "sparse_image",
-        "attributes": {
-            "ancestors": [],
-            "structure_family": "sparse",
-            "specs": [],
-            "metadata": {},
-            "structure": {
-                "shape": [
-                    100,
-                    100
-                ],
-                "chunks": [
-                    [
-                        100
-                    ],
-                    [
-                        100
-                    ]
-                ],
-                "dims": null,
-                "resizable": false,
-                "layout": "COO"
-            },
-            "sorting": null,
-            "data_sources": null
-        },
-        "links": {
-            "self": "http://127.0.0.1:8000/api/v1/metadata/sparse_image",
-            "full": "http://127.0.0.1:8000/api/v1/array/full/sparse_image",
-            "block": "http://127.0.0.1:8000/api/v1/array/block/sparse_image?block={0},{1}"
-        },
-        "meta": null
-    },
-];
+/**
+ * Generates a URL path for retrieving a full PNG image from a Tiled array
+ * @param searchPath - The path to the array data
+ * @param stepY - Step size for Y-axis sampling (default: 1)
+ * @param stepX - Step size for X-axis sampling (default: 1)
+ * @param stack - Optional array of stack indices for multi-dimensional arrays
+ * @param url - Optional custom Tiled server URL
+ * @returns Complete URL string for the PNG image
+ * @example
+ * ```typescript
+ * const imageUrl = generateFullImagePngPath('my-image', 1, 1, [0, 5]);
+ * ```
+ */
+export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
+    const params = new URLSearchParams();
+    const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
+    const fullSlice = stackString + `::${stepY},::${stepX}`;
+    if (globalApiKey) {
+        params.append('api_key', globalApiKey);
+    }
+    params.append('format', 'image/png');
+    params.append('slice', fullSlice);
+    const baseUrl = url ? url : defaultTiledUrl;
+    const queryString = params.toString();
+    const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+    return fullUrl;
+};
 
-const paths:string[] = [
-    'structured_data',
-    'big_image'
-];
+/**
+ * Configures whether search results should be returned in reverse order
+ * @param reverse - If true, results will be sorted in descending order
+ * @example
+ * ```typescript
+ * setReverseSort(true); // Enable reverse sorting
+ * ```
+ */
+export const setReverseSort = (reverse:boolean | undefined) => {
+    globalReverseSort = reverse || false; //default to false if undefined
+};
 
 
-const sampleColumnData = [
-    sampleTiledSearchData.data,
-    sampleTiledSearchData.data,
-    sampleTiledSearchData.data
-];
+const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/structured_data/xarray_dataset/time?format=application/json&slice=0:3"
 
-
-export { getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken}
+/**
+ * Retrieves XArray data from a Tiled server for a specific stack
+ * @param searchPath - The path to the XArray data
+ * @param stack - Optional array of stack indices for multi-dimensional arrays
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to parsed XArray data or null if error occurs
+ * @example
+ * ```typescript
+ * const xarrayData = await getXArrayData('xarray_dataset/time', [0, 5]);
+ * ```
+ */
+export const getXArrayData = async(searchPath: string, stack:number[], url?: string, cb?: (parsedData: any) => void) => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
+        const params = new URLSearchParams();
+        params.append('slice', stackString);
+        params.append('format', 'application/json');
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        const queryString = params.toString();
+        const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+        
+        const response = await axios.get(fullUrl);
+        
+        // The response data should be the structured array data
+        const parsedData = response.data;
+        
+        cb && cb(parsedData);
+        return parsedData;
+    } catch (error) {
+        console.error('Error fetching structured array data: ', error);
+        return null;
+    }
+};

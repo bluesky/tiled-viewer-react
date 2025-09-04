@@ -1,8 +1,8 @@
-import { ArrayStructure, TableStructure, TiledSearchItem } from "./types";
+import { ArrayStructure, TableStructure, TiledSearchItem, TiledStructures } from "./types";
 import ButtonCopyToClipboard from "../ButtonCopyToClipboard";
 
 type TiledPreviewMetadataProps = {
-    item: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> ;
+    item: TiledSearchItem<TiledStructures>;
 }
 export default function TiledPreviewMetadata({
     item,
@@ -17,8 +17,13 @@ export default function TiledPreviewMetadata({
             window.open(popoutUrl, '_blank', 'noopener,noreferrer');
         }
     };
+    const sanitizedItem = { ...item };
+    // if the item has property structure.arrow_schema, only list the text up to the first comma
+    if ('arrow_schema' in sanitizedItem.attributes.structure) {
+        sanitizedItem.attributes.structure.arrow_schema = sanitizedItem.attributes.structure.arrow_schema.split(',')[0];
+    }
     return (
-        <div {...props}>
+        <div {...props} className="">
 
             <h3 className="m-auto text-left pl-4 text-sky-950">Links</h3>
             <ul className="flex w-full justify-start pl-8 space-x-6">
@@ -35,8 +40,8 @@ export default function TiledPreviewMetadata({
             </ul>
 
             <h3 className="m-auto text-left pl-4 mt-2 text-sky-950">Metadata</h3>
-            <div className="px-8 max-w-[400px]" {...props}>
-                <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap break-words">{JSON.stringify(item, null, 2)}</pre>
+            <div className="px-8 " {...props}>
+                <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap break-words text-ellipsis">{JSON.stringify(sanitizedItem, null, 2)}</pre>
             </div>
 
         </div>

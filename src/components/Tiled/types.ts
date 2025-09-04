@@ -56,7 +56,7 @@ export interface TiledSearchItem<StructureType> {
     id: string; // Identifier for the item
     attributes: {
         ancestors: string[]; // Array of ancestor IDs
-        structure_family: "array" | "table" | "container" | "awkward" | "sparse"; // Enum for structure families
+        structure_family: "array" | "table" | "container" | "awkward" | "sparse" | "composite"; // Enum for structure families
         specs: Spec[]; // Optional specs
         metadata: Record<string, unknown>; // Metadata as a dictionary
         structure: StructureType;
@@ -67,30 +67,8 @@ export interface TiledSearchItem<StructureType> {
     meta: unknown | null; // Optional metadata
 }
 
-/* // Definition for a single search item
-export interface TiledSearchItem<StructureType> {
-    id: string; // Identifier for the item
-    attributes: {
-        ancestors: string[]; // Array of ancestor IDs
-        structure_family: "array" | "table" | "container" | "awkward" | "sparse"; // Enum for structure families
-        specs: Spec[]; // Optional specs
-        metadata: Record<string, unknown>; // Metadata as a dictionary
-        structure: ArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure;
-        sorting: Sorting[] | null; // Sorting details, if applicable
-        data_sources: string | null; // Data source, if any
-    };
-    links: {
-        self: string;
-        full?: string;
-        block?: string;
-        buffers?: string;
-        partition?: string;
-        search?: string;
-    };
-    meta: unknown | null; // Optional metadata
-} */
-export type TiledStructures = ArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure
-//export type GeneralTiledStructure extends TiledStructures
+
+export type TiledStructures = ArrayStructure | StructuredArrayStructure | TableStructure | ContainerStructure | AwkwardStructure | SparseStructure
 
 // Specs type
 export interface Spec {
@@ -116,6 +94,28 @@ export interface ArrayStructure {
     shape: number[];
     dims: string[] | null;
     resizable: boolean;
+}
+
+export interface StructuredArrayStructure {
+    data_type: {
+        itemsize: number;
+        fields: StructuredArrayField[];
+    };
+    chunks: number[][];
+    shape: number[];
+    dims: string[] | null;
+    resizable: boolean;
+}
+
+export interface StructuredArrayField {
+    name: string;
+    dtype: {
+        endianness: string;
+        kind: string;
+        itemsize: number;
+        dt_units: string | null;
+    };
+    shape: number[] | null;
 }
 
 
@@ -156,14 +156,30 @@ export interface SparseStructure {
     resizable: boolean;
 }
 
-export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
+export interface XArrayStructure {
+    data_type: {
+        endianness: string;
+        kind: string;
+        itemsize: number;
+        dt_units: string | null;
+    };
+    chunks: number[][];
+    shape: number[];
+    dims: string[]; // XArray always has dims (unlike regular arrays where dims can be null)
+    resizable: boolean;
+}
 
+export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
 
 export interface TiledTableRow {
     [column: string]: number
 }
 
+export interface TiledStructuredArrayRow extends Array<string | number> {}
+
 export type TiledTableData = TiledTableRow[];
+
+export type TiledStructuredArrayData = TiledStructuredArrayRow[];
 
 export const isArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ArrayStructure> => {
     return item.attributes.structure_family === 'array';
@@ -174,5 +190,28 @@ export const isTableStructure = (item: TiledSearchItem<any>): item is TiledSearc
 };
 
 export const isContainerStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ContainerStructure> => {
-    return item.attributes.structure_family === 'container';
+    return (item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite');
+};
+
+export const isAwkwardStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<AwkwardStructure> => {
+    return item.attributes.structure_family === 'awkward';
+};
+
+export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<SparseStructure> => {
+    return item.attributes.structure_family === 'sparse';
+};
+
+export const isStructuredArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<StructuredArrayStructure> => {
+    return item.attributes.structure_family === 'array' && 
+           'fields' in item.attributes.structure.data_type;
+};
+
+export const isXArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<XArrayStructure> => {
+    return item.attributes.structure_family === 'array' && 
+           item.attributes.specs.some(spec => 
+               spec.name === 'xarray_coord' || 
+               spec.name === 'xarray_data_var' || 
+               spec.name.startsWith('xarray_')
+           ) &&
+           item.attributes.structure.dims !== null;
 };

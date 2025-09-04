@@ -138,7 +138,7 @@ export default function InputSlider({
                     className={`${showFill ? 'appearance-auto' : 'appearance-none'} w-full absolute z-10 appearance-nonee hover:cursor-pointer bg-slate-400/50 h-2 rounded-lg focus:outline-none`}
                 />
                 {/** Thumb Input Number */}
-                <div className="absolute z-0 -top-8 w-12 h-24" style={{left: `calc(${((value - min) / (max - min)) * 100}% + ${(-((value - min) / (max - min))*thumbWidth) + thumbWidth/2}px)`}}>
+                <div className="absolute z-0 -top-8 w-12 h-24" style={{left: `calc(${((value - min) / (max - min)) * 100}% + ${(-((value - min) / (max - min))*thumbWidth)}px)`}}>
                     <div className="relative ">
                         <div className="absolute w-[0] h-4 top-1 bg-gray-400"></div>
                         <div className="absolute -translate-x-1/2 left-2 -y-translate-full -top-0">

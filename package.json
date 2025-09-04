@@ -1,7 +1,7 @@
 {
   "name": "@blueskyproject/tiled",
   "private": false,
-  "version": "0.0.1",
+  "version": "0.0.14",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -31,6 +31,15 @@
     "@phosphor-icons/react": "^2.1.7",
     "@storybook/addons": "^7.6.17",
     "@storybook/theming": "^8.6.14",
+    "@visx/curve": "^3.12.0",
+    "@visx/mock-data": "^3.12.0",
+    "@visx/pattern": "^3.12.0",
+    "@visx/react-spring": "^3.12.0",
+    "@visx/responsive": "^3.12.0",
+    "@visx/scale": "^3.12.0",
+    "@visx/shape": "^3.12.0",
+    "@visx/tooltip": "^3.12.0",
+    "@visx/xychart": "^3.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
@@ -82,7 +91,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluesky/tiled-viewer-react"
+    "url": "git+https://github.com/bluesky/tiled-viewer-react.git"
   },
   "bugs": {
     "url": "https://github.com/bluesky/tiled-viewer-react/issues"
@@ -99,5 +108,11 @@
     "workerDirectory": [
       "public"
     ]
-  }
+  },
+  "description": "A React Tiled Viewer component that can access a Bluesky Tiled server using an api key or auth bearer token. The component can accept a callback function that is run when a user selects an item.",
+  "keywords": [
+    "bluesky",
+    "beamline",
+    "tiled"
+  ]
 }

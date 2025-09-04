@@ -1,34 +1,76 @@
 import { tiledStructureIcons } from "./icons";
-import { TiledSearchItem, TiledStructures } from "./types";
+import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure  } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
-const defaultTiledUrl = getDefaultTiledUrl();
+//const defaultTiledUrl = getDefaultTiledUrl();
 
+/**
+ * Generates links for a TiledSearchItem, including a default link
+ * @param item - The TiledSearchItem to generate links for
+ * @param url - Optional base URL to prepend to the generated links
+ * @returns An object containing the generated links with an additional 'default' property
+ * @example
+ * ```typescript
+ * const links = generateLinksForCallback(item, 'http://localhost:8000/api/v1');
+ * // Returns: { ...item.links, default: 'http://localhost:8000/api/v1/path/to/item' }
+ * ```
+ */
 export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>, url?:string) => {
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
     var links= {...item.links};
-    const baseUrl = url ? url : defaultTiledUrl;
+    const baseUrl = url ? url : getDefaultTiledUrl();
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
     return links;
 }
 
-export const getTiledStructureIcon = (structureFamily:string) => {
+/**
+ * Returns the appropriate icon for a given Tiled structure family
+ * @param structureFamily - The structure family type (e.g., 'array', 'table', 'container')
+ * @returns The corresponding icon component
+ * @example
+ * ```typescript
+ * const icon = getTiledStructureIcon('array');
+ * // Returns: tiledStructureIcons.brackestSqaure
+ * ```
+ */
+export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) => {
+    var structureFamily = item.attributes.structure_family;
     var icon = tiledStructureIcons.question;
     if (structureFamily === 'array' || structureFamily === 'awkward' || structureFamily === 'sparse') {
-        icon = tiledStructureIcons.brackestSqaure;
+        //structured arrays technically are shown as arrays from tiled, but we visually display as a table
+        if (isStructuredArrayStructure(item)) {
+            icon = tiledStructureIcons.table;
+        } else {
+            if (isXArrayStructure(item)) {
+                icon = tiledStructureIcons.xarray;
+            } else {
+                icon = tiledStructureIcons.brackestSqaure;
+            }
+        }
     }
     if (structureFamily === 'table') {
-        icon = tiledStructureIcons.table;
+        icon = tiledStructureIcons.gridline;
     }
-    if (structureFamily === 'container') {
+    if (structureFamily === 'container' || structureFamily === 'composite') {
         icon = tiledStructureIcons.folder;
     }
 
     return icon;
 };
 
+/**
+ * Generates the search path for a TiledSearchItem by combining ancestors and item ID
+ * @param item - The TiledSearchItem to generate the path for
+ * @param extra - Optional additional string to append to the path
+ * @returns The complete search path as a string
+ * @example
+ * ```typescript
+ * const path = generateSearchPath(item, '/metadata');
+ * // Returns: 'parent/child/item/metadata' or 'item/metadata' if no ancestors
+ * ```
+ */
 export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra?:string):string => {
     const ancestors = item.attributes.ancestors;
     var searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
@@ -39,14 +81,15 @@ export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra
     return searchPath;
 };
 
-
-
-export const generateFullImagePngPath = (searchPath?:string, stepY?:number, stepX?:number, stack?:number[], url?:string) => {
-    const stackString = stack ? stack.join(',') : '';
-    const baseUrl = url ? url : defaultTiledUrl;
-    return (baseUrl + '/array/full/' + searchPath + '?format=image/png&slice=' + stackString + ',::' + stepY + ',::' + stepX);
-};
-
+/**
+ * Mapping of NumPy data type characters to their byte sizes
+ * Used for calculating memory usage and data type information
+ * @example
+ * ```typescript
+ * const floatSize = numpyTypeSizesBytes.f; // Returns: 4 (bytes for float32)
+ * const doubleSize = numpyTypeSizesBytes.d; // Returns: 8 (bytes for float64)
+ * ```
+ */
 export const numpyTypeSizesBytes: Record<string, number> = {
     // Numerical Data Types
     b: 1,  // int8
@@ -83,11 +126,36 @@ export const numpyTypeSizesBytes: Record<string, number> = {
     V: 1   // void (raw data, size depends on context)
   };
 
- export const onPopoutClick =(popoutUrl:string) => {
+/**
+ * Opens a URL in a new browser tab with security features enabled
+ * @param popoutUrl - The URL to open in the new tab
+ * @example
+ * ```typescript
+ * onPopoutClick('https://example.com');
+ * // Opens https://example.com in a new tab
+ * ```
+ */
+export const onPopoutClick =(popoutUrl:string) => {
     //open a new tab with the specified URL
     window.open(popoutUrl, '_blank', 'noopener,noreferrer');
 };
 
+/**
+ * Creates an array of slider configurations based on array dimensions
+ * Each slider represents a dimension of a multi-dimensional array, with the last two dimensions typically representing image size
+ * @param sliderCount - The number of sliders to create
+ * @param shape - Array of dimension sizes for each axis
+ * @returns Array of Slider objects with min, max, index, and value properties
+ * @example
+ * ```typescript
+ * const sliders = createSliders(3, [10, 20, 30, 100, 100]);
+ * // Returns: [
+ * //   { min: 0, max: 9, index: 0, value: 5 },
+ * //   { min: 0, max: 19, index: 1, value: 10 },
+ * //   { min: 0, max: 29, index: 2, value: 15 }
+ * // ]
+ * ```
+ */
 export const createSliders = (sliderCount:number, shape:number[]) => {
     var initialSliders:Slider[] = [];
     //the first values from shape represent the number of stacks, the last two dims are the actual 'image' size
@@ -101,4 +169,88 @@ export const createSliders = (sliderCount:number, shape:number[]) => {
         initialSliders.push(newSlider);
     };
     return initialSliders;
+}
+
+/**
+ * Retrieves the last search history from local storage
+ * @returns The last search path as a string, or undefined if not found
+ * @example
+ * ```typescript
+ * const lastSearch = getLastSearchFromLocalStorage();
+ * // Returns: 'parent/child/item' or undefined
+ * ```
+ */
+export const getLastSearchFromLocalStorage = () => {
+    const lastSearch = localStorage.getItem('lastSearchHistory');
+    if (lastSearch) {
+        return lastSearch;
+    }
+    return undefined;
+}
+
+/**
+ * Writes a search path to local storage based on a TiledSearchItem or clears it with an empty string
+ * @param item - The TiledSearchItem to generate a path from, or an empty string to clear storage
+ * @returns The generated search path if item is provided, undefined otherwise
+ * @example
+ * ```typescript
+ * const path = writeSearchPathToLocalStorage(item);
+ * // Returns: 'parent/child/item' and saves to localStorage
+ * 
+ * writeSearchPathToLocalStorage('');
+ * // Clears the search history in localStorage
+ * ```
+ */
+export const writeSearchPathToLocalStorage = (item:TiledSearchItem<TiledStructures> | '') => {
+    if (typeof item === 'string' || !item) {
+        localStorage.setItem('lastSearchHistory', '');
+    } else if (item) {
+        const searchPath = generateSearchPath(item);
+        localStorage.setItem('lastSearchHistory', searchPath);
+        return searchPath;
+    }
+}
+
+/**
+ * Retrieves the API key from local storage
+ * @returns The API key as a string if found and not empty, undefined otherwise
+ * @example
+ * ```typescript
+ * const apiKey = getApiKeyFromLocalStorage();
+ * // Returns: 'your-api-key' or undefined if not found/empty
+ * ```
+ */
+export const getApiKeyFromLocalStorage = () => {
+    const apiKey = localStorage.getItem('tiledApiKey');
+    if (apiKey) {
+        if (apiKey.length === 0) {
+            return undefined;
+        } else {
+            return apiKey;
+        }
+    }
+    return undefined;
+}
+
+export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructure>, maxBytesAllowed?:number) => {
+    var stepX = 1;
+    var stepY = 1;
+    const letter = arrayItem.attributes.structure.data_type.kind[0] as keyof typeof numpyTypeSizesBytes;
+    const bytesPerElement = numpyTypeSizesBytes[letter];
+    const shape = arrayItem.attributes.structure.shape;
+
+    const totalImageSizeBytes = shape[shape.length-1] * shape[shape.length-2] * bytesPerElement; //last two index are always the frame data to be displayed
+    const maxBytes = maxBytesAllowed ? maxBytesAllowed : 1000000; //default to 1MB if not provided
+    if (totalImageSizeBytes > maxBytes) {
+        const ratio = totalImageSizeBytes / maxBytes;
+        let squareStep = Math.ceil(Math.sqrt(ratio));
+        //TO DO - downsamplke for rectangular images instead of assumed square
+        stepX = squareStep;
+        stepY = squareStep;
+    }
+
+    return {
+        stepX,
+        stepY
+    };
 }
