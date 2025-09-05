@@ -6,6 +6,7 @@ import { defineConfig, loadEnv } from "vite";
 import dts from "vite-plugin-dts";
 import tsConfigPaths from "vite-tsconfig-paths";
 import * as packageJson from "./package.json";
+/// <reference types="vitest" />
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -66,6 +67,11 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         external: [...Object.keys(packageJson.peerDependencies)],
       },
+    },
+    test: {
+      environment: 'jsdom',
+      setupFiles: ['./src/testing/setup.ts'],
+      globals: true,
     },
   };
 });

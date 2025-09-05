@@ -36,14 +36,12 @@ export const Primary: Story = {
     // Wait for the DOM to update after the click
     await waitFor(async () => {
       const singleColumn = canvas.getAllByRole('list');
-      console.log({singleColumn});
       await expect(singleColumn.length).toBe(1);
     });
     const  sampleFolder = await canvas.findByText('sampleFolder');
     await userEvent.click(sampleFolder);
     await waitFor(async () => {
       const twoColumns = canvas.getAllByRole('list');
-      console.log({twoColumns});
       await expect(twoColumns.length).toBe(2);
     });
   }
