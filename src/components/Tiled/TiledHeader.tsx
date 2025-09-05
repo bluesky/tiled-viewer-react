@@ -55,8 +55,8 @@ export default function TiledHeader({
                 <p className="truncate"> {breadcrumbs.length > 0 && breadcrumbs[breadcrumbs.length - 1].label }</p>
             </div>
             
-            <div onClick={onHomeClick ? ()=>onHomeClick() : ()=>{}} className="w-4/5 flex items-end justify-center space-x-4 mx-auto absolute left-1/2 transform -translate-x-1/2 hover:cursor-pointer hover:opacity-70"> 
-                <img  src={imageUrl} className="w-16 h-auto "/> 
+            <div data-testid="tiled-header" onClick={onHomeClick ? ()=>onHomeClick() : ()=>{}} className="w-4/5 flex items-end justify-center space-x-4 mx-auto absolute left-1/2 transform -translate-x-1/2 hover:cursor-pointer hover:opacity-70"> 
+                <img  src={imageUrl} className="w-16 h-auto" alt="Bluesky Logo"/> 
                 <div className="flex items-center gap-4">
                     <h2 className="text-sky-900 font-semibold text-lg">{title}</h2> 
                     <p className="text-sm">{secondaryTitle}</p>
