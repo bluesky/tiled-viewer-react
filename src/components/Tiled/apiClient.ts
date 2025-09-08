@@ -3,12 +3,56 @@ axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
 import { TiledSearchResult } from "./types";
-import { getApiKeyFromLocalStorage } from "./utils";
+import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
 
 var globalReverseSort:boolean = false;
+
+// Add a callback function type
+type AuthErrorCallback = (error: any) => void;
+
+let authErrorCallback: AuthErrorCallback | null = null;
+
+export const setAuthErrorCallback = (callback: AuthErrorCallback) => {
+  authErrorCallback = callback;
+};
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    console.log('axios interceptor caught an error: ', error);
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const auth = getAuthFromLocalStorage();
+        //const refreshToken = localStorage.getItem('tiledRefreshToken');
+        
+        if (auth) {
+          const refreshResponse = await axios.post(`${defaultTiledUrl}/auth/refresh`, {
+            refresh_token: auth.refreshToken
+          });
+          const newAccessToken = refreshResponse.data.access_token;
+          saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
+          setBearerToken(newAccessToken);
+          return axios(originalRequest);
+        } else {
+            authErrorCallback && authErrorCallback(null);
+        }
+      } catch (refreshError) {
+        // Clear tokens and call the error callback
+        clearAuthFromLocalStorage();        
+        authErrorCallback && authErrorCallback(null);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
@@ -43,8 +87,6 @@ export const setBearerToken = (token:string) => {
 };
 // const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
 
-
-//add return type of tiledresponse or null
 
 /**
  * Searches for data in a Tiled server instance
@@ -302,5 +344,128 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
     } catch (error) {
         console.error('Error fetching structured array data: ', error);
         return null;
+    }
+};
+
+/**
+ * Fetches server information from a Tiled server
+ * @param url - Optional custom Tiled server URL
+ * @returns Promise that resolves to server information or null if error occurs
+ * @example
+ * ```typescript
+ * const serverInfo = await getServerInfo();
+ * ```
+ */
+export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | null> => {
+    //this can fail if we have an apikey cookie that is old, if the key is invalid Tiled will reject it and return a 401 even if the base route is public
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const response = await axios.get(baseUrl + '/');
+        //return JSON.stringify(response.data, null, 2);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching server info: ', error);
+        return null;
+    }
+}
+
+/**
+ * Logs in a user with username and password authentication
+ * @param username - The username for authentication
+ * @param password - The password for authentication
+ * @param url - Optional custom Tiled server URL
+ * @returns Promise that resolves to authentication tokens or null if login fails
+ * @example
+ * ```typescript
+ * const authResult = await loginUser('myusername', 'mypassword');
+ * if (authResult) {
+ *   console.log('Login successful:', authResult.access_token);
+ * }
+ * ```
+ */
+export const loginUser = async(username: string, password: string, url?: string): Promise<{access_token: string, refresh_token: string} | null> => {
+    try {
+        const serverInfo = await getServerInfo(url);
+        
+        if (!serverInfo || !serverInfo.authentication || !serverInfo.authentication.providers) {
+            console.error('No authentication providers found in server info');
+            return null;
+        }
+        
+        // Find the first provider with mode=password, there could be multiple, add ability select later
+        const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
+            provider.mode === 'password'
+        );
+        
+        if (!passwordProvider || !passwordProvider.links || !passwordProvider.links.auth_endpoint) {
+            console.error('No password authentication provider found');
+            return null;
+        }
+        
+        const authEndpoint = passwordProvider.links.auth_endpoint;
+        console.log('Using auth endpoint:', authEndpoint);
+        
+        // Create form data for the POST request
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+        
+        // Make the POST request to the auth endpoint
+        const response = await axios.post(authEndpoint, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        
+        // Extract tokens from response
+        const { access_token, refresh_token } = response.data;
+        
+        if (access_token && refresh_token) {
+            // Save tokens to localStorage
+            saveAuthToLocalStorage(refresh_token, access_token);
+            // Set the bearer token for future requests
+            setBearerToken(access_token);
+            
+            console.log('Login successful');
+            return { access_token, refresh_token };
+        } else {
+            console.error('Login response missing required tokens');
+            return null;
+        }
+        
+    } catch (error: any) {
+        console.error('Login failed:', error);
+        
+        if (error.response?.status === 401) {
+            console.error('Invalid username or password');
+        } else if (error.response?.status) {
+            console.error(`Server error: ${error.response.status}`);
+        } else {
+            console.error('Network error during login');
+        }
+        
+        return null;
+    }
+};
+
+
+/**
+ * Fetches an image with authentication and returns a blob URL
+ * @param imagePath - The complete URL path to the image
+ * @returns Promise that resolves to a blob URL string
+ */
+export const getAuthenticatedImage = async (imagePath: string): Promise<string> => {
+    try {
+        const response = await axios.get(imagePath, {
+            responseType: 'blob',
+            headers: {
+                'Accept': 'image/png'
+            }
+        });
+        
+        return URL.createObjectURL(response.data);
+    } catch (error) {
+        console.error('Error fetching authenticated image:', error);
+        throw error;
     }
 };

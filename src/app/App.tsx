@@ -30,7 +30,7 @@ function App() {
   return (
     <>
       <Tiled isButtonMode={true} size='medium'/>
-      <Tiled isPopup={true}/>
+      <Tiled isPopup={true} reverseSort={true}/>
     </>
   )
 

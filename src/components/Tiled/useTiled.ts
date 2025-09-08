@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
 import { getSearchResults, getFirstSearchWithApiKey, setBearerToken, setReverseSort } from "./apiClient";
+import { getAuthFromLocalStorage } from "./utils";
 import { 
     TiledSearchResult, 
     TiledSearchItem, 
@@ -203,7 +204,11 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const initializeData = async () => {
         //attempt to get data from base Tiled Url. Display error on UI if no data comes back
         let response = null;
-        if (bearerToken) setBearerToken(bearerToken); //set the bearer token for all future requests
+        const auth = getAuthFromLocalStorage();
+        if (auth) {
+            setBearerToken(auth.accessToken);
+        }
+        if (bearerToken) setBearerToken(bearerToken); //if there is both accessToken in localStorage and a bearerToken prop, the bearerToken prop takes precedence
         setReverseSort(reverseSort); //set the reverse sort for all future requests
         if (apiKey) {
             response = await getFirstSearchWithApiKey(apiKey, searchPath, url); //only need to use apiKey once to set cookie for future requests

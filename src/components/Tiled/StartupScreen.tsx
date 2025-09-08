@@ -54,6 +54,7 @@ export default function StartupScreen({
                     value={url ? url : ''} 
                     onKeyDown={handleEnterKey}
                     onChange={e=> handleUrlChange(e.target.value)}
+                    placeholder="e.g. http://localhost:8000"
                 >
                 </input>
                 <Button disabled={url ? false : true} text="Submit" cb={()=>testTiledConnection(url)}/>
