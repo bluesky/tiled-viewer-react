@@ -25,6 +25,9 @@ export type TiledProps = {
     contentClassName?: string,
     isFullWidth?: boolean,
     isButtonMode?: boolean,
+    inButtonModeShowApiKeyInput?: boolean,
+    inButtonModeShowReverseSortInput?: boolean,
+    inButtonModeShowSelectedData?: boolean,
     buttonModeText?: string,
     reverseSort?: boolean,
 }
@@ -42,6 +45,9 @@ export default function Tiled({
     singleColumnMode=false,
     isFullWidth=false,
     isButtonMode=false,
+    inButtonModeShowApiKeyInput,
+    inButtonModeShowReverseSortInput,
+    inButtonModeShowSelectedData,
     buttonModeText="Select Data",
     reverseSort=true,
     ...props
@@ -116,6 +122,9 @@ export default function Tiled({
                             userInputReverseSort={userInputReverseSort}
                             handleReverseSortChange={setUserInputReverseSort}
                             handleInputChange={handleApiKeyChange}
+                            showApiKeyInput={inButtonModeShowApiKeyInput}
+                            showReverseSortInput={inButtonModeShowReverseSortInput}
+                            showSelectedData={inButtonModeShowSelectedData}
                         />
                     )}
 

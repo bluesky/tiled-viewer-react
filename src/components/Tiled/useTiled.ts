@@ -218,7 +218,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         if (response!== null && typeof response !== 'string' && 'data' in response) {
             setColumns([response]);
         } else {
-            setWarning('No data found at the provided Tiled URL. Please check the URL or API key.');
+            setWarning('There was an error connecting to the Tiled server. Please check the console for more details.');
         }
     }
 

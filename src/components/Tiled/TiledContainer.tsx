@@ -4,6 +4,7 @@ import TiledHeader from "./TiledHeader";
 import TiledPreview from "./TiledPreview";
 import TiledFooter from "./TiledFooter";
 import TiledBody from "./TiledBody";
+import TiledStartupWarning from './TiledStartupWarning';
 import { TiledColumn } from "./TiledColumn";
 import './Tiled.css'
 
@@ -59,49 +60,53 @@ export default function TiledContainer({
 
 
     return (
-        <>
-            <TiledHeader 
-                breadcrumbs={breadcrumbs} 
-                onLeftArrowClick={handleLeftArrowClick} 
-                onRightArrowClick={handleRightArrowClick} 
-                onHomeClick={resetAllData} 
-                secondaryTitle={url}
-                handleExpandClick={handleExpandClick}
-                isExpanded={isExpanded}
-            />
-            <TiledBody ref={scrollContainerRef}>
-                {/* <TiledColumns 
-                    columns={columns} 
+        warning ? 
+            <TiledStartupWarning warningMessage={warning} />
+            :
+            <>
+                <TiledHeader 
                     breadcrumbs={breadcrumbs} 
-                    onItemClick={handleColumnItemClick} 
-                    handleSelectClick={handleSelectClick}
-                /> */}
-                {columns.map((column, index) => 
-                    <TiledColumn 
-                        handleSelectClick={handleSelectClick} 
-                        data={column.data} 
-                        meta={column.meta}
-                        links={column.links}
-                        key={index} 
-                        index={index} 
-                        onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick} 
-                        breadcrumbs={breadcrumbs}
-                        className={singleColumnMode ? "w-full max-w-full" : ""}
-                        showTooltip={singleColumnMode ? false : true}
-                        handleNewPageClick={handleNewPageClick}
-                    />
-                )}
-                {previewItem && 
-                    <TiledPreview 
-                        previewItem={previewItem} 
-                        previewSize={previewSize} 
-                        handleSelectClick={handleSelectClick} 
-                        url={url}
-                        scrollContainerRef={scrollContainerRef}
-                    />
-                }
-            </TiledBody>
-            <TiledFooter breadcrumbs={breadcrumbs}/>
-        </>
+                    onLeftArrowClick={handleLeftArrowClick} 
+                    onRightArrowClick={handleRightArrowClick} 
+                    onHomeClick={resetAllData} 
+                    secondaryTitle={url}
+                    handleExpandClick={handleExpandClick}
+                    isExpanded={isExpanded}
+                />
+                <TiledBody ref={scrollContainerRef}>
+                    {/* <TiledColumns 
+                        columns={columns} 
+                        breadcrumbs={breadcrumbs} 
+                        onItemClick={handleColumnItemClick} 
+                        handleSelectClick={handleSelectClick}
+                    /> */}
+                    {columns.map((column, index) => 
+                        <TiledColumn 
+                            handleSelectClick={handleSelectClick} 
+                            data={column.data} 
+                            meta={column.meta}
+                            links={column.links}
+                            key={index} 
+                            index={index} 
+                            onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick} 
+                            breadcrumbs={breadcrumbs}
+                            className={singleColumnMode ? "w-full max-w-full" : ""}
+                            showTooltip={singleColumnMode ? false : true}
+                            handleNewPageClick={handleNewPageClick}
+                        />
+                    )}
+                    {previewItem && 
+                        <TiledPreview 
+                            previewItem={previewItem} 
+                            previewSize={previewSize} 
+                            handleSelectClick={handleSelectClick} 
+                            url={url}
+                            scrollContainerRef={scrollContainerRef}
+                        />
+                    }
+                </TiledBody>
+                <TiledFooter breadcrumbs={breadcrumbs}/>
+            </>
+        
     )
 }
