@@ -394,7 +394,7 @@ export const loginUser = async(username: string, password: string, url?: string)
         
         // Find the first provider with mode=password, there could be multiple, add ability select later
         const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
-            provider.mode === 'password'
+            provider.mode === 'password' || provider.mode === 'internal'
         );
         
         if (!passwordProvider || !passwordProvider.links || !passwordProvider.links.auth_endpoint) {
