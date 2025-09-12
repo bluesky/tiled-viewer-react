@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 import TiledHeader from "./TiledHeader";
 import Button from "../Button";
@@ -18,6 +18,8 @@ export default function Login({ onSuccess }: LoginProps) {
     const [ showHelp, setShowHelp ] = useState<boolean>(false);
     const [ serverInfo, setServerInfo ] = useState<{[key: string]: any} | null>(null);
 
+    const passwordRef = useRef<HTMLInputElement>(null);
+
     const attemptLogin = useCallback(async () => {
         setWarning(null);
         const result = await loginUser(username, password);
@@ -25,13 +27,18 @@ export default function Login({ onSuccess }: LoginProps) {
             onSuccess();
         } else {
             setWarning("Login failed. Please check your credentials.");
+            //put focus back on the password field
+            if (passwordRef.current) {
+                passwordRef.current.focus();
+                passwordRef.current.select();
+            }
         }
     }, [username, password, onSuccess]);
 
     useEffect(() => {
         const fetchServerInfo = async () => {
             const info = await getServerInfo();
-            console.log(info)
+            //console.log(info)
             if (info) {
                 setServerInfo(info);
                 setWarning(null);
@@ -64,6 +71,12 @@ export default function Login({ onSuccess }: LoginProps) {
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        ref={passwordRef}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                attemptLogin();
+                            }
+                        }}
                     />
                     <Button  cb={attemptLogin} text="Login" disabled={!username || !password}/>
                 </section>
