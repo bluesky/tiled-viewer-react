@@ -10,8 +10,9 @@ import { getServerInfo, loginUser } from "./apiClient";
 
 export type LoginProps = {
     onSuccess: () => void;
+    url?: string;
 }
-export default function Login({ onSuccess }: LoginProps) {
+export default function Login({ onSuccess, url }: LoginProps) {
     const [ warning, setWarning ] = useState< string | null>(null);
     const [ username, setUsername ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');
@@ -22,7 +23,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
     const attemptLogin = useCallback(async () => {
         setWarning(null);
-        const result = await loginUser(username, password);
+        const result = await loginUser(username, password, url);
         if (result) {
             onSuccess();
         } else {
@@ -37,7 +38,7 @@ export default function Login({ onSuccess }: LoginProps) {
 
     useEffect(() => {
         const fetchServerInfo = async () => {
-            const info = await getServerInfo();
+            const info = await getServerInfo(url);
             //console.log(info)
             if (info) {
                 setServerInfo(info);

@@ -56,16 +56,17 @@ axios.interceptors.response.use(
 
 export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
+    const httpProto = window.location.protocol;
     try{
         if (import.meta.env.VITE_API_TILED_URL) {
             console.log('using env variable for tiled url: ', import.meta.env.VITE_API_TILED_URL);
             return import.meta.env.VITE_API_TILED_URL;
         } else {
-            return `http://${address}:8000/api/v1`;
+            return `${httpProto}//${address}:8000/api/v1`;
         }
     } catch(e) {
         console.error('error parsing VITE_API_TILED_URL env: ', e)
-        return `http://${address}:8000/api/v1`;
+        return `${httpProto}//${address}:8000/api/v1`;
     }
 };
 const defaultTiledUrl = getDefaultTiledUrl();

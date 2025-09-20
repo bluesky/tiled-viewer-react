@@ -161,7 +161,7 @@ export default function Tiled({
                                 ) : (
                                     <>
                                         {showLogin ? 
-                                            <Login onSuccess={handleLoginSuccess} /> 
+                                            <Login onSuccess={handleLoginSuccess} url={url}/> 
                                         :                                 
                                             <TiledContainer
                                                 url={url}
