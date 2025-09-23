@@ -175,7 +175,7 @@ export default function Tiled({
                                             />
                                         }
                                         {(isPopup || isButtonMode) && (
-                                            <p className="absolute top-8 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                                            <p className="w-full absolute top-8 text-center text-gray-200 text-3xl -translate-x-1/2 left-1/2 hover:cursor-default" onClick={handleClickOutside}>Select an Item or Click Outside to Close</p>
                                         )}
                                     </>
                                 )}
