@@ -61,7 +61,10 @@ export default function TiledContainer({
 
     return (
         warning ? 
-            <TiledStartupWarning warningMessage={warning} />
+        <>
+            <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false}/>
+            <TiledStartupWarning warningMessage={warning} />    
+        </>
             :
             <>
                 <TiledHeader 

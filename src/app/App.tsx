@@ -30,7 +30,7 @@ function App() {
   return (
     <>
       <Tiled isButtonMode={true} size='medium'/>
-      <Tiled isPopup={true} reverseSort={true}/>
+      <Tiled isPopup={true} reverseSort={true} tiledBaseUrl='http://badtiled:8000/api/v1'/>
     </>
   )
 
