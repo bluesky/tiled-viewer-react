@@ -1,20 +1,19 @@
 import path from "path";
 import { resolve } from "node:path";
-
+import fs from "node:fs"; // (not required for mkcert, but fine to keep)
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv } from "vite";
 import dts from "vite-plugin-dts";
 import tsConfigPaths from "vite-tsconfig-paths";
+import mkcert from "vite-plugin-mkcert";
 import * as packageJson from "./package.json";
-/// <reference types="vitest" />
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   const qserverRest = env.VITE_QSERVER_REST?.trim() || 'http://localhost:60610';
-  const qserverWs = env.VITE_QSERVER_WS?.trim() || 'ws://localhost:8000/queue_server';
-  const cameraWs = env.VITE_CAMERA_WS?.trim() || 'ws://localhost:8000/pvcamera';
+  const qserverWs   = env.VITE_QSERVER_WS?.trim()   || 'ws://localhost:8000/queue_server';
+  const cameraWs    = env.VITE_CAMERA_WS?.trim()    || 'ws://localhost:8000/pvcamera';
 
   return {
     define: {
@@ -27,33 +26,34 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tsConfigPaths(),
-      dts({
-        include: ['src/', 'src/vite-env.d.ts'],
-      }),
+      dts({ include: ['src/', 'src/vite-env.d.ts'] }),
+      mkcert(),                    // 👈 add this
     ],
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
-    },
+    resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
     server: {
+      https: true,                 // 👈 enable HTTPS
+      host: true,                  // optional: expose on LAN
+      hmr: { protocol: 'wss' },    // good hygiene when using https
       proxy: {
         '/api/qserver': {
           target: qserverRest,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/qserver/, ''),
+          rewrite: (p) => p.replace(/^\/api\/qserver/, ''),
+          // secure: false,        // uncomment if your target uses self-signed HTTPS
         },
         '/api/qserver/console': {
           target: qserverWs,
           ws: true,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/qserver\/console/, ''),
+          rewrite: (p) => p.replace(/^\/api\/qserver\/console/, ''),
+          // secure: false,
         },
         '/api/camera': {
           target: cameraWs,
           ws: true,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/camera/, ''),
+          rewrite: (p) => p.replace(/^\/api\/camera/, ''),
+          // secure: false,
         },
       },
     },
@@ -64,9 +64,7 @@ export default defineConfig(({ mode }) => {
         formats: ['es', 'umd'],
         fileName: (format) => `tiled.${format}.js`,
       },
-      rollupOptions: {
-        external: [...Object.keys(packageJson.peerDependencies)],
-      },
+      rollupOptions: { external: [...Object.keys(packageJson.peerDependencies)] },
     },
     test: {
       environment: 'jsdom',
