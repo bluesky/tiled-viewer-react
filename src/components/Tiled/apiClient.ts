@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -379,6 +379,7 @@ export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | nu
  * @param username - The username for authentication
  * @param password - The password for authentication
  * @param url - Optional custom Tiled server URL
+ * @param provider - Optional specific authentication provider to use
  * @returns Promise that resolves to authentication tokens or null if login fails
  * @example
  * ```typescript
@@ -388,29 +389,36 @@ export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | nu
  * }
  * ```
  */
-export const loginUser = async(username: string, password: string, url?: string): Promise<{access_token: string, refresh_token: string} | null> => {
+export const loginUserWithNamePassword = async(username: string, password: string, url?: string, provider?: TiledAuthProvider): Promise<{access_token: string, refresh_token: string} | null> => {
     try {
-        const serverInfo = await getServerInfo(url);
-        
-        if (!serverInfo || !serverInfo.authentication || !serverInfo.authentication.providers) {
-            console.error('No authentication providers found in server info');
-            return null;
-        }
-        
-        // Find the first provider with mode=password, there could be multiple, add ability select later
-        const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
-            provider.mode === 'password' || provider.mode === 'internal'
-        );
-        
-        if (!passwordProvider || !passwordProvider.links || !passwordProvider.links.auth_endpoint) {
-            console.error('No password authentication provider found');
-            return null;
+        // If a specific provider is given, use its auth_endpoint, otherwise fetch server info to find the first available password provider
+        var authEndpoint = '';
+        if (provider && (provider.mode === 'password' || provider.mode === 'internal')) {
+            if (!provider.links || !provider.links.auth_endpoint) {
+                console.error('Provided authentication provider is missing auth_endpoint');
+                return null;
+            }
+            authEndpoint = provider.links.auth_endpoint;
+        } else {
+            const serverInfo = await getServerInfo(url);
+            
+            if (!serverInfo || !serverInfo.authentication || !serverInfo.authentication.providers) {
+                console.error('No authentication providers found in server info');
+                return null;
+            }
+            
+            // Find the first provider with mode=password, there could be multiple
+            const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
+                provider.mode === 'password' || provider.mode === 'internal'
+            );
+            
+            if (!passwordProvider || !passwordProvider.links || !passwordProvider.links.auth_endpoint) {
+                console.error('No password authentication provider found');
+                return null;
+            }
+            authEndpoint = passwordProvider.links.auth_endpoint;
         }
 
-        //TODO - create separate function to handle oauth
-        
-        //TODO - move this username/password logic into a separate function
-        const authEndpoint = passwordProvider.links.auth_endpoint;
         console.log('Using auth endpoint:', authEndpoint);
         
         // Create form data for the POST request
