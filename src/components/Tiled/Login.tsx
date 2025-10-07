@@ -47,10 +47,10 @@ export default function Login({ onSuccess, url }: LoginProps) {
                 <LoginSelectProvider handleClick={setSelectedProvider} providers={serverInfo?.authentication?.providers || []} />        
             }
             {(selectedProvider?.mode === 'password' || selectedProvider?.mode === 'internal') && 
-                <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} handleCancel={() => setSelectedProvider(null)} />
+                <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {selectedProvider?.mode === 'external' && 
-                <LoginOIDC />
+                <LoginOIDC handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {warning && 
                 <section className="flex items-center max-w-72 m-auto space-x-4 my-4 flex-shrink-0">

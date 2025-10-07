@@ -6,16 +6,18 @@ export type LoginUsernamePasswordProps = {
     url?: string;
     setWarning: (warning: string | null) => void;
     handleCancel: () => void;
+    provider?: TiledAuthProvider;
 }
-import { loginUser } from "./apiClient";
-export default function LoginUsernamePassword({ onSuccess, url, setWarning, handleCancel }: LoginUsernamePasswordProps) {
+import { loginUserWithNamePassword } from "./apiClient";
+import { TiledAuthProvider } from "./types";
+export default function LoginUsernamePassword({ onSuccess, url, setWarning, handleCancel, provider }: LoginUsernamePasswordProps) {
     const [ username, setUsername ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');
     const passwordRef = useRef<HTMLInputElement>(null);
 
     const attemptLogin = useCallback(async () => {
         setWarning(null);
-        const result = await loginUser(username, password, url);
+        const result = await loginUserWithNamePassword(username, password, url, provider);
         if (result) {
             onSuccess();
         } else {
