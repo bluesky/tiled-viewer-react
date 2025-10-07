@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { TiledSearchResult } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -362,8 +362,12 @@ export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | nu
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const response = await axios.get(baseUrl + '/');
-        //return JSON.stringify(response.data, null, 2);
-        return response.data;
+        if (isValidTiledInfoResponse(response.data)) {
+            return response.data as TiledInfoResponse;
+        } else {
+            console.error('Invalid TiledInfoResponse format: ', response.data);
+            return null;
+        }
     } catch (error) {
         console.error('Error fetching server info: ', error);
         return null;
@@ -402,7 +406,10 @@ export const loginUser = async(username: string, password: string, url?: string)
             console.error('No password authentication provider found');
             return null;
         }
+
+        //TODO - create separate function to handle oauth
         
+        //TODO - move this username/password logic into a separate function
         const authEndpoint = passwordProvider.links.auth_endpoint;
         console.log('Using auth endpoint:', authEndpoint);
         

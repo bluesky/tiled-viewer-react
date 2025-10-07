@@ -215,6 +215,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         } else {
             response = await getSearchResults(searchPath, url);
         }
+        let responseMsg = JSON.stringify(response);
+        console.log(responseMsg)
         if (response!== null && typeof response !== 'string' && 'data' in response) {
             setColumns([response]);
         } else {
