@@ -50,7 +50,7 @@ export default function Login({ onSuccess, url }: LoginProps) {
                 <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {selectedProvider?.mode === 'external' && 
-                <LoginOIDC handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
+                <LoginOIDC onSuccess={onSuccess} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {warning && 
                 <section className="flex items-center max-w-72 m-auto space-x-4 my-4 flex-shrink-0">

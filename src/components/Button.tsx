@@ -61,7 +61,7 @@ export default function Button({
             `
                 rounded-xl  font-medium w-fit
                 ${isSecondary ? `${secondaryBgColor} ${secondaryTextColor} border` : `${bgColor} ${textColor}`}
-                ${disabled ? 'hover:cursor-not-allowed' : `${(isSecondary ? `secondaryHoverBgColor` : hoverBgColor)} hover:cursor-pointer`} 
+                ${disabled ? 'hover:cursor-not-allowed' : `${(isSecondary ? `${secondaryHoverBgColor}` : hoverBgColor)} hover:cursor-pointer`} 
                 ${textSizes[size]} 
                 ${paddingSizes[size]} 
                 ${styles}
