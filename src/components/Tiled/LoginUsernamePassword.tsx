@@ -5,9 +5,10 @@ export type LoginUsernamePasswordProps = {
     onSuccess: () => void;
     url?: string;
     setWarning: (warning: string | null) => void;
+    handleCancel: () => void;
 }
 import { loginUser } from "./apiClient";
-export default function LoginUsernamePassword({ onSuccess, url, setWarning }: LoginUsernamePasswordProps) {
+export default function LoginUsernamePassword({ onSuccess, url, setWarning, handleCancel }: LoginUsernamePasswordProps) {
     const [ username, setUsername ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');
     const passwordRef = useRef<HTMLInputElement>(null);
@@ -49,7 +50,11 @@ export default function LoginUsernamePassword({ onSuccess, url, setWarning }: Lo
                         }
                     }}
                 />
-                <Button  cb={attemptLogin} text="Login" disabled={!username || !password}/>
+                <span className="flex items-center space-x-4">
+                    <Button  cb={attemptLogin} text="Login" disabled={!username || !password}/>
+                    <Button isSecondary={true} cb={handleCancel} text="Cancel" />
+                </span>
+
             </section>
     )
 }

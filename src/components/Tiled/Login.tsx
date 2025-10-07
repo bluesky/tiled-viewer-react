@@ -5,6 +5,7 @@ import LoginUsernamePassword from "./LoginUsernamePassword";
 import LoginSelectProvider from "./LoginSelectProvider";
 import LoginOIDC from "./LoginOIDC";
 import LoginHelp from "./LoginHelp";
+import Button from "../Button";
 
 import { Warning, Key, Info, Lock } from "@phosphor-icons/react";
 
@@ -40,13 +41,13 @@ export default function Login({ onSuccess, url }: LoginProps) {
     }, []);
 
     return (
-        <div className="w-full h-full bg-white flex flex-col">
+        <div className="w-full h-full bg-white flex flex-col items-center">
             <TiledHeader handleExpandClick={()=>{}} isExpanded={false} secondaryTitle={url} showExpandButton={false}/>
             {selectedProvider === null &&
                 <LoginSelectProvider handleClick={setSelectedProvider} providers={serverInfo?.authentication?.providers || []} />        
             }
             {(selectedProvider?.mode === 'password' || selectedProvider?.mode === 'internal') && 
-                <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} />
+                <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} handleCancel={() => setSelectedProvider(null)} />
             }
             {selectedProvider?.mode === 'external' && 
                 <LoginOIDC />
