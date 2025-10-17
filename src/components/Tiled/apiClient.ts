@@ -4,11 +4,59 @@ axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 import { sampleTiledSearchData } from "./sampleData";
 import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
+import { glob } from "fs";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
 
 var globalReverseSort:boolean = false;
+
+var globalInitialPath:string | null = null;
+
+export const setInitialPath = (path:string | null) => {
+    //reformat so that a leading '/' is removed
+    if (path && path.startsWith('/')) {
+        path = path.substring(1);
+    }
+    globalInitialPath = path;
+    return globalInitialPath;
+};
+
+export const getInitialPath = () => {
+    return globalInitialPath;
+};
+
+/**
+ * Helper function to construct API paths with optional global initial path
+ * Removes redundant path segments when searchPath already contains the globalInitialPath
+ * @param searchPath - The search path to append
+ * @returns Combined path with globalInitialPath prepended if it exists, avoiding duplication
+ */
+const constructApiPath = (searchPath?: string): string => {
+    if (globalInitialPath) {
+        if (searchPath) {
+            // Clean up both paths by removing leading/trailing slashes
+            const cleanInitialPath = globalInitialPath.replace(/^\/+|\/+$/g, '');
+            const cleanSearchPath = searchPath.replace(/^\/+|\/+$/g, '');
+            
+            // If searchPath already starts with the globalInitialPath, remove the redundant part
+            if (cleanSearchPath.startsWith(cleanInitialPath + '/')) {
+                // Return globalInitialPath + remainder of searchPath after removing the redundant prefix
+                const remainder = cleanSearchPath.substring(cleanInitialPath.length + 1);
+                return remainder ? `${cleanInitialPath}/${remainder}` : cleanInitialPath;
+            } else if (cleanSearchPath === cleanInitialPath) {
+                // If searchPath is exactly the same as globalInitialPath, just return globalInitialPath
+                return cleanInitialPath;
+            } else {
+                // No redundancy, combine normally
+                return `${cleanInitialPath}/${cleanSearchPath}`;
+            }
+        } else {
+            return globalInitialPath.replace(/^\/+|\/+$/g, '');
+        }
+    }
+    return searchPath?.replace(/^\/+|\/+$/g, '') || '';
+};
 
 // Add a callback function type
 type AuthErrorCallback = (error: any) => void;
@@ -127,7 +175,8 @@ export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res
         }
         
         const queryString = params.toString();
-        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + (queryString ? '?' + queryString : '');
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = baseUrl + '/search/' + apiPath + (queryString ? '?' + queryString : '');
         
         const response = await axios.get(fullUrl);
         cb && cb(response.data as TiledSearchResult);
@@ -182,7 +231,8 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
         }
         
         const queryString = params.toString();
-        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + '?' + queryString;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = baseUrl + '/search/' + apiPath + '?' + queryString;
         
         const response = await axios.get(fullUrl);
         return response.data;
@@ -209,7 +259,8 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
 export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+        const apiPath = constructApiPath(searchPath);
+        const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
         //the data comes as a long string that unfortunately does not comply with JSON.parse(data)
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
@@ -250,7 +301,8 @@ export const getStructuredArrayData = async(searchPath: string, block: number, u
         }
         
         const queryString = params.toString();
-        const fullUrl = `${baseUrl}/array/block/${searchPath}?${queryString}`;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/array/block/${apiPath}?${queryString}`;
         
         const response = await axios.get(fullUrl);
         
@@ -289,7 +341,8 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
     params.append('slice', fullSlice);
     const baseUrl = url ? url : defaultTiledUrl;
     const queryString = params.toString();
-    const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+    const apiPath = constructApiPath(searchPath);
+    const fullUrl = `${baseUrl}/array/full/${apiPath}?${queryString}`;
     return fullUrl;
 };
 
@@ -333,7 +386,8 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
         }
         
         const queryString = params.toString();
-        const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/array/full/${apiPath}?${queryString}`;
         
         const response = await axios.get(fullUrl);
         

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, getFirstSearchWithApiKey, setBearerToken, setReverseSort } from "./apiClient";
+import { getSearchResults, getFirstSearchWithApiKey, setBearerToken, setReverseSort, getInitialPath } from "./apiClient";
 import { getAuthFromLocalStorage } from "./utils";
 import { 
     TiledSearchResult, 
@@ -30,6 +30,35 @@ export type useTiledProps = {
     reverseSort?: boolean,
 }
 type Url = string;
+
+/**
+ * Helper function to calculate the effective ancestor length accounting for global initial path
+ * @param ancestors - Array of ancestor strings from a TiledSearchItem
+ * @returns The effective ancestor length after accounting for global initial path segments
+ */
+const getEffectiveAncestorLength = (ancestors: string[]): number => {
+    const globalInitialPath = getInitialPath();
+    let effectiveAncestorLength = ancestors.length;
+    
+    if (globalInitialPath) {
+        const cleanGlobalPath = globalInitialPath.replace(/^\/+|\/+$/g, '');
+        const globalPathSegments = cleanGlobalPath ? cleanGlobalPath.split('/') : [];
+        
+        // If ancestors start with the global initial path segments, subtract those from the length
+        if (globalPathSegments.length > 0 && ancestors.length >= globalPathSegments.length) {
+            const ancestorsStartWithGlobal = globalPathSegments.every((segment, index) => 
+                ancestors[index] === segment
+            );
+            
+            if (ancestorsStartWithGlobal) {
+                effectiveAncestorLength = ancestors.length - globalPathSegments.length;
+            }
+        }
+    }
+    
+    return effectiveAncestorLength;
+};
+
 export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort}:useTiledProps) => {
     
     const [ columns, setColumns ] = useState<TiledSearchResult[]>([]);
@@ -86,7 +115,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
     const updateColumns = useCallback((clickedItem:TiledSearchItem<TiledStructures>, newColumn?:TiledSearchResult ) => {
         setColumns((prevState) => {
-            const newState = prevState.slice(0, clickedItem.attributes.ancestors.length + 1);
+            const effectiveAncestorLength = getEffectiveAncestorLength(clickedItem.attributes.ancestors);
+            const newState = prevState.slice(0, effectiveAncestorLength + 1);
     
             if (newColumn) {
                 return [...newState, newColumn];
@@ -100,10 +130,12 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //function assumes users may only click on items that exist in the current search 'stack' and cannot jump to a different branch
         setBreadcrumbs((prevState) => {
             var stateCopy = [...prevState]; //must use shallow to copy to hold function references
-            const ancestors:string[] = clickedItem.attributes.ancestors;
-            while (stateCopy.length  > ancestors.length) {
+            const effectiveAncestorLength = getEffectiveAncestorLength(clickedItem.attributes.ancestors);
+            
+            while (stateCopy.length > effectiveAncestorLength) {
                 stateCopy.pop();
             }
+            
             var newBreadcrumb:Breadcrumb = {
                 label: clickedItem.id,
                 icon: getTiledStructureIcon(clickedItem),
@@ -123,7 +155,9 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
     const updateAncestorRefs = (item:TiledSearchItem<TiledStructures>) => {
         //this function is only called when the user navigates by directly clicking an item, not using the nav arrows
-        currentAncestorId.current = item.attributes.ancestors.length;
+        const effectiveAncestorLength = getEffectiveAncestorLength(item.attributes.ancestors);
+        
+        currentAncestorId.current = effectiveAncestorLength;
         ancestorStack.current = ancestorStack.current.slice(0, currentAncestorId.current);
         ancestorStack.current = [...ancestorStack.current, item];
     }

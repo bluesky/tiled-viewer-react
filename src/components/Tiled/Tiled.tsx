@@ -8,7 +8,7 @@ import './Tiled.css'
 import { cn } from "@/lib/utils";
 import { TiledItemLinks, TiledSearchItem, TiledStructures } from "./types";
 import { generateLinksForCallback, getApiKeyFromLocalStorage } from "./utils";
-import { setAuthErrorCallback } from "./apiClient";
+import { setAuthErrorCallback, setInitialPath } from "./apiClient";
 
 
 export type TiledProps = {
@@ -30,6 +30,7 @@ export type TiledProps = {
     inButtonModeShowSelectedData?: boolean,
     buttonModeText?: string,
     reverseSort?: boolean,
+    initialPath?: string,
 }
 export default function Tiled({
     onSelectCallback,
@@ -50,6 +51,7 @@ export default function Tiled({
     inButtonModeShowSelectedData,
     buttonModeText="Select Data",
     reverseSort=true,
+    initialPath,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -67,6 +69,8 @@ export default function Tiled({
         console.error("Authentication error:", error);
         setShowLogin(true);
     });
+
+    initialPath &&setInitialPath(initialPath);
 
     const handleLoginSuccess = useCallback(() => {
         setShowLogin(false);
