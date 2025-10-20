@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw';
-import { mockTiledResponse, mockTiledResponseFolder } from './responses';
+import { mockTiledResponse, mockTiledResponseFolder, mockTiledInfoResponse } from './responses';
 
 export const tiledHandlers = [
           http.get('https://tiled-demo.blueskyproject.io/api/v1/search/sampleFolder', () => {
@@ -26,5 +26,8 @@ export const tiledHandlers = [
           ),
           http.get('https://tiled-demo.blueskyproject.io/api/v1/search', () => {
             return HttpResponse.json(mockTiledResponse, { status: 200 });
+          }),
+          http.get('https://tiled-demo.blueskyproject.io/api/v1', () => {
+            return HttpResponse.json(mockTiledInfoResponse, { status: 200 });
           }),
         ];

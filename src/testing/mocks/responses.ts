@@ -1,4 +1,6 @@
-export const mockTiledResponse = {
+import { TiledInfoResponse, TiledSearchResult } from "@/components/Tiled/types";
+
+export const mockTiledResponse: TiledSearchResult= {
     "data": [
         {
             "id": "sampleFolder",
@@ -193,7 +195,7 @@ export const mockTiledResponse = {
     }
 };
 
-export const mockTiledResponseFolder = {
+export const mockTiledResponseFolder: TiledSearchResult = {
     "data": [
         {
             "id": "image",
@@ -207,7 +209,7 @@ export const mockTiledResponseFolder = {
                 "structure": {
                     "data_type": {
                         "endianness": "little",
-                        "kind": "f",
+                        "kind": "f",        
                         "itemsize": 4,
                         "dt_units": null
                     },
@@ -256,3 +258,313 @@ export const mockTiledResponseFolder = {
         "count": 1
     }
 }
+
+export const mockTiledInfoResponse: TiledInfoResponse = {
+    "api_version": 0,
+    "library_version": "0.1.dev2523+g6314f1d.d20250507",
+    "formats": {
+        "container": [
+            "application/x-hdf5",
+            "application/json"
+        ],
+        "array": [
+            "application/octet-stream",
+            "application/json",
+            "text/csv",
+            "text/x-comma-separated-values",
+            "text/plain",
+            "image/png",
+            "image/tiff",
+            "text/html"
+        ],
+        "awkward": [
+            "application/zip",
+            "application/json",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet"
+        ],
+        "table": [
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/x-comma-separated-values",
+            "text/plain",
+            "text/html",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/json",
+            "application/json-seq",
+            "application/x-hdf5"
+        ],
+        "sparse": [
+            "application/x-hdf5",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/plain",
+            "text/html",
+            "application/json"
+        ],
+        "xarray_dataset": [
+            "application/netcdf",
+            "application/x-netcdf",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/comma-separated-values",
+            "text/plain",
+            "text/html",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/json",
+            "application/x-hdf5"
+        ]
+    },
+    "aliases": {
+        "container": {
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "array": {
+            "application/json": [
+                "json"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "image/png": [
+                "png"
+            ],
+            "image/tiff": [
+                "tiff",
+                "tif"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "awkward": {
+            "application/zip": [
+                "zip"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "table": {
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "sparse": {
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "xarray_dataset": {
+            "application/x-netcdf": [
+                "cdf",
+                "nc"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        }
+    },
+    "queries": [
+        "fulltext",
+        "lookup",
+        "keys_filter",
+        "regex",
+        "eq",
+        "noteq",
+        "comparison",
+        "contains",
+        "in",
+        "notin",
+        "specs",
+        "structure_family"
+    ],
+    "authentication": {
+        "required": true,
+        "providers": [
+            {
+                "provider": "toy",
+                "mode": "password",
+                "links": {
+                    "auth_endpoint": "http://localhost:8000/api/v1/auth/provider/toy/token"
+                },
+                "confirmation_message": "You have logged in as {id}."
+            },
+            {
+                "provider": "orcid",
+                "mode": "external",
+                "links": {
+                    "auth_endpoint": "http://localhost:8000/api/v1/auth/provider/orcid/authorize"
+                },
+                "confirmation_message": "You have logged in with ORCID as {id}."
+            }
+        ],
+        "links": {
+            "whoami": "http://localhost:8000/api/v1/auth/whoami",
+            "apikey": "http://localhost:8000/api/v1/auth/apikey",
+            "refresh_session": "http://localhost:8000/api/v1/auth/session/refresh",
+            "revoke_session": "http://localhost:8000/api/v1/auth/session/revoke/{session_id}",
+            "logout": "http://localhost:8000/api/v1/auth/logout"
+        }
+    },
+    "links": {
+        "self": "http://localhost:8000/api/v1",
+        "documentation": "http://localhost:8000/api/v1/docs"
+    },
+    "meta": {
+        "root_path": "/api"
+    }
+};
+
+export const mockTiled401Response = {
+    "detail": "Could not validate credentials"
+};
+
+export const mockTiled404Response = {
+    "detail": "Not Found"
+};
