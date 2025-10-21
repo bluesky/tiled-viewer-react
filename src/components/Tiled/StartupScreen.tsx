@@ -5,8 +5,8 @@ import { getSearchResults } from './apiClient';
 
 type StartupScreenProps = {
     url: string | undefined,
-    handleUrlChange: Function,
-    handleSubmit: Function
+    handleUrlChange: (url: string) => void,
+    handleSubmit: () => void
 }
 export default function StartupScreen({
     url,

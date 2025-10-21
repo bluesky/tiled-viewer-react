@@ -17,7 +17,7 @@ type TiledContainerProps = {
     url: string | undefined,
     handleSelectClick: (item: TiledSearchItem<TiledStructures> ) => void,
     singleColumnMode?: boolean,
-    handleExpandClick: Function,
+    handleExpandClick: () => void,
     isExpanded: boolean,
     apiKey?: string,
     bearerToken?: string,

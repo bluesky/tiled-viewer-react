@@ -75,8 +75,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const localStorageHistoryPath = useMemo(()=>getLastSearchFromLocalStorage(),[]);
     const preloadedColumnsPath = useMemo(() => initialSearchPath ? initialSearchPath : (localStorageHistoryPath ? localStorageHistoryPath : null), [initialSearchPath]);
 
-    var handleLeftArrowClick:Function;
-    var handleRightArrowClick:Function;
+    let handleLeftArrowClick: () => void;
+    let handleRightArrowClick: () => void;
     //Update the arrow click functions so they always have the correct pathing.
     //there may be a better way to do this without relying on state updates re-running 'useTiled.ts' and
     //subsequently recreating these functions, but this does work and eleminates the <TiledHeader /> component
@@ -129,14 +129,14 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const updateBreadcrumbs = useCallback((clickedItem:TiledSearchItem<TiledStructures>) => {
         //function assumes users may only click on items that exist in the current search 'stack' and cannot jump to a different branch
         setBreadcrumbs((prevState) => {
-            var stateCopy = [...prevState]; //must use shallow to copy to hold function references
+            const stateCopy = [...prevState]; //must use shallow to copy to hold function references
             const effectiveAncestorLength = getEffectiveAncestorLength(clickedItem.attributes.ancestors);
             
             while (stateCopy.length > effectiveAncestorLength) {
                 stateCopy.pop();
             }
             
-            var newBreadcrumb:Breadcrumb = {
+            const newBreadcrumb:Breadcrumb = {
                 label: clickedItem.id,
                 icon: getTiledStructureIcon(clickedItem),
                 onClick: ()=>handleColumnItemClick(clickedItem)
@@ -249,7 +249,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         } else {
             response = await getSearchResults(searchPath, url);
         }
-        let responseMsg = JSON.stringify(response);
+        const responseMsg = JSON.stringify(response);
         console.log(responseMsg)
         if (response!== null && typeof response !== 'string' && 'data' in response) {
             setColumns([response]);
@@ -260,7 +260,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
     const reloadLastSearch = (searchPath:string) => {
             //make a search for the searchPath id in the last column
-            let lastColumn = columns[columns.length - 1];
+            const lastColumn = columns[columns.length - 1];
 
             //columns contains an array of objects, each object has an id, if the id matches the searchPath then call handleColumnItemClick(matchingItem)
             const matchingItem = lastColumn.data.find((item: TiledSearchItem<TiledStructures>) => item.id === searchPath);
@@ -314,7 +314,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
         //kick off the calls to populate the viewer from optional user defined initial path or localStorage history
         if (preloadedColumnsPath) {
-            let searchArray = preloadedColumnsPath.split('/').filter(Boolean); 
+            const searchArray = preloadedColumnsPath.split('/').filter(Boolean); 
             setRemainingHistoryArray(searchArray);
         }
     }, []);
@@ -327,8 +327,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         if (!remainingHistoryArray || remainingHistoryArray.length === 0) return; //base case when there are no more subpaths to display
 
         if (preloadedColumnsPath && remainingHistoryArray) {
-            let fullHistoryArray = preloadedColumnsPath.split('/').filter(Boolean); 
-            let currentHistoryIndex = fullHistoryArray.length - remainingHistoryArray.length; //get the column index we should be searching in
+            const fullHistoryArray = preloadedColumnsPath.split('/').filter(Boolean); 
+            const currentHistoryIndex = fullHistoryArray.length - remainingHistoryArray.length; //get the column index we should be searching in
             if (columns.length === currentHistoryIndex + 1) { //only do the search if the column state is ready
                 reloadLastSearch(remainingHistoryArray[0]);
             }

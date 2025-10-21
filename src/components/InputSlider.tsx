@@ -87,14 +87,14 @@ export default function InputSlider({
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        var newValue = Number(e.target.value);
+        const newValue = Number(e.target.value);
         handleInputChange(newValue);
     };
 
     if (marks) {
         for ( let i = 0; i < marks?.length; i++) {
-            let val = marks[i];
-            let cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
+            const val = marks[i];
+            const cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
         }
     }
 
@@ -117,7 +117,7 @@ export default function InputSlider({
         return `calc(${((mark - min) / (max - min)) * 100}% + ${(-((mark - min) / (max - min))*thumbWidth) + thumbWidth/2}px)`;
     };
 
-    const isIndexFirstOrLast = (array:Number[], index: number): boolean => {
+    const isIndexFirstOrLast = (array:number[], index: number): boolean => {
         return (array.length - 1 === index || index === 0) ? true : false;
     };
 

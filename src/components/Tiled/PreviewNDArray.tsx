@@ -28,11 +28,11 @@ export default function PreviewNDArray({
 
     const handleSliderChange = (newValue:number, slider:Slider) => {
         //make an API call to overwrite the current image
-        var stack = sliders.map((slider) => slider.value);
+        const stack = sliders.map((slider) => slider.value);
         stack[slider.index] = newValue;
         updateImage(stack);
         setSliders((prevState) => {
-            var newState = [...prevState];
+            const newState = [...prevState];
             newState[slider.index].value = newValue;
             return newState;
         })

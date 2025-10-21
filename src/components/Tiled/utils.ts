@@ -18,7 +18,7 @@ import { Slider } from "./types";
 export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>, url?:string) => {
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
-    var links= {...item.links};
+    const links= {...item.links};
     const baseUrl = url ? url : getDefaultTiledUrl();
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
@@ -36,8 +36,8 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
  * ```
  */
 export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) => {
-    var structureFamily = item.attributes.structure_family;
-    var icon = tiledStructureIcons.question;
+    const structureFamily = item.attributes.structure_family;
+    let icon = tiledStructureIcons.question;
     if (structureFamily === 'array' || structureFamily === 'awkward' || structureFamily === 'sparse') {
         //structured arrays technically are shown as arrays from tiled, but we visually display as a table
         if (isStructuredArrayStructure(item)) {
@@ -73,7 +73,7 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
  */
 export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra?:string):string => {
     const ancestors = item.attributes.ancestors;
-    var searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
+    let searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
     searchPath+=item.id;
     if (extra) {
         searchPath+=extra;
@@ -157,7 +157,7 @@ export const onPopoutClick =(popoutUrl:string) => {
  * ```
  */
 export const createSliders = (sliderCount:number, shape:number[]) => {
-    var initialSliders:Slider[] = [];
+    const initialSliders:Slider[] = [];
     //the first values from shape represent the number of stacks, the last two dims are the actual 'image' size
     for ( let i = 0; i < sliderCount; i++) {
         const newSlider = {
@@ -259,8 +259,8 @@ export const saveAuthToLocalStorage = (refreshToken:string, accessToken:string) 
 };
 
 export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructure>, maxBytesAllowed?:number) => {
-    var stepX = 1;
-    var stepY = 1;
+    let stepX = 1;
+    let stepY = 1;
     const letter = arrayItem.attributes.structure.data_type.kind[0] as keyof typeof numpyTypeSizesBytes;
     const bytesPerElement = numpyTypeSizesBytes[letter];
     const shape = arrayItem.attributes.structure.shape;
@@ -269,7 +269,7 @@ export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructu
     const maxBytes = maxBytesAllowed ? maxBytesAllowed : 1000000; //default to 1MB if not provided
     if (totalImageSizeBytes > maxBytes) {
         const ratio = totalImageSizeBytes / maxBytes;
-        let squareStep = Math.ceil(Math.sqrt(ratio));
+        const squareStep = Math.ceil(Math.sqrt(ratio));
         //TO DO - downsamplke for rectangular images instead of assumed square
         stepX = squareStep;
         stepY = squareStep;

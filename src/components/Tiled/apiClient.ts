@@ -6,11 +6,11 @@ import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAu
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
-var globalApiKey:string | null = null;
+let globalApiKey:string | null = null;
 
-var globalReverseSort:boolean = false;
+let globalReverseSort:boolean = false;
 
-var globalInitialPath:string | null = null;
+let globalInitialPath:string | null = null;
 
 export const setInitialPath = (path:string | null) => {
     //reformat so that a leading '/' is removed
@@ -459,7 +459,7 @@ export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | nu
 export const loginUserWithNamePassword = async(username: string, password: string, url?: string, provider?: TiledAuthProvider): Promise<{access_token: string, refresh_token: string} | null> => {
     try {
         // If a specific provider is given, use its auth_endpoint, otherwise fetch server info to find the first available password provider
-        var authEndpoint = '';
+        let authEndpoint = '';
         if (provider && (provider.mode === 'password' || provider.mode === 'internal')) {
             if (!provider.links || !provider.links.auth_endpoint) {
                 console.error('Provided authentication provider is missing auth_endpoint');

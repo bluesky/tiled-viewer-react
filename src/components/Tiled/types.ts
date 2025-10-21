@@ -8,7 +8,7 @@ export type Breadcrumb = {
     labelStyle?: string;
     icon?: JSX.Element;
     iconStyle?: string;
-    onClick?: Function;
+    onClick?: () => void;
 }
 export type Slider = {
     min: number;

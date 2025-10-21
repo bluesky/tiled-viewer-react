@@ -8,7 +8,7 @@ export default function TiledFooter({
     ...props
 }: TiledFooterProps) {
     //console.log('render TiledFooter.tsx')
-    const handleClick = (cb:undefined | Function) => {
+    const handleClick = (cb: undefined | (() => void)) => {
         console.log('click')
         console.log({cb})
         if (cb!== undefined) {

@@ -8,10 +8,10 @@ type TiledColumnProps = {
     data: TiledSearchItem<TiledStructures>[];
     links: TiledSearchResult['links'];
     meta: TiledSearchResult['meta'];
-    onItemClick: Function;
+    onItemClick: (item: TiledSearchItem<TiledStructures>, index: number) => void;
     index: number;
     breadcrumbs: Breadcrumb[];
-    handleSelectClick?: Function;
+    handleSelectClick?: (item: TiledSearchItem<TiledStructures>) => void;
     className?: string;
     showTooltip?: boolean;
     handleNewPageClick: (link: string, columnIndex: number) => void;
@@ -37,13 +37,13 @@ const exampleLinks = {
 export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs, handleSelectClick, className, showTooltip=true, handleNewPageClick}: TiledColumnProps) {
     //console.log({links})
     //parse the links.self to get the value after ...page[offset]=
-    let currentOffset = links.self ? parseInt(links.self.split('page[offset]=')[1].split('&')[0]) : 1;
-    let pageLimit = links.self ? parseInt(links.self.split('page[limit]=')[1]) : 100;
-    let totalResults = meta.count;
-    let currentlyDisplayedStartIndex = currentOffset + (data.length > 0 ? 1 : 0);
-    let currentlyDisplayedEndIndex = currentlyDisplayedStartIndex + data.length - 1;
-    let nextResultsLink = links.next ? links.next : null;
-    let prevResultsLink = links.prev ? links.prev : null;
+    const currentOffset = links.self ? parseInt(links.self.split('page[offset]=')[1].split('&')[0]) : 1;
+    const pageLimit = links.self ? parseInt(links.self.split('page[limit]=')[1]) : 100;
+    const totalResults = meta.count;
+    const currentlyDisplayedStartIndex = currentOffset + (data.length > 0 ? 1 : 0);
+    const currentlyDisplayedEndIndex = currentlyDisplayedStartIndex + data.length - 1;
+    const nextResultsLink = links.next ? links.next : null;
+    const prevResultsLink = links.prev ? links.prev : null;
     //console.log({currentOffset, pageLimit, totalResults, currentlyDisplayedStartIndex, currentlyDisplayedEndIndex});
     return (
         <div className={cn("flex flex-col-reverse border-r border-r-slate-300 min-w-56 w-fit max-w-xs px-4 h-auto pt-2", className)}>
@@ -56,12 +56,12 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
             ) : null}
             <ul className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
                 {data.map((item:TiledSearchItem<TiledStructures>) => {
-                    let id = `item-${item.id}${index}`;
+                    const id = `item-${item.id}${index}`;
                     return (
                         <li 
                             className={`${ (breadcrumbs.length > index) && breadcrumbs[index].label === item.id ? 'bg-sky-200 hover:bg-sky-300' : 'hover:bg-sky-300'} flex space-x-2 px-2 rounded-sm hover:cursor-pointer relative`} 
                             key={id}
-                            onClick={()=>onItemClick(item)}
+                            onClick={()=>onItemClick(item, index)}
                             id={id}
                         >
                             <div className={`w-6 aspect-square flex-shrink-0 ${item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite' ? 'text-sky-700' : ''}`}>{getTiledStructureIcon(item)}</div>

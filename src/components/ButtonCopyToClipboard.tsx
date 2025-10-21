@@ -10,7 +10,7 @@ const clipBoardDocumentCheck = <svg xmlns="http://www.w3.org/2000/svg" fill="non
 
 export type ButtonCopyToClipboardProps = {
     copyText: string;
-    cb?: Function;
+    cb?: () => void;
     size?: 'small' | 'medium' | 'large',
     showText?: boolean;
 }

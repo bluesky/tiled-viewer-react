@@ -9,6 +9,7 @@ import PreviewXArray from './PreviewXArray';
 import { 
     PreviewSize, 
     TiledSearchItem, 
+    TiledStructures,
     ArrayStructure, 
     TableStructure, 
     AwkwardStructure, 
@@ -27,7 +28,7 @@ import { tailwindIcons } from '@/assets/icons';
 type TiledPreviewProps = {
     previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | TiledSearchItem<StructuredArrayStructure>;
     previewSize: PreviewSize;
-    handleSelectClick?: Function;
+    handleSelectClick?: (item: TiledSearchItem<TiledStructures>) => void;
     url?: string;
     scrollContainerRef: React.RefObject<HTMLDivElement>;
 }
