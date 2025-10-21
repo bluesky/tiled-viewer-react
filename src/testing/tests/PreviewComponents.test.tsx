@@ -302,15 +302,23 @@ describe('Preview Components', () => {
   ];
 
   describe('PreviewNDArray Component', () => {
-    it('should render array item with title and image container', () => {
+    it('should render array item with title and image container', async () => {
       render(<PreviewNDArray arrayItem={mockArrayItem} />);
       
-      expect(screen.getByText('test-array')).toBeInTheDocument();
-      expect(screen.getByText(/True Dimensions:/)).toBeInTheDocument();
-      expect(screen.getByText(/\[100, 100\]/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-array')).toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByText(/True Dimensions:/)).toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByText(/\[100, 100\]/)).toBeInTheDocument();
+      });
     });
 
-    it('should handle different array dimensions', () => {
+    it('should handle different array dimensions', async () => {
       const threeDArray = {
         ...mockArrayItem,
         attributes: {
@@ -324,20 +332,29 @@ describe('Preview Components', () => {
 
       render(<PreviewNDArray arrayItem={threeDArray} />);
       
-      expect(screen.getByText('test-array')).toBeInTheDocument();
-      expect(screen.getByText(/\[10, 100, 100\]/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-array')).toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByText(/\[10, 100, 100\]/)).toBeInTheDocument();
+      });
     });
 
-    it('should handle isFullWidth prop', () => {
+    it('should handle isFullWidth prop', async () => {
       render(<PreviewNDArray arrayItem={mockArrayItem} isFullWidth={true} />);
       
-      expect(screen.getByText('test-array')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-array')).toBeInTheDocument();
+      });
     });
 
-    it('should handle custom URL prop', () => {
+    it('should handle custom URL prop', async () => {
       render(<PreviewNDArray arrayItem={mockArrayItem} url="https://custom-url.com" />);
       
-      expect(screen.getByText('test-array')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-array')).toBeInTheDocument();
+      });
     });
   });
 
@@ -406,10 +423,12 @@ describe('Preview Components', () => {
       expect(screen.getByText('test-structured-array')).toBeInTheDocument();
     });
 
-    it('should handle custom URL prop', () => {
+    it('should handle custom URL prop', async () => {
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} url="https://custom-url.com" />);
       
-      expect(screen.getByText('test-structured-array')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-structured-array')).toBeInTheDocument();
+      });
     });
   });
 
@@ -475,10 +494,12 @@ describe('Preview Components', () => {
       expect(screen.getAllByDisplayValue('0')).toHaveLength(2); // Only 2 inputs with value 0 (not the SelectInteger)
     });
 
-    it('should handle custom URL prop', () => {
+    it('should handle custom URL prop', async () => {
       render(<PreviewTable tableItem={mockTableItem} url="https://custom-url.com" />);
       
-      expect(screen.getAllByText('test-table')).toHaveLength(2);
+      await waitFor(() => {
+        expect(screen.getAllByText('test-table')).toHaveLength(2);
+      });
     });
   });
 
@@ -524,10 +545,12 @@ describe('Preview Components', () => {
       expect(screen.getByText(/Dimensions: x\(100\)/)).toBeInTheDocument();
     });
 
-    it('should handle custom URL prop', () => {
+    it('should handle custom URL prop', async () => {
       render(<PreviewXArray xarrayItem={mockXArrayItem} url="https://custom-url.com" />);
       
-      expect(screen.getByText('test-xarray')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-xarray')).toBeInTheDocument();
+      });
     });
   });
 
@@ -576,25 +599,37 @@ describe('Preview Components', () => {
   });
 
   describe('Component Integration', () => {
-    it('should handle missing optional props gracefully', () => {
+    it('should handle missing optional props gracefully', async () => {
       // Test all components without optional URL prop
       render(<PreviewNDArray arrayItem={mockArrayItem} />);
-      expect(screen.getByText('test-array')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-array')).toBeInTheDocument();
+      });
       
       render(<PreviewAwkward awkwardItem={mockAwkwardItem} />);
-      expect(screen.getByText(/Awkward item ID:/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Awkward item ID:/)).toBeInTheDocument();
+      });
       
       render(<PreviewSparse sparseItem={mockSparseItem} />);
-      expect(screen.getByText(/Sparse item ID:/)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Sparse item ID:/)).toBeInTheDocument();
+      });
       
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} />);
-      expect(screen.getByText('test-structured-array')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-structured-array')).toBeInTheDocument();
+      });
       
       render(<PreviewTable tableItem={mockTableItem} />);
-      expect(screen.getByText('test-table')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-table')).toBeInTheDocument();
+      });
       
       render(<PreviewXArray xarrayItem={mockXArrayItem} />);
-      expect(screen.getByText('test-xarray')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('test-xarray')).toBeInTheDocument();
+      });
     });
 
     it('should handle empty data gracefully', async () => {
