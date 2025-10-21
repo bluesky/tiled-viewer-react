@@ -105,24 +105,28 @@ jobs:
               (testStep.conclusion === 'success' ? 'All tests passed' : 'Some tests failed') : 
               'Test status unknown';
             
-            github.rest.issues.createComment({
+            const commentBody = [
+              `## ${emoji} Test Results`,
+              ``,
+              `${message}`,
+              ``,
+              `**Complete Test Suite Coverage:**`,
+              `- ${testStepStatus} **TiledSearchSetup** - Search configuration and setup tests`,
+              `- ${testStepStatus} **TiledButtonMode** - Button mode functionality tests`,
+              `- ${testStepStatus} **PreviewComponents** - 6 Preview components (23 tests)`,
+              `- ${testStepStatus} **TiledErrorHandling** - Error handling and edge cases`,
+              `- ${testStepStatus} **Tiled** - Main component integration tests`,
+              ``,
+              `**Test Environment:** Node.js 18.x & 20.x`,
+              `**Linting:** ${lintStatus} ${lintText}`,
+              `**Type Checking:** ${buildStatus} ${buildText}`,
+              `**Build:** ${buildStatus} Production build successful`,
+              `**Tests:** ${testStepStatus} ${testText}`
+            ].join('\n');
+
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `## ${emoji} Test Results
-              
-              ${message}
-              
-              **Complete Test Suite Coverage:**
-              - ${testStepStatus} **TiledSearchSetup** - Search configuration and setup tests
-              - ${testStepStatus} **TiledButtonMode** - Button mode functionality tests  
-              - ${testStepStatus} **PreviewComponents** - 6 Preview components (23 tests)
-              - ${testStepStatus} **TiledErrorHandling** - Error handling and edge cases
-              - ${testStepStatus} **Tiled** - Main component integration tests
-              
-              **Test Environment:** Node.js 18.x & 20.x
-              **Linting:** ${lintStatus} ${lintText}
-              **Type Checking:** ${buildStatus} ${buildText}
-              **Build:** ${buildStatus} Production build successful
-              **Tests:** ${testStepStatus} ${testText}
-            `);
+              body: commentBody
+            });
