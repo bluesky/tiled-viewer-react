@@ -1,9 +1,6 @@
-import { useMemo } from 'react';
 import './App.css';
 import Tiled from '../components/Tiled/Tiled';
 import Button from '@/components/Button';
-import Example from '@/components/scatterExample/Example';
-import ParentSize from '@visx/responsive/lib/components/ParentSize';
 import bluesky_logo from '../assets/bluesky_tiled_logo_WithBskyLogo.svg';
 
 

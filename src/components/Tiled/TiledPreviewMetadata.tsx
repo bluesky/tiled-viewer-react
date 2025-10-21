@@ -1,4 +1,4 @@
-import { ArrayStructure, TableStructure, TiledSearchItem, TiledStructures } from "./types";
+import { TiledSearchItem, TiledStructures } from "./types";
 import ButtonCopyToClipboard from "../ButtonCopyToClipboard";
 
 type TiledPreviewMetadataProps = {

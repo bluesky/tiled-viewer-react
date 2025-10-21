@@ -73,7 +73,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const currentAncestorId = useRef<number>(-1);
     
     const localStorageHistoryPath = useMemo(()=>getLastSearchFromLocalStorage(),[]);
-    const preloadedColumnsPath = useMemo(() => initialSearchPath ? initialSearchPath : (localStorageHistoryPath ? localStorageHistoryPath : null), [initialSearchPath]);
+    const preloadedColumnsPath = useMemo(() => initialSearchPath ? initialSearchPath : (localStorageHistoryPath ? localStorageHistoryPath : null), [initialSearchPath, localStorageHistoryPath]);
 
     let handleLeftArrowClick: () => void;
     let handleRightArrowClick: () => void;
@@ -144,6 +144,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             stateCopy.push(newBreadcrumb);
             return stateCopy;
         })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const closePreview = () => {
@@ -165,6 +166,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         updateAncestorRefs(item);
         updateCurrentSelectedItem(item);
         writeSearchPathToLocalStorage(item);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const updateCurrentSelectedItem = (item:TiledSearchItem<TiledStructures>) => {
@@ -182,13 +184,14 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             console.error('Error: No matching structure family found for: ' + item.attributes.structure_family);
             console.log({item});
           }
-    }
-
+    };
+    
     const handleArrayClick = useCallback((item:TiledSearchItem<ArrayStructure>) => {
         setPreviewItem(item);
         updateBreadcrumbs(item);
         setPreviewSize(defaultPreviewSize);
         updateColumns(item);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleTableClick = useCallback((item:TiledSearchItem<TableStructure>) => {
@@ -196,6 +199,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         updateBreadcrumbs(item);
         setPreviewSize(defaultPreviewSize);
         updateColumns(item);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleContainerClick = (item:TiledSearchItem<ContainerStructure>) => {
@@ -224,6 +228,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const handleSearchResponse = useCallback((clickedItem:TiledSearchItem<TiledStructures>, res:TiledSearchResult) => {
         updateColumns(clickedItem, res);
         updateBreadcrumbs(clickedItem);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const resetAllData = () => {
@@ -235,7 +240,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         getSearchResults(searchPath, url, (res:TiledSearchResult) => setColumns([res]));
     }
 
-    const initializeData = async () => {
+    const initializeData = useCallback(async () => {
         //attempt to get data from base Tiled Url. Display error on UI if no data comes back
         let response = null;
         const auth = getAuthFromLocalStorage();
@@ -256,9 +261,9 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         } else {
             setWarning('There was an error connecting to the Tiled server. Please check the console for more details.');
         }
-    }
+    }, [apiKey, bearerToken, reverseSort, searchPath, url]);
 
-    const reloadLastSearch = (searchPath:string) => {
+    const reloadLastSearch = useCallback((searchPath:string) => {
             //make a search for the searchPath id in the last column
             const lastColumn = columns[columns.length - 1];
 
@@ -271,7 +276,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
                 console.warn(`Attempted to load previous search, no matching item found for search path: ${searchPath} in the current page offset, initializing at root.`);
                 setRemainingHistoryArray(null);
             }
-    }
+    }, [columns, handleColumnItemClick]);
 
     const handleNewPageClick = (link:Url, columnIndex:number, nextPageIndex?:number) => {
         //in a column if results exceed page limit the left/right arrows are enabled for making subsequent requests at the same path with different page offsets
@@ -317,7 +322,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             const searchArray = preloadedColumnsPath.split('/').filter(Boolean); 
             setRemainingHistoryArray(searchArray);
         }
-    }, []);
+    }, [initializeData, preloadedColumnsPath]);
 
     useEffect(() => {
         //keeps triggering to simulate a user clicking a column element until every subpath of preloadedColumnsPath is displayed in the viewer
@@ -335,7 +340,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         }
 
     }
-    , [remainingHistoryArray, columns]);
+    , [remainingHistoryArray, columns, preloadedColumnsPath, reloadLastSearch]);
 
     return useMemo(() => ({
         columns,
@@ -350,5 +355,6 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         resetAllData,
         warning,
         handleNewPageClick
-    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, handleColumnItemClick, warning, handleNewPageClick])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, previewItem, handleColumnItemClick, resetAllData, warning, handleNewPageClick])
 }

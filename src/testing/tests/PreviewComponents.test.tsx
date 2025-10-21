@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { render, screen, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 
 // Import all Preview components
@@ -368,7 +367,7 @@ describe('Preview Components', () => {
     });
 
     it('should handle custom URL prop', () => {
-      render(<PreviewAwkward awkwardItem={mockAwkwardItem} url="https://custom-url.com" />);
+      render(<PreviewAwkward awkwardItem={mockAwkwardItem} />);
       
       expect(screen.getByText('Awkward item ID: test-awkward')).toBeInTheDocument();
     });
@@ -384,7 +383,7 @@ describe('Preview Components', () => {
     });
 
     it('should handle custom URL prop', () => {
-      render(<PreviewSparse sparseItem={mockSparseItem} url="https://custom-url.com" />);
+      render(<PreviewSparse sparseItem={mockSparseItem} />);
       
       expect(screen.getByText('Sparse item ID: test-sparse')).toBeInTheDocument();
     });
@@ -413,7 +412,7 @@ describe('Preview Components', () => {
 
     it('should show loading state initially', async () => {
       const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getStructuredArrayData).mockImplementation(async () => {
         // Don't call callback to simulate loading
         return Promise.resolve();
       });

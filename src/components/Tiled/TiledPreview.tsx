@@ -72,10 +72,10 @@ export default function TiledPreview({
             return <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth} />;
         }
         if (isAwkwardStructure(previewItem)) {
-            return <PreviewAwkward awkwardItem={previewItem} url={url} />;
+            return <PreviewAwkward awkwardItem={previewItem} />;
         }
         if (isSparseStructure(previewItem)) {
-            return <PreviewSparse sparseItem={previewItem} url={url} />;
+            return <PreviewSparse sparseItem={previewItem} />;
         }
                 return <div className="text-red-500">Unsupported item type</div>;
     };

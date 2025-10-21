@@ -76,7 +76,7 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
                         onSuccess();
                     }
                 }
-            } catch (error) {
+            } catch {
                 // Cross-origin error - popup is on different domain
                 // This is expected during the OIDC flow
                 console.log('Cross-origin access (expected during OIDC flow)');

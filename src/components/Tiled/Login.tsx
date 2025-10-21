@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import TiledHeader from "./TiledHeader";
 import LoginUsernamePassword from "./LoginUsernamePassword";
 import LoginSelectProvider from "./LoginSelectProvider";
 import LoginOIDC from "./LoginOIDC";
 import LoginHelp from "./LoginHelp";
-import Button from "../Button";
 
-import { Warning, Key, Info, Lock } from "@phosphor-icons/react";
+import { Warning } from "@phosphor-icons/react";
 
 import { getServerInfo } from "./apiClient";
 import { TiledAuthProvider, TiledInfoResponse } from "./types";

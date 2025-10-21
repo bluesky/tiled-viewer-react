@@ -1,6 +1,6 @@
 import { TiledSearchItem, SparseStructure } from "./types";
 
-export default function PreviewSparse({ sparseItem, url }: { sparseItem: TiledSearchItem<SparseStructure>; url?: string }) {
+export default function PreviewSparse({ sparseItem }: { sparseItem: TiledSearchItem<SparseStructure> }) {
     console.log({ sparseItem });
     return (
         <div className="w-full flex flex-col items-center space-y-8 py-8">

@@ -32,9 +32,7 @@ export default function TiledContainer({
     isExpanded,
     apiKey,
     bearerToken,
-    initialSearchPath,
-    reverseSort,
-    ...props
+    reverseSort
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 

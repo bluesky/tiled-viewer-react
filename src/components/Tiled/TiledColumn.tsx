@@ -73,8 +73,8 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                                         <Button 
                                             text="Select" 
                                             size="small" 
-                                            cb={(event:React.MouseEvent)=> {
-                                                event.stopPropagation();
+                                            cb={(e?:React.MouseEvent)=> {
+                                                e?.stopPropagation();
                                                 handleSelectClick(item);
                                             }
                                         

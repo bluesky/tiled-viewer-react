@@ -2,9 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { TiledSearchItem, XArrayStructure, TiledTableRow } from "./types";
 import { getXArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
-import InputSliderRange from "../InputSliderRange";
-import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
-import SelectInteger from "../SelectInteger";
 import Table from "./Table";
 
 type PreviewXArrayProps = {
@@ -16,7 +13,6 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
     const [xarrayData, setXarrayData] = useState<number[][]>([]);
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
 
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
@@ -73,7 +69,6 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         const tableData = convertToTableFormat(newXArrayData);
         setVisibleData(tableData.slice(0, rowLoadSize));
         setIsLoading(false);
-        setDomain([0, tableData.length - 1]);
     };
 
     useEffect(() => {

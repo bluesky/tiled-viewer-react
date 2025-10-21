@@ -84,7 +84,7 @@ export default function Tiled({
         isButtonMode && setIsViewerOpen(false);
     };
 
-    const handleClickOutside = (event: React.MouseEvent<HTMLDivElement>) => {
+    const handleClickOutside = () => {
         setIsViewerOpen(false);
     };
 

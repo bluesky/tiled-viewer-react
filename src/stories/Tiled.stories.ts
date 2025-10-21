@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { expect, within, userEvent, waitFor } from '@storybook/test';
+import { expect, userEvent, waitFor } from '@storybook/test';
 import Tiled from '../components/Tiled/Tiled';
 import { tiledHandlers } from '@/testing/mocks/handlers';
 

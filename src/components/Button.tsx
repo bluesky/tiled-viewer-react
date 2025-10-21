@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils";
-
 export type ButtonProps = {
     /** callback function on click */
     cb?: (e?: React.MouseEvent<HTMLButtonElement>) => void;

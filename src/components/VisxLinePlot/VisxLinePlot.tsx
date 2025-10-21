@@ -12,7 +12,7 @@ export type XYChartProps = {
   domain?: [number, number];
 };
 
-export default function VisxLinePlot({ width, height, plotData, domain }: XYChartProps) {
+export default function VisxLinePlot({ plotData, domain }: XYChartProps) {
 
     const dataWithIndex = useMemo(() => {
         if (!domain) {
@@ -28,14 +28,6 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
                 __index: startIndex + arrayIndex // Preserve original indices
             }));
     }, [plotData, domain]);
-
-      // Get data keys dynamically
-    const dataKeys = useMemo(() => {
-      if (!dataWithIndex || dataWithIndex.length === 0) return [];
-      return Object.keys(dataWithIndex[0]).filter(key => key !== '__index');
-    }, [dataWithIndex]);
-
-    console.log({plotData})
 
     const [ selectedDataKeys, setSelectedDataKeys ] = React.useState<string[]>( plotData ? [Object.keys(plotData[0])[0] as string] : []); //auto display the first key
 
@@ -60,8 +52,6 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
           renderAreaSeries,
           renderAreaStack,
           renderBarGroup,
-          renderBarSeries,
-          renderBarStack,
           renderGlyph,
           renderGlyphSeries,
           enableTooltipGlyph,
@@ -88,9 +78,6 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
           AreaSeries,
           AreaStack,
           Axis,
-          BarGroup,
-          BarSeries,
-          BarStack,
           GlyphSeries,
           Grid,
           LineSeries,
