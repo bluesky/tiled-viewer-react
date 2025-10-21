@@ -52,7 +52,7 @@ jobs:
           CI: true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-node-${{ matrix.node-version }}
@@ -75,6 +75,36 @@ jobs:
             const emoji = testStatus === 'success' ? '✅' : '❌';
             const message = testStatus === 'success' ? 'All tests passed!' : 'Some tests failed.';
             
+            // Get the job outputs to determine individual step results
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            
+            const testJob = jobs.data.jobs.find(job => job.name.includes('test'));
+            const steps = testJob ? testJob.steps : [];
+            
+            const lintStep = steps.find(step => step.name === 'Run linting');
+            const buildStep = steps.find(step => step.name === 'Run type checking and build');
+            const testStep = steps.find(step => step.name === 'Run all tests');
+            
+            const lintStatus = lintStep ? (lintStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            const buildStatus = buildStep ? (buildStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            const testStepStatus = testStep ? (testStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            
+            const lintText = lintStep ? 
+              (lintStep.conclusion === 'success' ? 'ESLint passed' : 'ESLint failed') : 
+              'ESLint status unknown';
+              
+            const buildText = buildStep ? 
+              (buildStep.conclusion === 'success' ? 'TypeScript compilation successful' : 'TypeScript compilation failed') : 
+              'Build status unknown';
+              
+            const testText = testStep ? 
+              (testStep.conclusion === 'success' ? 'All tests passed' : 'Some tests failed') : 
+              'Test status unknown';
+            
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -84,19 +114,15 @@ jobs:
               ${message}
               
               **Complete Test Suite Coverage:**
-              - ✅ **TiledSearchSetup** - Search configuration and setup tests
-              - ✅ **TiledButtonMode** - Button mode functionality tests  
-              - ✅ **PreviewComponents** - All 6 Preview components (23 tests)
-                - PreviewNDArray, PreviewAwkward, PreviewSparse
-                - PreviewStructuredArray, PreviewTable, PreviewXArray
-                - Error handling and integration tests
-              - ✅ **TiledErrorHandling** - Error handling and edge cases
-              - ✅ **Tiled** - Main component integration tests
+              - ${testStepStatus} **TiledSearchSetup** - Search configuration and setup tests
+              - ${testStepStatus} **TiledButtonMode** - Button mode functionality tests  
+              - ${testStepStatus} **PreviewComponents** - 6 Preview components (23 tests)
+              - ${testStepStatus} **TiledErrorHandling** - Error handling and edge cases
+              - ${testStepStatus} **Tiled** - Main component integration tests
               
               **Test Environment:** Node.js 18.x & 20.x
-              **Linting:** ESLint passed
-              **Type Checking:** TypeScript compilation successful
-              **Build:** Production build successful
-              
-              All tests are running clean with no \`act()\` warnings! 🎉`
-            });
+              **Linting:** ${lintStatus} ${lintText}
+              **Type Checking:** ${buildStatus} ${buildText}
+              **Build:** ${buildStatus} Production build successful
+              **Tests:** ${testStepStatus} ${testText}
+            `);
