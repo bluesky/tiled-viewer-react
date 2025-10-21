@@ -4,7 +4,6 @@ axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 import { sampleTiledSearchData } from "./sampleData";
 import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
-import { glob } from "fs";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
@@ -356,6 +355,20 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
  */
 export const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
+};
+
+/**
+ * Resets all global state variables to their default values
+ * Useful for testing to ensure clean state between tests
+ * @example
+ * ```typescript
+ * resetGlobalState(); // Clears all global variables
+ * ```
+ */
+export const resetGlobalState = () => {
+    globalApiKey = null;
+    globalReverseSort = false;
+    globalInitialPath = null;
 };
 
 
