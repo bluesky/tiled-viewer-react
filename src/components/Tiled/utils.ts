@@ -232,6 +232,32 @@ export const getApiKeyFromLocalStorage = () => {
     return undefined;
 }
 
+export const getAuthFromLocalStorage = () => {
+    const refreshToken = localStorage.getItem('tiledRefreshToken');
+    const accessToken = localStorage.getItem('tiledAccessToken');
+    if (refreshToken && accessToken) {
+        if (refreshToken.length === 0 || accessToken.length === 0) {
+            return undefined;
+        } else {
+            return {
+                refreshToken,
+                accessToken
+            };
+        }
+    }
+    return undefined;
+}
+
+export const clearAuthFromLocalStorage = () => {
+    localStorage.removeItem('tiledRefreshToken');
+    localStorage.removeItem('tiledAccessToken');
+};
+
+export const saveAuthToLocalStorage = (refreshToken:string, accessToken:string) => {
+    localStorage.setItem('tiledRefreshToken', refreshToken);
+    localStorage.setItem('tiledAccessToken', accessToken);
+};
+
 export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructure>, maxBytesAllowed?:number) => {
     var stepX = 1;
     var stepY = 1;

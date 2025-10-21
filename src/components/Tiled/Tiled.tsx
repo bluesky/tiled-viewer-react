@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import TiledContainer from "./TiledContainer";
+import Login from "./Login";
 import StartupScreen from "./StartupScreen";
 import OpenTiledRow from "./OpenTiledRow";
 import './Tiled.css'
@@ -7,6 +8,7 @@ import './Tiled.css'
 import { cn } from "@/lib/utils";
 import { TiledItemLinks, TiledSearchItem, TiledStructures } from "./types";
 import { generateLinksForCallback, getApiKeyFromLocalStorage } from "./utils";
+import { setAuthErrorCallback, setInitialPath } from "./apiClient";
 
 
 export type TiledProps = {
@@ -23,8 +25,12 @@ export type TiledProps = {
     contentClassName?: string,
     isFullWidth?: boolean,
     isButtonMode?: boolean,
+    inButtonModeShowApiKeyInput?: boolean,
+    inButtonModeShowReverseSortInput?: boolean,
+    inButtonModeShowSelectedData?: boolean,
     buttonModeText?: string,
     reverseSort?: boolean,
+    initialPath?: string,
 }
 export default function Tiled({
     onSelectCallback,
@@ -40,8 +46,12 @@ export default function Tiled({
     singleColumnMode=false,
     isFullWidth=false,
     isButtonMode=false,
+    inButtonModeShowApiKeyInput,
+    inButtonModeShowReverseSortInput,
+    inButtonModeShowSelectedData,
     buttonModeText="Select Data",
     reverseSort=true,
+    initialPath,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -52,6 +62,19 @@ export default function Tiled({
     const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
     const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
     const [ userInputReverseSort, setUserInputReverseSort ] = useState<boolean>(reverseSort || false);
+    const [ showLogin, setShowLogin ] = useState<boolean>(false);
+
+    //on 401 errors show the login component
+    setAuthErrorCallback((error) => {
+        console.error("Authentication error:", error);
+        setShowLogin(true);
+    });
+
+    initialPath &&setInitialPath(initialPath);
+
+    const handleLoginSuccess = useCallback(() => {
+        setShowLogin(false);
+    }, []);
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
         const links = generateLinksForCallback(item, url);
@@ -103,6 +126,9 @@ export default function Tiled({
                             userInputReverseSort={userInputReverseSort}
                             handleReverseSortChange={setUserInputReverseSort}
                             handleInputChange={handleApiKeyChange}
+                            showApiKeyInput={inButtonModeShowApiKeyInput}
+                            showReverseSortInput={inButtonModeShowReverseSortInput}
+                            showSelectedData={inButtonModeShowSelectedData}
                         />
                     )}
 
@@ -123,33 +149,37 @@ export default function Tiled({
                                 className={cn(
                                     `
                                         flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
-                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)]' : (size ? sizeClassMap[size] : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`)} 
-                                        ${isFullWidth && 'w-full'} ${isExpanded && (size ? expandedSizeClassMap[size] : 'h-full w-full')}
+                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (size ? sizeClassMap[size] : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`)} 
+                                        ${isFullWidth ? 'w-full' : ''} ${isExpanded ? (size ? expandedSizeClassMap[size] : 'h-full w-full') : ''}
                                     `,
                                     contentClassName
                                 )}
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {enableStartupScreen && showStartupScreen ? (
-                                <StartupScreen
-                                    url={url}
-                                    handleUrlChange={setUrl}
-                                    handleSubmit={handleStartupScreenSubmit}
-                                />
+                                    <StartupScreen
+                                        url={url}
+                                        handleUrlChange={setUrl}
+                                        handleSubmit={handleStartupScreenSubmit}
+                                    />
                                 ) : (
                                     <>
-                                        <TiledContainer
-                                            url={url}
-                                            handleSelectClick={handleSelectClick}
-                                            singleColumnMode={singleColumnMode}
-                                            handleExpandClick={handleExpandClick}
-                                            isExpanded={isExpanded}
-                                            apiKey={userInputApiKey}
-                                            bearerToken={bearerToken}
-                                            reverseSort={userInputReverseSort}
-                                        />
+                                        {showLogin ? 
+                                            <Login onSuccess={handleLoginSuccess} url={url}/> 
+                                        :                                 
+                                            <TiledContainer
+                                                url={url}
+                                                handleSelectClick={handleSelectClick}
+                                                singleColumnMode={singleColumnMode}
+                                                handleExpandClick={handleExpandClick}
+                                                isExpanded={isExpanded}
+                                                apiKey={userInputApiKey}
+                                                bearerToken={bearerToken}
+                                                reverseSort={userInputReverseSort}
+                                            />
+                                        }
                                         {(isPopup || isButtonMode) && (
-                                            <p className="absolute top-8 text-center text-gray-200 text-3xl  -translate-x-1/2 left-1/2" >Select an Item or Click Outside to Close</p>
+                                            <p className="w-full absolute top-8 text-center text-gray-200 text-3xl -translate-x-1/2 left-1/2 hover:cursor-default" onClick={handleClickOutside}>Select an Item or Click Outside to Close</p>
                                         )}
                                     </>
                                 )}

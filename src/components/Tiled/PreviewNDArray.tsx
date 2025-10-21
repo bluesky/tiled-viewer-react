@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import InputSlider from "../InputSlider";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
 import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
-import { generateFullImagePngPath } from "./apiClient";
-import {  } from "./apiClient";
+import { generateFullImagePngPath, getAuthenticatedImage } from "./apiClient";
 import { tailwindIcons } from "@/assets/icons";
 
 
@@ -41,10 +40,11 @@ export default function PreviewNDArray({
 
     const searchPath = generateSearchPath(arrayItem);
 
-    const updateImage = (stack?:number[]) => {
+    const updateImage = async (stack?:number[]) => {
         const { stepX, stepY } = generateStepsForImagePath(arrayItem);
         const reducedImagePath = generateFullImagePngPath(searchPath, stepY, stepX, stack, url);
-        setImageUrl(reducedImagePath); 
+        const authenticatedReducedImagePath = await getAuthenticatedImage(reducedImagePath);
+        setImageUrl(authenticatedReducedImagePath); 
         const fullSizeImagePath = generateFullImagePngPath(searchPath, 1, 1, stack, url);
         setPopoutUrl(fullSizeImagePath); 
     }

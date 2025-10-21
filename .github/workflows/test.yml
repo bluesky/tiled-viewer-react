@@ -1,0 +1,132 @@
+name: Run Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Run type checking and build
+        run: npm run build
+        continue-on-error: false
+
+      - name: Run all tests
+        run: npm run test:run
+        env:
+          CI: true
+
+      - name: Run specific test suites
+        run: |
+          echo "Running individual test suites for better visibility..."
+          npm run test:run -- src/testing/tests/TiledSearchSetup.test.tsx
+          npm run test:run -- src/testing/tests/TiledButtonMode.test.tsx  
+          npm run test:run -- src/testing/tests/PreviewComponents.test.tsx
+          npm run test:run -- src/testing/tests/TiledErrorHandling.test.tsx
+          npm run test:run -- src/testing/tests/Tiled.test.tsx
+        env:
+          CI: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-node-${{ matrix.node-version }}
+          path: |
+            coverage/
+            test-results/
+          retention-days: 30
+
+  test-summary:
+    runs-on: ubuntu-latest
+    needs: test
+    if: always() && github.event_name == 'pull_request'
+    
+    steps:
+      - name: Comment PR with test summary
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const testStatus = '${{ needs.test.result }}';
+            const emoji = testStatus === 'success' ? '✅' : '❌';
+            const message = testStatus === 'success' ? 'All tests passed!' : 'Some tests failed.';
+            
+            // Get the job outputs to determine individual step results
+            const jobs = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+            });
+            
+            const testJob = jobs.data.jobs.find(job => job.name.includes('test'));
+            const steps = testJob ? testJob.steps : [];
+            
+            const lintStep = steps.find(step => step.name === 'Run linting');
+            const buildStep = steps.find(step => step.name === 'Run type checking and build');
+            const testStep = steps.find(step => step.name === 'Run all tests');
+            
+            const lintStatus = lintStep ? (lintStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            const buildStatus = buildStep ? (buildStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            const testStepStatus = testStep ? (testStep.conclusion === 'success' ? '✅' : '❌') : '❓';
+            
+            const lintText = lintStep ? 
+              (lintStep.conclusion === 'success' ? 'ESLint passed' : 'ESLint failed') : 
+              'ESLint status unknown';
+              
+            const buildText = buildStep ? 
+              (buildStep.conclusion === 'success' ? 'TypeScript compilation successful' : 'TypeScript compilation failed') : 
+              'Build status unknown';
+              
+            const testText = testStep ? 
+              (testStep.conclusion === 'success' ? 'All tests passed' : 'Some tests failed') : 
+              'Test status unknown';
+            
+            const commentBody = [
+              `## ${emoji} Test Results`,
+              ``,
+              `${message}`,
+              ``,
+              `**Complete Test Suite Coverage:**`,
+              `- ${testStepStatus} **TiledSearchSetup** - Search configuration and setup tests`,
+              `- ${testStepStatus} **TiledButtonMode** - Button mode functionality tests`,
+              `- ${testStepStatus} **PreviewComponents** - 6 Preview components (23 tests)`,
+              `- ${testStepStatus} **TiledErrorHandling** - Error handling and edge cases`,
+              `- ${testStepStatus} **Tiled** - Main component integration tests`,
+              ``,
+              `**Test Environment:** Node.js 18.x & 20.x`,
+              `**Linting:** ${lintStatus} ${lintText}`,
+              `**Type Checking:** ${buildStatus} ${buildText}`,
+              `**Build:** ${buildStatus} Production build successful`,
+              `**Tests:** ${testStepStatus} ${testText}`
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });

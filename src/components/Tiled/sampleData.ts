@@ -1,6 +1,6 @@
 import { TiledSearchResult } from "./types";
 
-const sampleTiledSearchData:TiledSearchResult = {
+export const sampleTiledSearchData:TiledSearchResult = {
     "data": [
         {
             "id": "big_image",
@@ -675,4 +675,313 @@ const sampleTiledSearchData:TiledSearchResult = {
     }
 };
 
-export { sampleTiledSearchData };
+export const sampleServerInfoRespnse = {
+    "api_version": 0,
+    "library_version": "0.1.dev2523+g6314f1d.d20250507",
+    "formats": {
+        "container": [
+            "application/x-hdf5",
+            "application/json"
+        ],
+        "array": [
+            "application/octet-stream",
+            "application/json",
+            "text/csv",
+            "text/x-comma-separated-values",
+            "text/plain",
+            "image/png",
+            "image/tiff",
+            "text/html"
+        ],
+        "awkward": [
+            "application/zip",
+            "application/json",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet"
+        ],
+        "table": [
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/x-comma-separated-values",
+            "text/plain",
+            "text/html",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/json",
+            "application/json-seq",
+            "application/x-hdf5"
+        ],
+        "sparse": [
+            "application/x-hdf5",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/plain",
+            "text/html",
+            "application/json"
+        ],
+        "xarray_dataset": [
+            "application/netcdf",
+            "application/x-netcdf",
+            "application/vnd.apache.arrow.file",
+            "application/x-parquet",
+            "text/csv",
+            "text/comma-separated-values",
+            "text/plain",
+            "text/html",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/json",
+            "application/x-hdf5"
+        ]
+    },
+    "aliases": {
+        "container": {
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "array": {
+            "application/json": [
+                "json"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "image/png": [
+                "png"
+            ],
+            "image/tiff": [
+                "tiff",
+                "tif"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "awkward": {
+            "application/zip": [
+                "zip"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "table": {
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "sparse": {
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        },
+        "xarray_dataset": {
+            "application/x-netcdf": [
+                "cdf",
+                "nc"
+            ],
+            "text/csv": [
+                "csv"
+            ],
+            "text/html": [
+                "html",
+                "htm"
+            ],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+                "xlsx"
+            ],
+            "application/json": [
+                "json"
+            ],
+            "application/x-hdf5": [
+                "h5",
+                "hdf5"
+            ],
+            "application/x-parquet": [
+                "parquet"
+            ],
+            "application/vnd.apache.arrow.file": [
+                "arrow",
+                "feather"
+            ],
+            "application/netcdf": [
+                "nc"
+            ],
+            "text/plain": [
+                "text",
+                "txt"
+            ]
+        }
+    },
+    "queries": [
+        "fulltext",
+        "lookup",
+        "keys_filter",
+        "regex",
+        "eq",
+        "noteq",
+        "comparison",
+        "contains",
+        "in",
+        "notin",
+        "specs",
+        "structure_family"
+    ],
+    "authentication": {
+        "required": true,
+        "providers": [
+            {
+                "provider": "toy",
+                "mode": "password",
+                "links": {
+                    "auth_endpoint": "http://localhost:8000/api/v1/auth/provider/toy/token"
+                },
+                "confirmation_message": "You have logged in as {id}."
+            }
+        ],
+        "links": {
+            "whoami": "http://localhost:8000/api/v1/auth/whoami",
+            "apikey": "http://localhost:8000/api/v1/auth/apikey",
+            "refresh_session": "http://localhost:8000/api/v1/auth/session/refresh",
+            "revoke_session": "http://localhost:8000/api/v1/auth/session/revoke/{session_id}",
+            "logout": "http://localhost:8000/api/v1/auth/logout"
+        }
+    },
+    "links": {
+        "self": "http://localhost:8000/api/v1",
+        "documentation": "http://localhost:8000/api/v1/docs"
+    },
+    "meta": {
+        "root_path": "/api"
+    }
+};
+
+export const sampleLoginSuccessResponse = {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZDMxOTBhMzVkNmE0MmYzYWE0YTQzZmE2Mjk2MzgyNCIsInN1Yl90eXAiOiJ1c2VyIiwic2NwIjpbIndyaXRlOm1ldGFkYXRhIiwid3JpdGU6ZGF0YSIsImFwaWtleXMiLCJhZG1pbjphcGlrZXlzIiwibWV0cmljcyIsInJlZ2lzdGVyIiwicmVhZDpkYXRhIiwiY3JlYXRlIiwicmVhZDptZXRhZGF0YSIsIndyaXRlOnByaW5jaXBhbHMiLCJyZWFkOnByaW5jaXBhbHMiXSwic3RhdGUiOnt9LCJpZHMiOlt7ImlkIjoiYWxpY2UiLCJpZHAiOiJ0b3kifV0sImV4cCI6MTc1NzM1NzU1NSwidHlwZSI6ImFjY2VzcyJ9.9ojNtBo--qW6ZoVYAcn_nIZUV4xI6XTNNk-_FjWjCno",
+    "expires_in": 900.0,
+    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicmVmcmVzaCIsInNpZCI6Ijk5ZDIzYjEyNGI5YjQ4Yjg4M2FkNjU2NzY4YWY4Mjc5IiwiZXhwIjoxNzU3OTYxNDU1fQ.kztx1ZMtiOKpuupnTvhuUvJ4YPIPGq8iFCHJpmahMzE",
+    "refresh_token_expires_in": 604800.0,
+    "token_type": "bearer",
+    "identity": {
+        "id": "alice",
+        "provider": "toy"
+    },
+    "principal": "4d3190a35d6a42f3aa4a43fa62963824"
+};
+
+export const sampleLoginFailureResponse = {
+    "detail": "Incorrect username or password"
+}

@@ -2,26 +2,118 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { TiledSearchResult } from "./types";
-import { getApiKeyFromLocalStorage } from "./utils";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider } from "./types";
+import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 var globalApiKey:string | null = null;
 
 var globalReverseSort:boolean = false;
 
+var globalInitialPath:string | null = null;
+
+export const setInitialPath = (path:string | null) => {
+    //reformat so that a leading '/' is removed
+    if (path && path.startsWith('/')) {
+        path = path.substring(1);
+    }
+    globalInitialPath = path;
+    return globalInitialPath;
+};
+
+export const getInitialPath = () => {
+    return globalInitialPath;
+};
+
+/**
+ * Helper function to construct API paths with optional global initial path
+ * Removes redundant path segments when searchPath already contains the globalInitialPath
+ * @param searchPath - The search path to append
+ * @returns Combined path with globalInitialPath prepended if it exists, avoiding duplication
+ */
+const constructApiPath = (searchPath?: string): string => {
+    if (globalInitialPath) {
+        if (searchPath) {
+            // Clean up both paths by removing leading/trailing slashes
+            const cleanInitialPath = globalInitialPath.replace(/^\/+|\/+$/g, '');
+            const cleanSearchPath = searchPath.replace(/^\/+|\/+$/g, '');
+            
+            // If searchPath already starts with the globalInitialPath, remove the redundant part
+            if (cleanSearchPath.startsWith(cleanInitialPath + '/')) {
+                // Return globalInitialPath + remainder of searchPath after removing the redundant prefix
+                const remainder = cleanSearchPath.substring(cleanInitialPath.length + 1);
+                return remainder ? `${cleanInitialPath}/${remainder}` : cleanInitialPath;
+            } else if (cleanSearchPath === cleanInitialPath) {
+                // If searchPath is exactly the same as globalInitialPath, just return globalInitialPath
+                return cleanInitialPath;
+            } else {
+                // No redundancy, combine normally
+                return `${cleanInitialPath}/${cleanSearchPath}`;
+            }
+        } else {
+            return globalInitialPath.replace(/^\/+|\/+$/g, '');
+        }
+    }
+    return searchPath?.replace(/^\/+|\/+$/g, '') || '';
+};
+
+// Add a callback function type
+type AuthErrorCallback = (error: any) => void;
+
+let authErrorCallback: AuthErrorCallback | null = null;
+
+export const setAuthErrorCallback = (callback: AuthErrorCallback) => {
+  authErrorCallback = callback;
+};
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    console.log('axios interceptor caught an error: ', error);
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const auth = getAuthFromLocalStorage();
+        //const refreshToken = localStorage.getItem('tiledRefreshToken');
+        
+        if (auth) {
+          const refreshResponse = await axios.post(`${defaultTiledUrl}/auth/refresh`, {
+            refresh_token: auth.refreshToken
+          });
+          const newAccessToken = refreshResponse.data.access_token;
+          saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
+          setBearerToken(newAccessToken);
+          return axios(originalRequest);
+        } else {
+            authErrorCallback && authErrorCallback(null);
+        }
+      } catch (refreshError) {
+        // Clear tokens and call the error callback
+        clearAuthFromLocalStorage();        
+        authErrorCallback && authErrorCallback(null);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
+    const httpProto = window.location.protocol;
     try{
         if (import.meta.env.VITE_API_TILED_URL) {
             console.log('using env variable for tiled url: ', import.meta.env.VITE_API_TILED_URL);
             return import.meta.env.VITE_API_TILED_URL;
         } else {
-            return `http://${address}:8000/api/v1`;
+            return `${httpProto}//${address}:8000/api/v1`;
         }
     } catch(e) {
         console.error('error parsing VITE_API_TILED_URL env: ', e)
-        return `http://${address}:8000/api/v1`;
+        return `${httpProto}//${address}:8000/api/v1`;
     }
 };
 const defaultTiledUrl = getDefaultTiledUrl();
@@ -43,8 +135,6 @@ export const setBearerToken = (token:string) => {
 };
 // const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
 
-
-//add return type of tiledresponse or null
 
 /**
  * Searches for data in a Tiled server instance
@@ -84,7 +174,8 @@ export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res
         }
         
         const queryString = params.toString();
-        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + (queryString ? '?' + queryString : '');
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = baseUrl + '/search/' + apiPath + (queryString ? '?' + queryString : '');
         
         const response = await axios.get(fullUrl);
         cb && cb(response.data as TiledSearchResult);
@@ -139,7 +230,8 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
         }
         
         const queryString = params.toString();
-        const fullUrl = baseUrl + '/search/' + (searchPath ? searchPath : '') + '?' + queryString;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = baseUrl + '/search/' + apiPath + '?' + queryString;
         
         const response = await axios.get(fullUrl);
         return response.data;
@@ -166,7 +258,8 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
 export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
-        const response = await axios.get(baseUrl + '/table/partition/' + searchPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+        const apiPath = constructApiPath(searchPath);
+        const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
         //the data comes as a long string that unfortunately does not comply with JSON.parse(data)
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
@@ -207,7 +300,8 @@ export const getStructuredArrayData = async(searchPath: string, block: number, u
         }
         
         const queryString = params.toString();
-        const fullUrl = `${baseUrl}/array/block/${searchPath}?${queryString}`;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/array/block/${apiPath}?${queryString}`;
         
         const response = await axios.get(fullUrl);
         
@@ -246,7 +340,8 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
     params.append('slice', fullSlice);
     const baseUrl = url ? url : defaultTiledUrl;
     const queryString = params.toString();
-    const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+    const apiPath = constructApiPath(searchPath);
+    const fullUrl = `${baseUrl}/array/full/${apiPath}?${queryString}`;
     return fullUrl;
 };
 
@@ -260,6 +355,20 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
  */
 export const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
+};
+
+/**
+ * Resets all global state variables to their default values
+ * Useful for testing to ensure clean state between tests
+ * @example
+ * ```typescript
+ * resetGlobalState(); // Clears all global variables
+ * ```
+ */
+export const resetGlobalState = () => {
+    globalApiKey = null;
+    globalReverseSort = false;
+    globalInitialPath = null;
 };
 
 
@@ -290,7 +399,8 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
         }
         
         const queryString = params.toString();
-        const fullUrl = `${baseUrl}/array/full/${searchPath}?${queryString}`;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/array/full/${apiPath}?${queryString}`;
         
         const response = await axios.get(fullUrl);
         
@@ -302,5 +412,143 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
     } catch (error) {
         console.error('Error fetching structured array data: ', error);
         return null;
+    }
+};
+
+/**
+ * Fetches server information from a Tiled server
+ * @param url - Optional custom Tiled server URL
+ * @returns Promise that resolves to server information or null if error occurs
+ * @example
+ * ```typescript
+ * const serverInfo = await getServerInfo();
+ * ```
+ */
+export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | null> => {
+    //this can fail if we have an apikey cookie that is old, if the key is invalid Tiled will reject it and return a 401 even if the base route is public
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const response = await axios.get(baseUrl + '/');
+        if (isValidTiledInfoResponse(response.data)) {
+            return response.data as TiledInfoResponse;
+        } else {
+            console.error('Invalid TiledInfoResponse format: ', response.data);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error fetching server info: ', error);
+        return null;
+    }
+}
+
+/**
+ * Logs in a user with username and password authentication
+ * @param username - The username for authentication
+ * @param password - The password for authentication
+ * @param url - Optional custom Tiled server URL
+ * @param provider - Optional specific authentication provider to use
+ * @returns Promise that resolves to authentication tokens or null if login fails
+ * @example
+ * ```typescript
+ * const authResult = await loginUser('myusername', 'mypassword');
+ * if (authResult) {
+ *   console.log('Login successful:', authResult.access_token);
+ * }
+ * ```
+ */
+export const loginUserWithNamePassword = async(username: string, password: string, url?: string, provider?: TiledAuthProvider): Promise<{access_token: string, refresh_token: string} | null> => {
+    try {
+        // If a specific provider is given, use its auth_endpoint, otherwise fetch server info to find the first available password provider
+        var authEndpoint = '';
+        if (provider && (provider.mode === 'password' || provider.mode === 'internal')) {
+            if (!provider.links || !provider.links.auth_endpoint) {
+                console.error('Provided authentication provider is missing auth_endpoint');
+                return null;
+            }
+            authEndpoint = provider.links.auth_endpoint;
+        } else {
+            const serverInfo = await getServerInfo(url);
+            
+            if (!serverInfo || !serverInfo.authentication || !serverInfo.authentication.providers) {
+                console.error('No authentication providers found in server info');
+                return null;
+            }
+            
+            // Find the first provider with mode=password, there could be multiple
+            const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
+                provider.mode === 'password' || provider.mode === 'internal'
+            );
+            
+            if (!passwordProvider || !passwordProvider.links || !passwordProvider.links.auth_endpoint) {
+                console.error('No password authentication provider found');
+                return null;
+            }
+            authEndpoint = passwordProvider.links.auth_endpoint;
+        }
+
+        console.log('Using auth endpoint:', authEndpoint);
+        
+        // Create form data for the POST request
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+        
+        // Make the POST request to the auth endpoint
+        const response = await axios.post(authEndpoint, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        
+        // Extract tokens from response
+        const { access_token, refresh_token } = response.data;
+        
+        if (access_token && refresh_token) {
+            // Save tokens to localStorage
+            saveAuthToLocalStorage(refresh_token, access_token);
+            // Set the bearer token for future requests
+            setBearerToken(access_token);
+            
+            console.log('Login successful');
+            return { access_token, refresh_token };
+        } else {
+            console.error('Login response missing required tokens');
+            return null;
+        }
+        
+    } catch (error: any) {
+        console.error('Login failed:', error);
+        
+        if (error.response?.status === 401) {
+            console.error('Invalid username or password');
+        } else if (error.response?.status) {
+            console.error(`Server error: ${error.response.status}`);
+        } else {
+            console.error('Network error during login');
+        }
+        
+        return null;
+    }
+};
+
+
+/**
+ * Fetches an image with authentication and returns a blob URL
+ * @param imagePath - The complete URL path to the image
+ * @returns Promise that resolves to a blob URL string
+ */
+export const getAuthenticatedImage = async (imagePath: string): Promise<string> => {
+    try {
+        const response = await axios.get(imagePath, {
+            responseType: 'blob',
+            headers: {
+                'Accept': 'image/png'
+            }
+        });
+        
+        return URL.createObjectURL(response.data);
+    } catch (error) {
+        console.error('Error fetching authenticated image:', error);
+        throw error;
     }
 };
