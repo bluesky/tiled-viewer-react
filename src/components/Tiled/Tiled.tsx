@@ -70,7 +70,9 @@ export default function Tiled({
         setShowLogin(true);
     });
 
-    initialPath &&setInitialPath(initialPath);
+    if (initialPath) {
+        setInitialPath(initialPath);
+    }
 
     const handleLoginSuccess = useCallback(() => {
         setShowLogin(false);
@@ -79,9 +81,13 @@ export default function Tiled({
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
         const links = generateLinksForCallback(item, url);
         setSelectedData(links);
-        onSelectCallback && onSelectCallback(links);
-        closeOnSelect && setIsClosed(true);
-        isButtonMode && setIsViewerOpen(false);
+        onSelectCallback?.(links);
+        if (closeOnSelect) {
+            setIsClosed(true);
+        }
+        if (isButtonMode) {
+            setIsViewerOpen(false);
+        }
     };
 
     const handleClickOutside = () => {

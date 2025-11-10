@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -58,6 +58,7 @@ const constructApiPath = (searchPath?: string): string => {
 };
 
 // Add a callback function type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AuthErrorCallback = (error: any) => void;
 
 let authErrorCallback: AuthErrorCallback | null = null;
@@ -88,12 +89,12 @@ axios.interceptors.response.use(
           setBearerToken(newAccessToken);
           return axios(originalRequest);
         } else {
-            authErrorCallback && authErrorCallback(null);
+            authErrorCallback?.(null);
         }
-      } catch (refreshError) {
+      } catch {
         // Clear tokens and call the error callback
         clearAuthFromLocalStorage();        
-        authErrorCallback && authErrorCallback(null);
+        authErrorCallback?.(null);
       }
     }
 
@@ -150,9 +151,9 @@ export const setBearerToken = (token:string) => {
  * const results = await getSearchResults('my-data-folder');
  * ```
  */
-export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:any, sortingKey?:string):Promise<TiledSearchResult | null> => {
+export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:Record<string, string | number | boolean>, sortingKey?:string):Promise<TiledSearchResult | null> => {
     if (mock) {
-        cb && cb(sampleTiledSearchData);
+        cb?.(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
@@ -169,7 +170,7 @@ export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res
 
         if (parameters) {
             Object.keys(parameters).forEach(key => {
-                params.append(key, parameters[key]);
+                params.append(key, String(parameters[key]));
             });
         }
         
@@ -178,7 +179,7 @@ export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res
         const fullUrl = baseUrl + '/search/' + apiPath + (queryString ? '?' + queryString : '');
         
         const response = await axios.get(fullUrl);
-        cb && cb(response.data as TiledSearchResult);
+        cb?.(response.data as TiledSearchResult);
         return response.data as TiledSearchResult;
     } catch (error) {
         console.error('Error searching path: ', error);
@@ -213,7 +214,7 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
     globalApiKey = apiKey;  //makes this available to all other functions that make api calls or generate image paths, technically a cookie is not required when this is used
     
     if (mock) {
-        cb && cb(sampleTiledSearchData);
+        cb?.(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
@@ -255,7 +256,7 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
  * // Returns: [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
  * ```
  */
-export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:any)=>void) => {
+export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableRow[])=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const apiPath = constructApiPath(searchPath);
@@ -264,11 +265,11 @@ export const getTableData = async(searchPath:string, partition:number, url?:stri
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
             .split("\n") // Split by line
-            .map((line:any) => JSON.parse(line)); // Parse each line as JSON
+            .map((line:string) => JSON.parse(line)); // Parse each line as JSON
 
         //console.log(parsedData); // Now it's an array of objects
         // [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
-        cb && cb(parsedData)
+        cb?.(parsedData);
         return parsedData;
     } catch (error) {
         console.error('Error searching table data: ', error);
@@ -289,7 +290,7 @@ export const getTableData = async(searchPath:string, partition:number, url?:stri
  * // Returns: [{ name: "Fluffy", age: 3, weight: 4.2 }, ...]
  * ```
  */
-export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const params = new URLSearchParams();
@@ -307,8 +308,8 @@ export const getStructuredArrayData = async(searchPath: string, block: number, u
         
         // The response data should be the structured array data
         const parsedData = response.data;
-        
-        cb && cb(parsedData);
+        console.log({parsedData})
+        cb?.(parsedData);
         return parsedData;
     } catch (error) {
         console.error('Error fetching structured array data: ', error);
@@ -372,7 +373,7 @@ export const resetGlobalState = () => {
 };
 
 
-const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/structured_data/xarray_dataset/time?format=application/json&slice=0:3"
+//const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/structured_data/xarray_dataset/time?format=application/json&slice=0:3"
 
 /**
  * Retrieves XArray data from a Tiled server for a specific stack
@@ -386,7 +387,7 @@ const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/stru
  * const xarrayData = await getXArrayData('xarray_dataset/time', [0, 5]);
  * ```
  */
-export const getXArrayData = async(searchPath: string, stack:number[], url?: string, cb?: (parsedData: any) => void) => {
+export const getXArrayData = async(searchPath: string, stack:number[], url?: string, cb?: (parsedData: number[][]) => void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
@@ -406,8 +407,7 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
         
         // The response data should be the structured array data
         const parsedData = response.data;
-        
-        cb && cb(parsedData);
+        cb?.(parsedData);
         return parsedData;
     } catch (error) {
         console.error('Error fetching structured array data: ', error);
@@ -424,7 +424,7 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
  * const serverInfo = await getServerInfo();
  * ```
  */
-export const getServerInfo = async(url?:string):Promise<{[key:string]: any} | null> => {
+export const getServerInfo = async(url?:string):Promise<TiledInfoResponse | null> => {
     //this can fail if we have an apikey cookie that is old, if the key is invalid Tiled will reject it and return a 401 even if the base route is public
     try {
         const baseUrl = url ? url : defaultTiledUrl;
@@ -475,7 +475,7 @@ export const loginUserWithNamePassword = async(username: string, password: strin
             }
             
             // Find the first provider with mode=password, there could be multiple
-            const passwordProvider = serverInfo.authentication.providers.find((provider: any) => 
+            const passwordProvider = serverInfo.authentication.providers.find((provider: TiledAuthProvider) => 
                 provider.mode === 'password' || provider.mode === 'internal'
             );
             
@@ -515,14 +515,18 @@ export const loginUserWithNamePassword = async(username: string, password: strin
             console.error('Login response missing required tokens');
             return null;
         }
-        
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Login failed:', error);
         
-        if (error.response?.status === 401) {
-            console.error('Invalid username or password');
-        } else if (error.response?.status) {
-            console.error(`Server error: ${error.response.status}`);
+        if (error && typeof error === 'object' && 'response' in error) {
+            const axiosError = error as { response?: { status?: number } };
+            if (axiosError.response?.status === 401) {
+                console.error('Invalid username or password');
+            } else if (axiosError.response?.status) {
+                console.error(`Server error: ${axiosError.response.status}`);
+            } else {
+                console.error('Network error during login');
+            }
         } else {
             console.error('Network error during login');
         }

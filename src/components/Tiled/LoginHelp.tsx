@@ -1,9 +1,10 @@
 import { useState } from "react";
 
 import { Lock, Info } from "@phosphor-icons/react";
+import { TiledInfoResponse } from "./types";
 
 export type LoginHelpProps = {
-    serverInfo: {[key: string]: any} | null;
+    serverInfo: TiledInfoResponse | null;
 }
 export default function LoginHelp({ serverInfo }: LoginHelpProps) {
     const [ showHelp, setShowHelp ] = useState<boolean>(false);

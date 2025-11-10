@@ -24,13 +24,13 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
     // Extract dimension names and calculate block counts for each dimension
     const dims = structure.dims;
     const shape = structure.shape;
-    const chunks = structure.chunks;
+    //const chunks = structure.chunks;
     
     // For table display, use dimension names as columns
     const columns = dims;
 
     // Convert multi-dimensional array data to table format for display
-    const convertToTableFormat = (data: number[][]): TiledTableRow[] => {
+    const convertToTableFormat = useCallback((data: number[][]): TiledTableRow[] => {
         if (!data || data.length === 0) return [];
         
         // For 1D data
@@ -43,10 +43,10 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         
         // For 2D+ data, flatten and create coordinate pairs
         const tableRows: TiledTableRow[] = [];
-        const flattenData = (arr: any[], coords: number[] = []): void => {
+        const flattenData = (arr: unknown[], coords: number[] = []): void => {
             if (Array.isArray(arr[0])) {
                 arr.forEach((subArr, index) => {
-                    flattenData(subArr, [...coords, index]);
+                    flattenData(subArr as unknown[], [...coords, index]);
                 });
             } else {
                 arr.forEach((value, index) => {
@@ -54,7 +54,7 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
                     dims.forEach((dim, dimIndex) => {
                         row[dim] = coords[dimIndex] || index;
                     });
-                    row.value = value;
+                    row.value = value as number;
                     tableRows.push(row);
                 });
             }
@@ -62,21 +62,21 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         
         flattenData(data);
         return tableRows;
-    };
+    }, [dims]);
 
-    const updateXArray = (newXArrayData: number[][]) => {
+    const updateXArray = useCallback((newXArrayData: number[][]) => {
         setXarrayData(newXArrayData);
         const tableData = convertToTableFormat(newXArrayData);
         setVisibleData(tableData.slice(0, rowLoadSize));
         setIsLoading(false);
-    };
+    }, [convertToTableFormat, rowLoadSize]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
         getXArrayData(searchPath, [], url, updateXArray);
-    }, [xarrayItem]);
+    }, [xarrayItem, searchPath, url, updateXArray]);
 
     const loadMoreRows = useCallback(() => {
         const tableData = convertToTableFormat(xarrayData);
@@ -84,7 +84,7 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
             const nextRows = tableData.slice(prev.length, prev.length + rowLoadSize);
             return [...prev, ...nextRows];
         });
-    }, [xarrayData]);
+    }, [xarrayData, convertToTableFormat, rowLoadSize]);
 
     useEffect(() => {
         if (!observerRef.current) return;

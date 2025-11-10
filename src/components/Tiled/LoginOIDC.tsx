@@ -16,7 +16,20 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
 
     const loginUrl = provider.links.auth_endpoint;
 
-    const openLoginWindow = () => {
+    
+
+    const cleanup = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (popupRef.current && !popupRef.current.closed) {
+            popupRef.current.close();
+        }
+    };
+
+    useEffect(() => {
+        const openLoginWindow = () => {
         // Open the popup window
         popupRef.current = window.open(
             loginUrl, 
@@ -83,23 +96,11 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
             }
         }, 1000);
     };
-
-    const cleanup = () => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-        if (popupRef.current && !popupRef.current.closed) {
-            popupRef.current.close();
-        }
-    };
-
-    useEffect(() => {
         openLoginWindow();
         
         // Cleanup on component unmount
         return cleanup;
-    }, []);
+    }, [loginUrl, onSuccess]);
 
     const handleCancelClick = () => {
         cleanup();

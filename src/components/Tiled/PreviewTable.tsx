@@ -39,7 +39,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         setIsLoading(true);
         getTableData(searchPath, newValue, url, updateTable);
         setPartition(newValue);
-    }, [tableItem]);
+    }, [searchPath, url]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
@@ -49,7 +49,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         setPartition(0);
         getTableData(searchPath, 0, url, updateTable);
 
-    }, [tableItem]);
+    }, [tableItem, searchPath, url]);
 
     const loadMoreRows = useCallback(() => {
         setVisibleData((prev) => {

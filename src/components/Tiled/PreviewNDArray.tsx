@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import InputSlider from "../InputSlider";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
 import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
@@ -40,14 +40,14 @@ export default function PreviewNDArray({
 
     const searchPath = generateSearchPath(arrayItem);
 
-    const updateImage = async (stack?:number[]) => {
+    const updateImage = useCallback( async (stack?:number[]) => {
         const { stepX, stepY } = generateStepsForImagePath(arrayItem);
         const reducedImagePath = generateFullImagePngPath(searchPath, stepY, stepX, stack, url);
         const authenticatedReducedImagePath = await getAuthenticatedImage(reducedImagePath);
         setImageUrl(authenticatedReducedImagePath); 
         const fullSizeImagePath = generateFullImagePngPath(searchPath, 1, 1, stack, url);
-        setPopoutUrl(fullSizeImagePath); 
-    }
+        setPopoutUrl(fullSizeImagePath);
+    }, [arrayItem, searchPath, url]);
 
     useEffect(() => {
         //make an api call to fill the image
@@ -56,7 +56,7 @@ export default function PreviewNDArray({
         const stack = shape.slice(0, sliderCount).map((dim) => Math.floor(dim/2));
         setSliders(createSliders(sliderCount, shape));
         updateImage(stack);
-    }, [arrayItem]);
+    }, [arrayItem, sliderCount, shape, updateImage]);
 
     return (
         <div className="flex flex-col w-full space-y-2">

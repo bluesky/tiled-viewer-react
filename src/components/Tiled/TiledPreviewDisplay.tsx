@@ -1,12 +1,12 @@
-type TiledPreviewDisplayProps = {
+// type TiledPreviewDisplayProps = {
 
-}
-export default function TiledPreviewDisplay({
-    ...props
-}: TiledPreviewDisplayProps) {
-    return (
-        <div {...props}>
-            tiled
-        </div>
-    )
-}
+// }
+// export default function TiledPreviewDisplay({
+//     ...props
+// }: TiledPreviewDisplayProps) {
+//     return (
+//         <div {...props}>
+//             tiled
+//         </div>
+//     )
+// }

@@ -37,7 +37,7 @@ export default function Login({ onSuccess, url }: LoginProps) {
             }
         };
         fetchServerInfo();
-    }, []);
+    }, [url]);
 
     return (
         <div className="w-full h-full bg-white flex flex-col items-center">

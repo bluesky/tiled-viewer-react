@@ -175,37 +175,44 @@ export interface TiledTableRow {
     [column: string]: number
 }
 
-export interface TiledStructuredArrayRow extends Array<string | number> {}
+export type TiledStructuredArrayRow = Array<string | number>;
 
 export type TiledTableData = TiledTableRow[];
 
 export type TiledStructuredArrayData = TiledStructuredArrayRow[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ArrayStructure> => {
     return item.attributes.structure_family === 'array';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isTableStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<TableStructure> => {
     return item.attributes.structure_family === 'table';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isContainerStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ContainerStructure> => {
     return (item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite');
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isAwkwardStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<AwkwardStructure> => {
     return item.attributes.structure_family === 'awkward';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<SparseStructure> => {
     return item.attributes.structure_family === 'sparse';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isStructuredArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<StructuredArrayStructure> => {
     return item.attributes.structure_family === 'array' && 
            'fields' in item.attributes.structure.data_type;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isXArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<XArrayStructure> => {
     return item.attributes.structure_family === 'array' && 
            item.attributes.specs.some(spec => 
@@ -225,6 +232,7 @@ export type TiledAuthProvider = {
         [key: string]: string;
     };
     confirmation_message: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
 
@@ -268,6 +276,7 @@ export type TiledInfoResponse = {
     };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidTiledInfoResponse(data: any): data is TiledInfoResponse {
     return data &&
            typeof data.api_version === 'number' &&
@@ -277,7 +286,7 @@ export function isValidTiledInfoResponse(data: any): data is TiledInfoResponse {
 }
 
 
-const sampleTiledInfoResponse: TiledInfoResponse = {
+export const sampleTiledInfoResponse: TiledInfoResponse = {
     "api_version": 0,
     "library_version": "0.1.dev2523+g6314f1d.d20250507",
     "formats": {

@@ -56,7 +56,7 @@ export default function TiledPreview({
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
         } 
-    }, [isFullWidth]);
+    }, [isFullWidth, scrollContainerRef]);
 
     const renderPreviewComponent = () => {
         if (isXArrayStructure(previewItem)) {

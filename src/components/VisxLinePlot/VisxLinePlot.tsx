@@ -34,7 +34,7 @@ export default function VisxLinePlot({ plotData, domain }: XYChartProps) {
 
   return (
 
-    <ParentSize>{({ width, height }) => 
+    <ParentSize>{({width, height }) => 
       <PlotSettings data={dataWithIndex} dataKeys={selectedDataKeys} setSelectedDataKeys={setSelectedDataKeys}>
         {({
           accessors,

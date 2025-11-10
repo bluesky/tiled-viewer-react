@@ -28,7 +28,7 @@ export default function LoginUsernamePassword({ onSuccess, url, setWarning, hand
                 passwordRef.current.select();
             }
         }
-    }, [username, password, onSuccess]);
+    }, [username, password, onSuccess, provider, url, setWarning]);
     return (
             <section className="flex flex-col items-center space-y-8 mt-8 flex-shrink-0">
                 <h2 className="text-slate-700 font-light text-lg">Please login to access Tiled</h2>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 type InputSliderRangeProps = {
@@ -43,7 +43,7 @@ export default function InputSliderRange({
   shorthandUnits,
   marks,
   step=1,
-  size='medium',
+  // size='medium',
   allowValueOverlap=false,
   width='w-full',
   showSideInput=true,
@@ -53,27 +53,27 @@ export default function InputSliderRange({
   ...props
 }: InputSliderRangeProps) {
     //todo: remove this
-    const [currentValue, setCurrentValue] = useState(value);
+    // const [currentValue, setCurrentValue] = useState(value);
 
     //todo: create thumb styles with a few different options, no way to control thumb style without direct CSS
-    const thumbStyleCSS = ``;
+    // const thumbStyleCSS = ``;
 
     //todo: create slider styles with a few different options, no way to control all aspects of slider style without direct CSS
-    const sliderStyleCSS = ``;
+    // const sliderStyleCSS = ``;
 
     //todo: implement
-    const tickMarkSizes = {
-        small: '',
-        medium: '',
-        large: ''
-    };
+    // const tickMarkSizes = {
+    //     small: '',
+    //     medium: '',
+    //     large: ''
+    // };
 
     //todo: implement
-    const thumbInputSizes = {
-        small: '',
-        medium: '',
-        large: ''
-    }
+    // const thumbInputSizes = {
+    //     small: '',
+    //     medium: '',
+    //     large: ''
+    // }
 
     //todo: make this variable based on a thumb size
     const thumbWidth = 16; //pixels
@@ -93,7 +93,7 @@ export default function InputSliderRange({
                 return;
             }
         }
-        setCurrentValue(newRange);
+        // setCurrentValue(newRange);
         if (onChange) onChange(newRange);
     };
 
@@ -131,13 +131,13 @@ export default function InputSliderRange({
     }
 
 
-    if (marks) {
-        for ( let i = 0; i < marks?.length; i++) {
-            const val = marks[i];
-            const cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
-            //console.log(cssStyle);
-        }
-    }
+    // if (marks) {
+    //     for ( let i = 0; i < marks?.length; i++) {
+    //         const val = marks[i];
+    //         // const cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
+    //         //console.log(cssStyle);
+    //     }
+    // }
 
     type TickMarkProps = {
         mark: number,
