@@ -19,7 +19,8 @@ import {
   StructuredArrayStructure,
   TableStructure,
   XArrayStructure,
-  TiledTableRow
+  TiledTableRow,
+  TiledStructuredArrayData
 } from '../../components/Tiled/types';
 
 // Mock the API client functions
@@ -294,7 +295,7 @@ describe('Preview Components', () => {
   ];
 
   // Mock structured array data (should be arrays, not objects)
-  const mockStructuredArrayData = [
+  const mockStructuredArrayData: TiledStructuredArrayData = [
     ['rex', 2.5, 100],
     ['fido', 5.5, 200],
     ['max', 8.5, 300]
@@ -393,7 +394,7 @@ describe('Preview Components', () => {
     beforeEach(async () => {
       // Mock the API call to return structured array data
       const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (_searchPath: string, _block: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
+      vi.mocked(getStructuredArrayData).mockImplementation(async (_searchPath: string, _block: number, _url?: string, cb?: (parsedData: TiledStructuredArrayData) => void) => {
         if (cb) cb(mockStructuredArrayData);
         return mockStructuredArrayData;
       });

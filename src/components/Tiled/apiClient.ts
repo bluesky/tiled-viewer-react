@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -290,7 +290,7 @@ export const getTableData = async(searchPath:string, partition:number, url?:stri
  * // Returns: [{ name: "Fluffy", age: 3, weight: 4.2 }, ...]
  * ```
  */
-export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
+export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: TiledStructuredArrayData) => void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const params = new URLSearchParams();

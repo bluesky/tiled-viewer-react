@@ -172,7 +172,7 @@ export interface XArrayStructure {
 export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
 
 export interface TiledTableRow {
-    [column: string]: number
+    [column: string]: number;
 }
 
 export type TiledStructuredArrayRow = Array<string | number>;
