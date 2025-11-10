@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { TiledSearchItem, StructuredArrayStructure, TiledTableRow } from "./types";
+import { TiledSearchItem, StructuredArrayStructure, TiledTableRow, TiledStructuredArrayData } from "./types";
 import { getStructuredArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
-import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
+//import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
 import SelectInteger from "../SelectInteger";
 import Table from "./Table";
 
@@ -13,8 +13,8 @@ type PreviewStructuredArrayProps = {
 };
 
 export default function PreviewStructuredArray({ structuredArrayItem, url }: PreviewStructuredArrayProps) {
-    const [structuredArrayData, setStructuredArrayData] = useState<TiledTableRow[]>([]);
-    const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
+    const [structuredArrayData, setStructuredArrayData] = useState<TiledStructuredArrayData>([]);
+    const [visibleData, setVisibleData] = useState<TiledStructuredArrayData>([]);
     const [block, setBlock] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
@@ -32,7 +32,7 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
     // Extract column names from the structured array fields
     const columns = structuredArrayItem.attributes.structure.data_type.fields.map(field => field.name);
 
-    const updateStructuredArray = (newStructuredArrayData: TiledTableRow[]) => {
+    const updateStructuredArray = (newStructuredArrayData: TiledStructuredArrayData) => {
         setStructuredArrayData(newStructuredArrayData);
         setVisibleData(newStructuredArrayData.slice(0, rowLoadSize));
         setIsLoading(false);
@@ -120,10 +120,10 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
                     />
 
                     {/* Scatter plot */}
-                    <VisxLinePlot
+                    {/* <VisxLinePlot
                         plotData={structuredArrayData}
                         domain={domain}
-                    />
+                    /> */}
                 </div>
             )}
         </div>
