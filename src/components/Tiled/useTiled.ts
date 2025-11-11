@@ -233,6 +233,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
     const resetAllData = () => {
         setBreadcrumbs([]);
+        writeSearchPathToLocalStorage('');
         ancestorStack.current = [];
         currentAncestorId.current = -1;
         setPreviewItem(null);

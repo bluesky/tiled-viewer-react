@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
-import { getTableData } from "./apiClient";
+import { getTableDataAsSequence } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
 import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
@@ -37,7 +37,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
 
     const handlePartitionChange = useCallback((newValue: number) => {
         setIsLoading(true);
-        getTableData(searchPath, newValue, url, updateTable);
+        getTableDataAsSequence(searchPath, newValue, url, updateTable);
         setPartition(newValue);
     }, [searchPath, url]);
 
@@ -47,7 +47,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         }
         const searchPath = generateSearchPath(tableItem);
         setPartition(0);
-        getTableData(searchPath, 0, url, updateTable);
+        getTableDataAsSequence(searchPath, 0, url, updateTable);
 
     }, [tableItem, searchPath, url]);
 

@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -252,28 +252,52 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
  * @returns Promise that resolves to an array of parsed table rows or null if error occurs
  * @example
  * ```typescript
- * const tableData = await getTableData('my-table', 0);
+ * const tableData = await getTableDataAsSequence('my-table', 0);
  * // Returns: [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
  * ```
  */
-export const getTableData = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableRow[])=>void) => {
+export const getTableDataAsSequence = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableRow[])=>void) => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const apiPath = constructApiPath(searchPath);
-        const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
-        //the data comes as a long string that unfortunately does not comply with JSON.parse(data)
+        const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));        
         const parsedData = response.data
             .trim() // Remove any extra newlines at start or end
             .split("\n") // Split by line
             .map((line:string) => JSON.parse(line)); // Parse each line as JSON
-
-        //console.log(parsedData); // Now it's an array of objects
-        // [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
+        //parsedData [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
         cb?.(parsedData);
         return parsedData;
     } catch (error) {
         console.error('Error searching table data: ', error);
         return null;
+    }
+};
+
+/**
+ * Retrieves table data from a Tiled server for a specific partition in JSON format
+ * @param searchPath - The path to the table data
+ * @param partition - The partition number to retrieve (0-based index)
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the parsed data
+ * @returns Promise that resolves to an array of parsed table rows or null if error occurs
+ * @example
+ * ```typescript
+ * const tableData = await getTableDataAsJson('my-table', 0);
+ * // Returns: { A: [0.5699, ...], B: [1.1398, ...], C: [1.7098, ...] }
+ * ```
+ */
+export const getTableDataAsJson = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableJSONResponse)=>void) => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const apiPath = constructApiPath(searchPath);
+        const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
+        const jsonData: TiledTableJSONResponse = response.data;
+        cb?.(jsonData);
+        return jsonData;
+    } catch (error) {
+        console.error('Error searching table data: ', error);
+        throw error;
     }
 };
 

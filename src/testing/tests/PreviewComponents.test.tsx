@@ -22,12 +22,13 @@ import {
   TiledTableRow,
   TiledStructuredArrayData
 } from '../../components/Tiled/types';
+import { getTableDataAsSequence } from '../../components/Tiled/apiClient';
 
 // Mock the API client functions
 vi.mock('../../components/Tiled/apiClient', () => ({
   getAuthenticatedImage: vi.fn().mockResolvedValue('data:image/png;base64,mockimage'),
   generateFullImagePngPath: vi.fn().mockReturnValue('http://mock-url/image.png'),
-  getTableData: vi.fn(),
+  getTableDataAsSequence: vi.fn(),
   getStructuredArrayData: vi.fn(),
   getXArrayData: vi.fn(),
 }));
@@ -435,8 +436,8 @@ describe('Preview Components', () => {
   describe('PreviewTable Component', () => {
     beforeEach(async () => {
       // Mock the API call to return table data
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
         if (cb) cb(mockTableData);
         return mockTableData;
       });
@@ -556,8 +557,8 @@ describe('Preview Components', () => {
 
   describe('Component Error Handling', () => {
     it('should handle API errors gracefully in PreviewTable', async () => {
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (/* _searchPath: string, _partition: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (/* _searchPath: string, _partition: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
         // Simulate API error by not calling callback
         console.error('Mock API error');
         return Promise.reject(new Error('Mock API error'));
@@ -633,8 +634,8 @@ describe('Preview Components', () => {
     });
 
     it('should handle empty data gracefully', async () => {
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
         const emptyData: TiledTableRow[] = []; // Empty data
         if (cb) cb(emptyData);
         return emptyData;

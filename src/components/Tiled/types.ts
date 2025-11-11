@@ -587,3 +587,7 @@ export const sampleTiledInfoResponse: TiledInfoResponse = {
         "root_path": "/api"
     }
 };
+
+export type TiledTableJSONResponse = {
+    [column: string]: number[];
+}

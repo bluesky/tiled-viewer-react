@@ -24,7 +24,8 @@ export {
   // Search and data retrieval
   getSearchResults,
   getFirstSearchWithApiKey,
-  getTableData,
+  getTableDataAsJson,
+  getTableDataAsSequence,
   getStructuredArrayData,
   getXArrayData,
   
