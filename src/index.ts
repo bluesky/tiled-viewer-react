@@ -7,7 +7,7 @@ export type { TiledProps } from './components/Tiled/Tiled';
 //HOOKS
 
 //TYPES
-export type { TiledItemLinks, TiledSearchItem, TiledStructures, TiledTableRow, TableStructure, ArrayStructure, ContainerStructure, AwkwardStructure, AwkwardForm, SparseStructure } from './components/Tiled/types';
+export type { TiledItemLinks, TiledSearchItem, TiledBlueskyPlanMetadataResponse, TiledStructures, TiledTableRow, TableStructure, TiledTableJSONResponse, ArrayStructure, ContainerStructure, AwkwardStructure, AwkwardForm, SparseStructure } from './components/Tiled/types';
 //UTILS
 export {
   // Path management
@@ -23,6 +23,8 @@ export {
   
   // Search and data retrieval
   getSearchResults,
+  getItemMetadata,
+  getBlueskyPlanMetadata,
   getFirstSearchWithApiKey,
   getTableDataAsJson,
   getTableDataAsSequence,
