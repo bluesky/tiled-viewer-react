@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse } from "./types";
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -239,6 +239,64 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
     } catch (error) {
         console.error('Error searching path: ', error);
         console.log('If you are getting a CORS error, make sure to start tiled with the TILED_ALLOW_ORIGINS environment variable set to your frontend URL');
+        return null;
+    }
+};
+
+/**
+ * Retrieves metadata for a specific item from a Tiled server
+ * @param searchPath - The path to the item
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the metadata
+ * @returns Promise that resolves to metadata object or null if error occurs
+ * @example
+ * ```typescript
+ * const metadata = await getItemMetadata('my-item-id');
+ * // Returns: { data: { id: "...", attributes: {...} }, ... }
+ * ```
+ */
+export const getItemMetadata = async(searchPath: string, url?: string, cb?: (metadata: { [key: string]: unknown }) => void): Promise<{ [key: string]: unknown } | null> => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/metadata/${apiPath}${globalApiKey ? '?api_key=' + globalApiKey : ''}`;
+        
+        const response = await axios.get(fullUrl);
+        const metadata = response.data;
+        cb?.(metadata);
+        return metadata;
+    } catch (error) {
+        console.error('Error fetching item metadata: ', error);
+        return null;
+    }
+};
+
+/**
+ * Retrieves Bluesky plan metadata for a specific item from a Tiled server
+ * @param searchPath - The path to the Bluesky plan item
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the structured metadata
+ * @returns Promise that resolves to Bluesky plan metadata or null if error occurs
+ * @example
+ * ```typescript
+ * const planMetadata = await getBlueskyPlanMetadata('aba7753b-ec5f-464d-abc2-809b620bb66b');
+ * if (planMetadata?.data.attributes.metadata.start) {
+ *   console.log('Plan name:', planMetadata.data.attributes.metadata.start.plan_name);
+ * }
+ * ```
+ */
+export const getBlueskyPlanMetadata = async(searchPath: string, url?: string, cb?: (metadata: TiledBlueskyPlanMetadataResponse) => void): Promise<TiledBlueskyPlanMetadataResponse | null> => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = `${baseUrl}/metadata/${apiPath}${globalApiKey ? '?api_key=' + globalApiKey : ''}`;
+        
+        const response = await axios.get(fullUrl);
+        const metadata: TiledBlueskyPlanMetadataResponse = response.data;
+        cb?.(metadata);
+        return metadata;
+    } catch (error) {
+        console.error('Error fetching Bluesky plan metadata: ', error);
         return null;
     }
 };

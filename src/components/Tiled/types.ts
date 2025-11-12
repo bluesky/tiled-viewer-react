@@ -591,3 +591,73 @@ export const sampleTiledInfoResponse: TiledInfoResponse = {
 export type TiledTableJSONResponse = {
     [column: string]: number[];
 }
+
+export type TiledBlueskyPlanMetadataResponse = {
+    data: {
+        id: string;
+        attributes: {
+            ancestors: string[];
+            structure_family: string;
+            specs: Array<{
+                name: string;
+                version: string | null;
+            }>;
+            metadata: {
+                start?: {
+                    uid: string;
+                    time: number;
+                    versions: {
+                        [key: string]: string;
+                    };
+                    scan_id: number;
+                    plan_type: string;
+                    plan_name: string;
+                    detectors: string[];
+                    num_points: number;
+                    num_intervals: number;
+                    plan_args: {
+                        [key: string]: unknown;
+                    };
+                    hints: {
+                        dimensions: unknown[];
+                    };
+                };
+                stop?: {
+                    uid: string;
+                    time: number;
+                    run_start: string;
+                    exit_status: string;
+                    reason: string;
+                    num_events: {
+                        [stream: string]: number;
+                    };
+                };
+                [key: string]: unknown; // Allow additional metadata fields
+            };
+            structure: {
+                contents: unknown | null;
+                count: number;
+            };
+            access_blob: {
+                [key: string]: unknown;
+            };
+            sorting: Array<{
+                key: string;
+                direction: number;
+            }>;
+            data_sources: unknown | null;
+        };
+        links: {
+            self: string;
+            search: string;
+            full: string;
+            [key: string]: string; // Allow additional links
+        };
+        meta: unknown | null;
+    };
+    error: unknown | null;
+    links: unknown | null;
+    meta: {
+        [key: string]: unknown;
+    };
+};

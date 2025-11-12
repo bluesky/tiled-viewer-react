@@ -985,3 +985,89 @@ export const sampleLoginSuccessResponse = {
 export const sampleLoginFailureResponse = {
     "detail": "Incorrect username or password"
 }
+
+export const sampleBlueskyPlanMetadataResponse = {
+    "data": {
+    "id": "aba7753b-ec5f-464d-abc2-809b620bb66b",
+    "attributes": {
+      "ancestors": [],
+      "structure_family": "container",
+      "specs": [
+        {
+          "name": "BlueskyRun",
+          "version": "3.0"
+        }
+      ],
+      "metadata": {
+        "start": {
+          "uid": "aba7753b-ec5f-464d-abc2-809b620bb66b",
+          "time": 1762972767.16652,
+          "versions": {
+            "ophyd": "1.11.0",
+            "bluesky": "1.14.4"
+          },
+          "scan_id": 3,
+          "plan_type": "generator",
+          "plan_name": "count",
+          "detectors": [
+            "motor1"
+          ],
+          "num_points": 10,
+          "num_intervals": 9,
+          "plan_args": {
+            "detectors": [
+              "SynAxis(prefix='', name='motor1', read_attrs=['readback', 'setpoint'], configuration_attrs=['velocity', 'acceleration'])"
+            ],
+            "num": 10,
+            "delay": 10
+          },
+          "hints": {
+            "dimensions": [
+              [
+                [
+                  "time"
+                ],
+                "primary"
+              ]
+            ]
+          }
+        },
+        "stop": {
+          "uid": "fd287c55-a47c-4673-9e4f-d3cbe7031468",
+          "time": 1762972867.23871,
+          "run_start": "aba7753b-ec5f-464d-abc2-809b620bb66b",
+          "exit_status": "success",
+          "reason": "",
+          "num_events": {
+            "primary": 10
+          }
+        }
+      },
+      "structure": {
+        "contents": null,
+        "count": 1
+      },
+      "access_blob": {
+
+      },
+      "sorting": [
+        {
+          "key": "",
+          "direction": 1
+        }
+      ],
+      "data_sources": null
+    },
+    "links": {
+      "self": "http://localhost:8000/api/v1/metadata/aba7753b-ec5f-464d-abc2-809b620bb66b",
+      "search": "http://localhost:8000/api/v1/search/aba7753b-ec5f-464d-abc2-809b620bb66b",
+      "full": "http://localhost:8000/api/v1/container/full/aba7753b-ec5f-464d-abc2-809b620bb66b"
+    },
+    "meta": null
+  },
+  "error": null,
+  "links": null,
+  "meta": {
+
+  }
+}
