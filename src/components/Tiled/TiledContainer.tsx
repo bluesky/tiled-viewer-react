@@ -23,6 +23,8 @@ type TiledContainerProps = {
     bearerToken?: string,
     initialSearchPath?: string,
     reverseSort?: boolean,
+    showPlanName?: boolean,
+    showPlanStartTime?: boolean,
 }
 export default function TiledContainer({
     url,
@@ -32,7 +34,9 @@ export default function TiledContainer({
     isExpanded,
     apiKey,
     bearerToken,
-    reverseSort
+    reverseSort,
+    showPlanName,
+    showPlanStartTime
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +98,8 @@ export default function TiledContainer({
                             className={singleColumnMode ? "w-full max-w-full" : ""}
                             showTooltip={singleColumnMode ? false : true}
                             handleNewPageClick={handleNewPageClick}
+                            showPlanName={showPlanName}
+                            showPlanStartTime={showPlanStartTime}
                         />
                     )}
                     {previewItem && 

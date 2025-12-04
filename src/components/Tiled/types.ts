@@ -58,7 +58,7 @@ export interface TiledSearchItem<StructureType> {
         ancestors: string[]; // Array of ancestor IDs
         structure_family: "array" | "table" | "container" | "awkward" | "sparse" | "composite"; // Enum for structure families
         specs: Spec[]; // Optional specs
-        metadata: Record<string, unknown>; // Metadata as a dictionary
+        metadata: TiledMetadata; // Metadata with optional Bluesky fields and arbitrary JSON
         structure: StructureType;
         sorting: Sorting[] | null; // Sorting details, if applicable
         data_sources: string | null; // Data source, if any
@@ -170,6 +170,39 @@ export interface XArrayStructure {
 }
 
 export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
+
+export type TiledMetadata = {
+    start?: {
+        uid: string;
+        time: number;
+        versions: {
+            [key: string]: string;
+        };
+        scan_id: number;
+        plan_type: string;
+        plan_name: string;
+        detectors: string[];
+        num_points: number;
+        num_intervals: number;
+        plan_args: {
+            [key: string]: unknown;
+        };
+        hints: {
+            dimensions: unknown[];
+        };
+    };
+    stop?: {
+        uid: string;
+        time: number;
+        run_start: string;
+        exit_status: string;
+        reason: string;
+        num_events: {
+            [stream: string]: number;
+        };
+    };
+    [key: string]: unknown; // Allow arbitrary nested JSON
+};
 
 export interface TiledTableRow {
     [column: string]: number;

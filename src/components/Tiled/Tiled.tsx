@@ -31,6 +31,8 @@ export type TiledProps = {
     buttonModeText?: string,
     reverseSort?: boolean,
     initialPath?: string,
+    showPlanName?: boolean,
+    showPlanStartTime?: boolean
 }
 export default function Tiled({
     onSelectCallback,
@@ -52,6 +54,8 @@ export default function Tiled({
     buttonModeText="Select Data",
     reverseSort=true,
     initialPath,
+    showPlanName,
+    showPlanStartTime,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -182,6 +186,8 @@ export default function Tiled({
                                                 apiKey={userInputApiKey}
                                                 bearerToken={bearerToken}
                                                 reverseSort={userInputReverseSort}
+                                                showPlanName={showPlanName}
+                                                showPlanStartTime={showPlanStartTime}
                                             />
                                         }
                                         {(isPopup || isButtonMode) && (
