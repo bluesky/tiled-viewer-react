@@ -54,7 +54,12 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
         icon = tiledStructureIcons.gridline;
     }
     if (structureFamily === 'container' || structureFamily === 'composite') {
-        icon = tiledStructureIcons.folder;
+        //some containers are from tiledWriter, so they are containers for bluesky plans. show them with a bluesky folder icon
+        if (isItemBlueskyRun(item)) {
+            icon = tiledStructureIcons.blueskyRun;
+        } else {
+            icon = tiledStructureIcons.folder;
+        }
     }
 
     return icon;
@@ -232,6 +237,18 @@ export const getApiKeyFromLocalStorage = () => {
     return undefined;
 }
 
+/**
+ * Retrieves authentication tokens (refresh and access tokens) from local storage
+ * @returns Object containing refreshToken and accessToken if both exist and are non-empty, undefined otherwise
+ * @example
+ * ```typescript
+ * const auth = getAuthFromLocalStorage();
+ * if (auth) {
+ *   console.log('Access token:', auth.accessToken);
+ *   console.log('Refresh token:', auth.refreshToken);
+ * }
+ * ```
+ */
 export const getAuthFromLocalStorage = () => {
     const refreshToken = localStorage.getItem('tiledRefreshToken');
     const accessToken = localStorage.getItem('tiledAccessToken');
@@ -248,16 +265,47 @@ export const getAuthFromLocalStorage = () => {
     return undefined;
 }
 
+/**
+ * Removes authentication tokens from local storage
+ * Clears both 'tiledRefreshToken' and 'tiledAccessToken' items
+ * @example
+ * ```typescript
+ * clearAuthFromLocalStorage();
+ * // Both tokens are now removed from localStorage
+ * ```
+ */
 export const clearAuthFromLocalStorage = () => {
     localStorage.removeItem('tiledRefreshToken');
     localStorage.removeItem('tiledAccessToken');
 };
 
+/**
+ * Saves authentication tokens to local storage
+ * @param refreshToken - The refresh token string to store
+ * @param accessToken - The access token string to store
+ * @example
+ * ```typescript
+ * saveAuthToLocalStorage('refresh_token_here', 'access_token_here');
+ * // Tokens are now saved to localStorage
+ * ```
+ */
 export const saveAuthToLocalStorage = (refreshToken:string, accessToken:string) => {
     localStorage.setItem('tiledRefreshToken', refreshToken);
     localStorage.setItem('tiledAccessToken', accessToken);
 };
 
+/**
+ * Calculates optimal step sizes for image downsampling to stay within memory limits
+ * Used to reduce image size when requesting PNG data from large arrays
+ * @param arrayItem - The TiledSearchItem containing array structure information
+ * @param maxBytesAllowed - Optional maximum bytes allowed (defaults to 1MB if not provided)
+ * @returns Object containing stepX and stepY values for downsampling
+ * @example
+ * ```typescript
+ * const steps = generateStepsForImagePath(largeArrayItem, 2000000); // 2MB limit
+ * // Returns: { stepX: 2, stepY: 2 } for 4x downsampling if needed
+ * ```
+ */
 export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructure>, maxBytesAllowed?:number) => {
     let stepX = 1;
     let stepY = 1;
@@ -279,4 +327,26 @@ export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructu
         stepX,
         stepY
     };
+};
+
+/**
+ * Determines if a TiledSearchItem represents a Bluesky run as written by TiledWriter
+ * Checks for container structure family and the BlueskyRun spec inside attributes
+ * @param item - The TiledSearchItem to check
+ * @returns True if the item is a Bluesky run, false otherwise
+ * @example
+ * ```typescript
+ * if (isItemBlueskyRun(item)) {
+ *   console.log('This is a Bluesky experimental run');
+ *   // Access Bluesky-specific metadata like plan_name, detectors, etc.
+ * }
+ * ```
+ */
+export const isItemBlueskyRun = (item:TiledSearchItem<TiledStructures>) => {
+    if (item.attributes.structure_family === 'container' ) {
+        if (item?.attributes?.specs?.[0]?.name === 'BlueskyRun') {
+            return true;
+        }
+    }
+    return false;
 }
