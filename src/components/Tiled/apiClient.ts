@@ -3,6 +3,8 @@ axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
 import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse } from "./types";
+import { TiledSearchConfig, TiledSearchOptions, TiledSearchFilters, TiledSpecsFilter } from './apiTypes';
+import { addBasicOptions, addSearchFilters } from './apiUtils';
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
@@ -26,32 +28,36 @@ export const getInitialPath = () => {
 };
 
 /**
- * Helper function to construct API paths with optional global initial path
- * Removes redundant path segments when searchPath already contains the globalInitialPath
+ * Helper function to construct API paths with optional initial path and global initial path
+ * Removes redundant path segments when searchPath already contains the initial path
  * @param searchPath - The search path to append
- * @returns Combined path with globalInitialPath prepended if it exists, avoiding duplication
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Combined path with initial path prepended if it exists, avoiding duplication
  */
-const constructApiPath = (searchPath?: string): string => {
-    if (globalInitialPath) {
+const constructApiPath = (searchPath?: string, initialPath?: string): string => {
+    // Priority: initialPath argument > globalInitialPath > none
+    const effectiveInitialPath = initialPath || globalInitialPath;
+    
+    if (effectiveInitialPath) {
         if (searchPath) {
             // Clean up both paths by removing leading/trailing slashes
-            const cleanInitialPath = globalInitialPath.replace(/^\/+|\/+$/g, '');
+            const cleanInitialPath = effectiveInitialPath.replace(/^\/+|\/+$/g, '');
             const cleanSearchPath = searchPath.replace(/^\/+|\/+$/g, '');
             
-            // If searchPath already starts with the globalInitialPath, remove the redundant part
+            // If searchPath already starts with the effectiveInitialPath, remove the redundant part
             if (cleanSearchPath.startsWith(cleanInitialPath + '/')) {
-                // Return globalInitialPath + remainder of searchPath after removing the redundant prefix
+                // Return effectiveInitialPath + remainder of searchPath after removing the redundant prefix
                 const remainder = cleanSearchPath.substring(cleanInitialPath.length + 1);
                 return remainder ? `${cleanInitialPath}/${remainder}` : cleanInitialPath;
             } else if (cleanSearchPath === cleanInitialPath) {
-                // If searchPath is exactly the same as globalInitialPath, just return globalInitialPath
+                // If searchPath is exactly the same as effectiveInitialPath, just return effectiveInitialPath
                 return cleanInitialPath;
             } else {
                 // No redundancy, combine normally
                 return `${cleanInitialPath}/${cleanSearchPath}`;
             }
         } else {
-            return globalInitialPath.replace(/^\/+|\/+$/g, '');
+            return effectiveInitialPath.replace(/^\/+|\/+$/g, '');
         }
     }
     return searchPath?.replace(/^\/+|\/+$/g, '') || '';
@@ -239,6 +245,62 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
     } catch (error) {
         console.error('Error searching path: ', error);
         console.log('If you are getting a CORS error, make sure to start tiled with the TILED_ALLOW_ORIGINS environment variable set to your frontend URL');
+        return null;
+    }
+};
+
+/**
+ * Searches for items that include specific specs
+ * @param searchPath - Optional path to search within
+ * @param includeSpecs - Array of spec names to include in results
+ * @param excludeSpecs - Optional array of spec names to exclude from results
+ * @param url - Optional custom Tiled server URL
+ * @param cb - Optional callback function that receives the search results
+ * @returns Promise that resolves to TiledSearchResult or null if error occurs
+ * @example
+ * ```typescript
+ * // Search for BlueskyEventStream specs
+ * const results = await getSearchResultsBySpecs('my-path', ['BlueskyEventStream']);
+ * 
+ * // Search for multiple specs but exclude BlueskyRun
+ * const results = await getSearchResultsBySpecs('my-path', ['BlueskyEventStream'], ['BlueskyRun']);
+ * ```
+ */
+export const getSearchResultsBySpecs = async (
+    searchPath?: string,
+    includeSpecs?: string[],
+    excludeSpecs?: string[],
+    url?: string,
+    cb?: (res: TiledSearchResult) => void
+): Promise<TiledSearchResult | null> => {
+    try {
+        const baseUrl = url ? url : defaultTiledUrl;
+        const params = new URLSearchParams();
+        
+        if (globalApiKey) {
+            params.append('api_key', globalApiKey);
+        }
+        
+        if (globalReverseSort) {
+            params.append('sort', '-');
+        }
+
+        // Format as JSON arrays - this is what Tiled expects
+        const includeArray = includeSpecs && includeSpecs.length > 0 ? includeSpecs : [];
+        const excludeArray = excludeSpecs && excludeSpecs.length > 0 ? excludeSpecs : [];
+        
+        params.append('filter[specs][condition][include]', JSON.stringify(includeArray));
+        params.append('filter[specs][condition][exclude]', JSON.stringify(excludeArray));
+        
+        const queryString = params.toString();
+        const apiPath = constructApiPath(searchPath);
+        const fullUrl = baseUrl + '/search/' + apiPath + (queryString ? '?' + queryString : '');
+        
+        const response = await axios.get(fullUrl);
+        cb?.(response.data as TiledSearchResult);
+        return response.data as TiledSearchResult;
+    } catch (error) {
+        console.error('Error searching by specs: ', error);
         return null;
     }
 };
@@ -637,4 +699,243 @@ export const getAuthenticatedImage = async (imagePath: string): Promise<string> 
         console.error('Error fetching authenticated image:', error);
         throw error;
     }
+};
+
+/**
+ * Comprehensive search function for Tiled API with full filter and option support
+ * @param config - Complete search configuration object
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchTiled = async (config: TiledSearchConfig): Promise<TiledSearchResult[]> => {
+    const { baseUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
+    
+    try {
+        const apiPath = constructApiPath(path, initialPath);
+        const url = new URL(`${baseUrl}/api/v1/search/${apiPath}`);
+        const params = url.searchParams;
+        
+        // Add basic search options
+        addBasicOptions(params, options, false);
+        
+        // Add search filters
+        if (filters) {
+            addSearchFilters(params, filters);
+        }
+        
+        const headers: Record<string, string> = {};
+        const currentApiKey = apiKey || globalApiKey;
+        if (currentApiKey) {
+            headers['Authorization'] = `Apikey ${currentApiKey}`;
+        }
+        
+        const response = await axios.get(url.toString(), { headers });
+        return response.data.data;
+    } catch (error) {
+        console.error('Error in searchTiled:', error);
+        throw error;
+    }
+};
+
+/**
+ * Search by specs with include/exclude arrays
+ * @param baseUrl - Tiled server base URL
+ * @param include - Array of specs to include
+ * @param exclude - Array of specs to exclude (defaults to empty array)
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchBySpecs = async (
+    baseUrl: string,
+    include: string[],
+    exclude: string[] = [],
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            specs: { include, exclude }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
+};
+
+/**
+ * Search by fulltext
+ * @param baseUrl - Tiled server base URL
+ * @param text - Text to search for
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchByFulltext = async (
+    baseUrl: string,
+    text: string,
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            fulltext: { text }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
+};
+
+/**
+ * Search by metadata key equality
+ * @param baseUrl - Tiled server base URL
+ * @param key - Metadata key to search
+ * @param value - Value to match
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchByMetadataEquals = async (
+    baseUrl: string,
+    key: string,
+    value: any,
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            eq: { key, value }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
+};
+
+/**
+ * Search by metadata key comparison
+ * @param baseUrl - Tiled server base URL
+ * @param key - Metadata key to search
+ * @param operator - Comparison operator ('gt', 'gte', 'lt', 'lte')
+ * @param value - Value to compare against
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchByMetadataComparison = async (
+    baseUrl: string,
+    key: string,
+    operator: 'gt' | 'gte' | 'lt' | 'lte',
+    value: any,
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            comparison: { operator, key, value }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
+};
+
+/**
+ * Search by regex pattern on metadata key
+ * @param baseUrl - Tiled server base URL
+ * @param key - Metadata key to search
+ * @param pattern - Regex pattern to match
+ * @param caseSensitive - Whether regex should be case sensitive (defaults to false)
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchByRegex = async (
+    baseUrl: string,
+    key: string,
+    pattern: string,
+    caseSensitive: boolean = false,
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            regex: { key, pattern, caseSensitive }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
+};
+
+/**
+ * Search by structure family
+ * @param baseUrl - Tiled server base URL
+ * @param structureFamily - Structure family to filter by
+ * @param path - Optional path within the Tiled server
+ * @param options - Additional search options
+ * @param apiKey - Optional API key
+ * @param initialPath - Optional initial path that takes priority over globalInitialPath
+ * @returns Promise<TiledSearchResult[]>
+ */
+export const searchByStructureFamily = async (
+    baseUrl: string,
+    structureFamily: 'container' | 'array' | 'table' | 'awkward' | 'sparse',
+    path: string = '',
+    options: TiledSearchOptions = {},
+    apiKey?: string,
+    initialPath?: string
+): Promise<TiledSearchResult[]> => {
+    const config: TiledSearchConfig = {
+        baseUrl,
+        path,
+        initialPath,
+        filters: {
+            structureFamily: { value: structureFamily }
+        },
+        options,
+        apiKey
+    };
+    
+    return searchTiled(config);
 };

@@ -8,6 +8,17 @@ export type { TiledProps } from './components/Tiled/Tiled';
 
 //TYPES
 export type { TiledItemLinks, TiledSearchItem, TiledBlueskyPlanMetadataResponse, TiledStructures, TiledTableRow, TableStructure, TiledTableJSONResponse, ArrayStructure, ContainerStructure, AwkwardStructure, AwkwardForm, SparseStructure } from './components/Tiled/types';
+export type { 
+  TiledSearchConfig, 
+  TiledSearchOptions, 
+  TiledSearchFilters,
+  TiledSpecsFilter,
+  TiledFulltextFilter,
+  TiledRegexFilter,
+  TiledEqualityFilter,
+  TiledComparisonFilter,
+  TiledStructureFamilyFilter
+} from './components/Tiled/apiTypes';
 //UTILS
 export {
   // Path management
@@ -23,6 +34,7 @@ export {
   
   // Search and data retrieval
   getSearchResults,
+  getSearchResultsBySpecs,
   getItemMetadata,
   getBlueskyPlanMetadata,
   getFirstSearchWithApiKey,
@@ -30,6 +42,15 @@ export {
   getTableDataAsSequence,
   getStructuredArrayData,
   getXArrayData,
+  
+  // Comprehensive search functions
+  searchTiled,
+  searchBySpecs,
+  searchByFulltext,
+  searchByMetadataEquals,
+  searchByMetadataComparison,
+  searchByRegex,
+  searchByStructureFamily,
   
   // Image handling
   generateFullImagePngPath,
