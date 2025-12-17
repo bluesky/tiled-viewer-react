@@ -29,6 +29,7 @@ export type useTiledProps = {
     bearerToken?: string,
     initialSearchPath?: string,
     reverseSort?: boolean,
+    pageLimit?: number,
 }
 type Url = string;
 
@@ -60,8 +61,7 @@ const getEffectiveAncestorLength = (ancestors: string[]): number => {
     return effectiveAncestorLength;
 };
 
-export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort}:useTiledProps) => {
-    
+export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort, pageLimit}:useTiledProps) => {
     const [ columns, setColumns ] = useState<TiledSearchResult[]>([]);
     const [ breadcrumbs, setBreadcrumbs ] = useState<Breadcrumb[]>([]);
     const [ imageUrl, setImageUrl ] = useState<string | undefined>();
@@ -87,7 +87,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             currentAncestorId.current = currentAncestorId.current - 1;
             if (currentAncestorId.current < 0) {
                 //uesr has clicked back onto the root directory
-                getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : ''}}, (res:TiledSearchResult) => setColumns([res]));
+                getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
                 setBreadcrumbs([]);
                 setImageUrl('');
                 setPopoutUrl('');
@@ -208,7 +208,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         setPreviewItem(null)
         const searchPath = generateSearchPath(item);
         const firstSortKey = item.attributes.sorting ? item.attributes.sorting[0].key : undefined; //sort key may be 'time' for RE data or defaults to '_'
-        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: firstSortKey}}, (res:TiledSearchResult) => handleSearchResponse(item, res));
+        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: firstSortKey, pageLimit:pageLimit}}, (res:TiledSearchResult) => handleSearchResponse(item, res));
         closePreview();
     };
 
@@ -239,7 +239,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         currentAncestorId.current = -1;
         setPreviewItem(null);
         setPreviewSize('hidden');
-       getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : ''}}, (res:TiledSearchResult) => setColumns([res]));
+       getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
     }
 
     const initializeData = useCallback(async () => {
@@ -255,7 +255,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             setGlobalApiKey(apiKey); //will add apiKey to ALL future requests, in testing there were issues with the cookies being sent after the intial apiKey call so this is done on each req
         }
         try{
-            response = await getSearchResults({path:searchPath || '', baseUrl:url, initialPath:initialSearchPath, apiKey:apiKey, options:{sort: reverseSort ? '-' : ''} });
+            response = await getSearchResults({path:searchPath || '', baseUrl:url, initialPath:initialSearchPath, apiKey:apiKey, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit} });
         } catch (error) {
             console.error('Error fetching search results:', error);
             setWarning('There was an error connecting to the Tiled server. Please check the console for more details.');

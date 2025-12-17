@@ -27,7 +27,7 @@ function App() {
         <TiledSearch />
         <Tiled isButtonMode={true} size='medium' tiledBaseUrl='http://tiled.localhost:8000/api/v1'/>
         <Button cb={clearSavedTokensAndRefresh} text="Clear saved tokens and Refresh" isSecondary={true} styles='mt-12'/>
-        <Tiled isPopup={true} reverseSort={true} tiledBaseUrl='http://tiled.localhost:8000/api/v1'/>
+        <Tiled isPopup={true}  tiledBaseUrl='http://tiled.localhost:8000/api/v1' pageLimit={2}/>
       </section>
     </>
   )

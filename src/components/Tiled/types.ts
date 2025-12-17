@@ -60,6 +60,7 @@ export interface TiledSearchItem<StructureType> {
         specs: Spec[]; // Optional specs
         metadata: TiledMetadata; // Metadata with optional Bluesky fields and arbitrary JSON
         structure: StructureType;
+        access_blob?: Record<string, unknown>; // Optional access blob URL
         sorting: Sorting[] | null; // Sorting details, if applicable
         data_sources: string | null; // Data source, if any
     };

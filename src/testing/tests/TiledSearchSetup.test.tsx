@@ -50,10 +50,8 @@ describe('Tiled Component Search Setup', () => {
     // Wait for the component to make the initial search request
     await waitFor(() => {
       expect(capturedHeaders).toBeTruthy();
+      expect(capturedHeaders?.get('authorization')).toBe('Apikey test-api-key-123');
     });
-
-    // Verify the headers contain the API key
-    expect(capturedHeaders?.get('authorization')).toBe('Apikey test-api-key-123');
   });
 
   it('includes sort parameter when reverseSort is set to true', async () => {

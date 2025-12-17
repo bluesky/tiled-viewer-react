@@ -23,7 +23,11 @@ type TiledColumnProps = {
 export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs, handleSelectClick, className, showTooltip=true, handleNewPageClick, showPlanName=true, showPlanStartTime=true}: TiledColumnProps) {
     //console.log({links})
     //parse the links.self to get the value after ...page[offset]=
-    const currentOffset = links.self ? parseInt(links.self.split('page[offset]=')[1].split('&')[0]) : 1;
+    const currentOffset = (() => {
+        if (!links.self) return 0;
+        const offsetMatch = links.self.match(/page\[offset\]=(\d+)/);
+        return offsetMatch ? parseInt(offsetMatch[1]) : 0;
+    })();
     //const pageLimit = links.self ? parseInt(links.self.split('page[limit]=')[1]) : 100;
     const totalResults = meta.count;
     const currentlyDisplayedStartIndex = currentOffset + (data.length > 0 ? 1 : 0);

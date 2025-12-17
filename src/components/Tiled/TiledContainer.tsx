@@ -25,6 +25,7 @@ type TiledContainerProps = {
     reverseSort?: boolean,
     showPlanName?: boolean,
     showPlanStartTime?: boolean,
+    pageLimit?: number,
 }
 export default function TiledContainer({
     url,
@@ -36,11 +37,12 @@ export default function TiledContainer({
     bearerToken,
     reverseSort,
     showPlanName,
-    showPlanStartTime
+    showPlanStartTime,
+    pageLimit
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort  });
+    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort, pageLimit });
 
     if (!tiledData) {
         return <div>Error: Unable to load tiled data. Check console for error logs.</div>;
