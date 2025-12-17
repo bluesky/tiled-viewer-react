@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, getFirstSearchWithApiKey, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath } from "./apiClient";
+import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath } from "./apiClient";
 import { getAuthFromLocalStorage } from "./utils";
 import { 
     TiledSearchResult, 
@@ -20,7 +20,6 @@ import {
     SparseStructure
  } from "./types";
 import { getTiledStructureIcon, generateSearchPath, getLastSearchFromLocalStorage, writeSearchPathToLocalStorage} from "./utils";
-import { get } from "http";
 
 export type useTiledProps = {
     url?: string,

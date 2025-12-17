@@ -119,6 +119,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                     <VisxLinePlot
                         plotData={tableData}
                         domain={domain}
+                        defaultHeight={400}
                     />
                 </div>
             )}

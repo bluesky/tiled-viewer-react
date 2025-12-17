@@ -21,20 +21,17 @@ type TiledColumnProps = {
 };
 
 export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs, handleSelectClick, className, showTooltip=true, handleNewPageClick, showPlanName=true, showPlanStartTime=true}: TiledColumnProps) {
-    //console.log({links})
     //parse the links.self to get the value after ...page[offset]=
     const currentOffset = (() => {
         if (!links.self) return 0;
         const offsetMatch = links.self.match(/page\[offset\]=(\d+)/);
         return offsetMatch ? parseInt(offsetMatch[1]) : 0;
     })();
-    //const pageLimit = links.self ? parseInt(links.self.split('page[limit]=')[1]) : 100;
     const totalResults = meta.count;
     const currentlyDisplayedStartIndex = currentOffset + (data.length > 0 ? 1 : 0);
     const currentlyDisplayedEndIndex = currentlyDisplayedStartIndex + data.length - 1;
     const nextResultsLink = links.next ? links.next : null;
     const prevResultsLink = links.prev ? links.prev : null;
-    //console.log({currentOffset, pageLimit, totalResults, currentlyDisplayedStartIndex, currentlyDisplayedEndIndex});
     return (
         <div className={cn("flex flex-col-reverse border-r border-r-slate-300 min-w-56 w-fit max-w-xs px-4 h-auto pt-2", className)}>
             {nextResultsLink || prevResultsLink ? (

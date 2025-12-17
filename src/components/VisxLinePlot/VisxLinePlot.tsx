@@ -6,13 +6,12 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 //import Portal from '@visx/tooltip/lib/Portal';
 
 export type XYChartProps = {
-  width?: number;
-  height?: number;
+  defaultHeight?: number;
   plotData: Record<string, number>[];
   domain?: [number, number];
 };
 
-export default function VisxLinePlot({ plotData, domain }: XYChartProps) {
+export default function VisxLinePlot({ plotData, domain, defaultHeight=400 }: XYChartProps) {
 
     const dataWithIndex = useMemo(() => {
         if (!domain) {
@@ -34,7 +33,7 @@ export default function VisxLinePlot({ plotData, domain }: XYChartProps) {
 
   return (
 
-    <ParentSize>{({width, height }) => 
+    <ParentSize style={{minHeight:defaultHeight}} initialSize={{ width: 400, height: defaultHeight }}>{({width, height }) => 
       <PlotSettings data={dataWithIndex} dataKeys={selectedDataKeys} setSelectedDataKeys={setSelectedDataKeys}>
         {({
           accessors,
@@ -93,7 +92,7 @@ export default function VisxLinePlot({ plotData, domain }: XYChartProps) {
             theme={theme}
             xScale={config.x}
             yScale={config.y}
-            height={Math.min(400, height)}
+            height={Math.max(400, defaultHeight)}
             captureEvents={!editAnnotationLabelPosition}
             onPointerUp={(d) => {
               if (dataKeys.includes(d.key)) {

@@ -18,9 +18,7 @@ export default function StartupScreen({
     const [ warning, setWarning ] = useState< JSX.Element | null>(null);
 
     const testTiledConnection = async (url:string | undefined) => {
-        console.log({url})
         //ping the tiled server at the url and check if we get a response.
-        //const res = await getSearchResults('', url);
         const res = await getSearchResults({path: '', baseUrl: url});
         //console.log(typeof res)
         if (res !== null && typeof res !== 'string' && 'data' in res) {
