@@ -4,6 +4,7 @@ import { getDefaultTiledUrl } from "./apiClient";
 import blueskyLogo from "./bluesky_logo.png"
 import { tailwindIcons } from "@/assets/icons";
 import { MagnifyingGlass } from "@phosphor-icons/react";
+import TiledSearchBar from "./TiledSearchBar";
 
 const defaultUrl = getDefaultTiledUrl();
 
@@ -67,7 +68,7 @@ export default function TiledHeader({
             </div>
             { showExpandButton &&
                 <div className="absolute top-0 right-0 mr-3 mt-3 h-6 aspect-square text-slate-500 hover:text-slate-900 hover:cursor-pointer flex gap-2" onClick={handleExpandClick}>
-                    <MagnifyingGlass size={24} className="text-slate-500 hover:text-slate-900 hover:cursor-pointer" />
+                    <TiledSearchBar />
                     {isExpanded ? tailwindIcons.arrowsPointingIn :tailwindIcons.arrowsPointingOut}
                 </div>
             }
