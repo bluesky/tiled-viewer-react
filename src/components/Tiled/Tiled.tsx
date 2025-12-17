@@ -34,6 +34,7 @@ export type TiledProps = {
     showPlanName?: boolean,
     showPlanStartTime?: boolean,
     pageLimit?: number,
+    reloadLastItemOnStartup?: boolean,
 }
 export default function Tiled({
     onSelectCallback,
@@ -58,6 +59,7 @@ export default function Tiled({
     showPlanName,
     showPlanStartTime,
     pageLimit,
+    reloadLastItemOnStartup,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -191,6 +193,7 @@ export default function Tiled({
                                                 showPlanName={showPlanName}
                                                 showPlanStartTime={showPlanStartTime}
                                                 pageLimit={pageLimit}
+                                                reloadLastItemOnStartup={reloadLastItemOnStartup}
                                             />
                                         }
                                         {(isPopup || isButtonMode) && (

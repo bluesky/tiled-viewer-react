@@ -29,6 +29,7 @@ export type useTiledProps = {
     initialSearchPath?: string,
     reverseSort?: boolean,
     pageLimit?: number,
+    reloadLastItemOnStartup?: boolean,
 }
 type Url = string;
 
@@ -60,7 +61,7 @@ const getEffectiveAncestorLength = (ancestors: string[]): number => {
     return effectiveAncestorLength;
 };
 
-export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort, pageLimit}:useTiledProps) => {
+export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPath, reverseSort, pageLimit, reloadLastItemOnStartup}:useTiledProps) => {
     const [ columns, setColumns ] = useState<TiledSearchResult[]>([]);
     const [ breadcrumbs, setBreadcrumbs ] = useState<Breadcrumb[]>([]);
     const [ imageUrl, setImageUrl ] = useState<string | undefined>();
@@ -326,19 +327,20 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //keeps triggering to simulate a user clicking a column element until every subpath of preloadedColumnsPath is displayed in the viewer
         //this must be done sequentially so that various state vars can update properly before each successive search
 
-        if (columns.length <= 0) return; //base case when this runs prior to columns initialized with data
-        if (!remainingHistoryArray || remainingHistoryArray.length === 0) return; //base case when there are no more subpaths to display
-
-        if (preloadedColumnsPath && remainingHistoryArray) {
-            const fullHistoryArray = preloadedColumnsPath.split('/').filter(Boolean); 
-            const currentHistoryIndex = fullHistoryArray.length - remainingHistoryArray.length; //get the column index we should be searching in
-            if (columns.length === currentHistoryIndex + 1) { //only do the search if the column state is ready
-                reloadLastSearch(remainingHistoryArray[0]);
+        if (reloadLastItemOnStartup) {
+            if (columns.length <= 0) return; //base case when this runs prior to columns initialized with data
+            if (!remainingHistoryArray || remainingHistoryArray.length === 0) return; //base case when there are no more subpaths to display
+    
+            if (preloadedColumnsPath && remainingHistoryArray) {
+                const fullHistoryArray = preloadedColumnsPath.split('/').filter(Boolean); 
+                const currentHistoryIndex = fullHistoryArray.length - remainingHistoryArray.length; //get the column index we should be searching in
+                if (columns.length === currentHistoryIndex + 1) { //only do the search if the column state is ready
+                    reloadLastSearch(remainingHistoryArray[0]);
+                }
             }
         }
-
     }
-    , [remainingHistoryArray, columns, preloadedColumnsPath, reloadLastSearch]);
+    , [remainingHistoryArray, columns, preloadedColumnsPath, reloadLastSearch, reloadLastItemOnStartup]);
 
     return useMemo(() => ({
         columns,

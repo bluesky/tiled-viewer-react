@@ -174,6 +174,83 @@ describe('TiledColumn Component', () => {
       expect(screen.getByText('1 - 2 of 62')).toBeInTheDocument();
     }, { timeout: 3000 });
   });
-});
 
-//we expect there to be text of "1 - 2 of 62" rendered when we get render the mock 2 page limit response
+  it('makes additional search query when reloadLastItemStartup=true and localStorage has lastSearchHistory', async () => {
+    // Set up localStorage with lastSearchHistory
+    localStorage.setItem('lastSearchHistory', '0e0699be-aaec-432f-b373-b19b95bbef5d');
+
+    const requestUrls: string[] = [];
+    let itemSearchRequestMade = false;
+
+    // Mock ALL requests to see what's being requested
+    server.use(
+      http.get('https://test-server.example.com/api/v1/*', ({ request }) => {
+        const url = request.url;
+        requestUrls.push(url);
+        
+        if (url.includes('search') && url.includes('0e0699be-aaec-432f-b373-b19b95bbef5d')) {
+          // This is the specific item search request
+          itemSearchRequestMade = true;
+          return HttpResponse.json({
+            data: [
+              {
+                id: "streams",
+                attributes: {
+                  structure_family: "container",
+                  metadata: {}
+                }
+              }
+            ],
+            links: {
+              self: url,
+              first: url,
+              last: url
+            },
+            meta: {
+              count: 1
+            }
+          });
+        } else if (url.includes('search')) {
+          // General search request
+          return HttpResponse.json(mockTiledSearch2PageLimitResponse);
+        } else {
+          // Return 404 for other requests
+          return new HttpResponse(null, { status: 404 });
+        }
+      })
+    );
+
+    render(
+      <Tiled 
+        tiledBaseUrl="https://test-server.example.com/api/v1"
+        enableStartupScreen={false}
+        reloadLastItemOnStartup={true}
+      />
+    );
+
+    // Wait for component to load and verify basic functionality
+    await waitFor(() => {
+      expect(screen.getByText('1 - 2 of 62')).toBeInTheDocument();
+    }, { timeout: 5000 });
+
+    // Verify that the component shows it navigated to the item
+    await waitFor(() => {
+      expect(screen.getByText(/0e0699be-aaec-432f-b373-b19b95bbef5d/)).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    // Wait for the additional item search request to be made
+    await waitFor(() => {
+      expect(itemSearchRequestMade).toBe(true);
+      expect(requestUrls.some(url => url.includes('search/0e0699be-aaec-432f-b373-b19b95bbef5d'))).toBe(true);
+    }, { timeout: 5000 });
+
+    // Verify that "streams" text is rendered (from the item-specific search response)
+    await waitFor(() => {
+      expect(screen.getByText('streams')).toBeInTheDocument();
+    }, { timeout: 5000 });
+
+    // Check that we made multiple requests (initial search + item search)
+    expect(requestUrls.length).toBeGreaterThan(1);
+    console.log('All request URLs:', requestUrls);
+  });
+});
