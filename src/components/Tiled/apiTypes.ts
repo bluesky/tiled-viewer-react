@@ -4,7 +4,7 @@ import { TiledSearchResult } from './types';
  * Configuration object for comprehensive Tiled search functionality
  */
 export interface TiledSearchConfig {
-    baseUrl: string;
+    baseUrl?: string;
     path?: string;
     initialPath?: string;
     filters?: TiledSearchFilters;

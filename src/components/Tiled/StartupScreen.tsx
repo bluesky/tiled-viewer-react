@@ -20,7 +20,8 @@ export default function StartupScreen({
     const testTiledConnection = async (url:string | undefined) => {
         console.log({url})
         //ping the tiled server at the url and check if we get a response.
-        const res = await getSearchResults('', url);
+        //const res = await getSearchResults('', url);
+        const res = await getSearchResults({path: '', baseUrl: url});
         //console.log(typeof res)
         if (res !== null && typeof res !== 'string' && 'data' in res) {
             //Tiled will return a data field when it's working

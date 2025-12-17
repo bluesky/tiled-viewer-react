@@ -23,8 +23,25 @@ export const setInitialPath = (path:string | null) => {
     return globalInitialPath;
 };
 
+/**
+ * Configures whether search results should be returned in reverse order
+ * @param reverse - If true, results will be sorted in descending order
+ * @example
+ * ```typescript
+ * setReverseSort(true); // Enable reverse sorting
+ * ```
+ */
+export const setReverseSort = (reverse:boolean | undefined) => {
+    globalReverseSort = reverse || false; //default to false if undefined
+};
+
 export const getInitialPath = () => {
     return globalInitialPath;
+};
+
+export const setGlobalApiKey = (apiKey:string | null) => {
+    globalApiKey = apiKey;
+    return globalApiKey;
 };
 
 /**
@@ -155,7 +172,7 @@ export const setBearerToken = (token:string) => {
  * const results = await getSearchResults('my-data-folder');
  * ```
  */
-export const getSearchResults = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:Record<string, string | number | boolean>, sortingKey?:string):Promise<TiledSearchResult | null> => {
+export const getSearchResultsOld = async (searchPath?:string, url?:string, cb?:(res:TiledSearchResult)=>void, mock?:boolean, parameters?:Record<string, string | number | boolean>, sortingKey?:string):Promise<TiledSearchResult | null> => {
     if (mock) {
         cb?.(sampleTiledSearchData);
         return sampleTiledSearchData as TiledSearchResult;
@@ -489,18 +506,6 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
 };
 
 /**
- * Configures whether search results should be returned in reverse order
- * @param reverse - If true, results will be sorted in descending order
- * @example
- * ```typescript
- * setReverseSort(true); // Enable reverse sorting
- * ```
- */
-export const setReverseSort = (reverse:boolean | undefined) => {
-    globalReverseSort = reverse || false; //default to false if undefined
-};
-
-/**
  * Resets all global state variables to their default values
  * Useful for testing to ensure clean state between tests
  * @example
@@ -701,12 +706,12 @@ export const getAuthenticatedImage = async (imagePath: string): Promise<string> 
  * @param config - Complete search configuration object
  * @returns Promise<TiledSearchResult[]>
  */
-export const searchTiled = async (config: TiledSearchConfig): Promise<TiledSearchResult[]> => {
-    const { baseUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
+export const getSearchResults = async (config: TiledSearchConfig, cb?:(res:TiledSearchResult)=>void): Promise<TiledSearchResult> => {
+    const { baseUrl = defaultTiledUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
     
     try {
         const apiPath = constructApiPath(path, initialPath);
-        const url = new URL(`${baseUrl}/api/v1/search/${apiPath}`);
+        const url = new URL(`${baseUrl}/search/${apiPath}`);
         const params = url.searchParams;
         
         // Add basic search options
@@ -724,7 +729,8 @@ export const searchTiled = async (config: TiledSearchConfig): Promise<TiledSearc
         }
         
         const response = await axios.get(url.toString(), { headers });
-        return response.data.data;
+        cb?.(response.data as TiledSearchResult);
+        return response.data as TiledSearchResult;
     } catch (error) {
         console.error('Error in searchTiled:', error);
         throw error;
@@ -750,7 +756,7 @@ export const searchBySpecs = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -761,8 +767,8 @@ export const searchBySpecs = async (
         options,
         apiKey
     };
-    
-    return searchTiled(config);
+
+    return getSearchResults(config);
 };
 
 /**
@@ -782,7 +788,7 @@ export const searchByFulltext = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -794,7 +800,7 @@ export const searchByFulltext = async (
         apiKey
     };
     
-    return searchTiled(config);
+    return getSearchResults(config);
 };
 
 /**
@@ -816,7 +822,7 @@ export const searchByMetadataEquals = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -828,7 +834,7 @@ export const searchByMetadataEquals = async (
         apiKey
     };
     
-    return searchTiled(config);
+    return getSearchResults(config);
 };
 
 /**
@@ -852,7 +858,7 @@ export const searchByMetadataComparison = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -864,7 +870,7 @@ export const searchByMetadataComparison = async (
         apiKey
     };
     
-    return searchTiled(config);
+    return getSearchResults(config);
 };
 
 /**
@@ -888,7 +894,7 @@ export const searchByRegex = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -899,8 +905,8 @@ export const searchByRegex = async (
         options,
         apiKey
     };
-    
-    return searchTiled(config);
+
+    return getSearchResults(config);
 };
 
 /**
@@ -920,7 +926,7 @@ export const searchByStructureFamily = async (
     options: TiledSearchOptions = {},
     apiKey?: string,
     initialPath?: string
-): Promise<TiledSearchResult[]> => {
+): Promise<TiledSearchResult> => {
     const config: TiledSearchConfig = {
         baseUrl,
         path,
@@ -931,6 +937,6 @@ export const searchByStructureFamily = async (
         options,
         apiKey
     };
-    
-    return searchTiled(config);
+
+    return getSearchResults(config);
 };

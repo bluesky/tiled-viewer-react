@@ -29,12 +29,12 @@ afterEach(() => {
 
 describe('Tiled Component Search Setup', () => {
   it('includes API key in first search request when apiKey prop is provided', async () => {
-    let capturedUrl = '';
-    
-    // Mock handler that captures the request URL
+    let capturedHeaders: Headers | null = null;
+
+    // Mock handler that captures the request headers
     server.use(
       http.get('https://test-server.example.com/api/v1/search/*', ({ request }) => {
-        capturedUrl = request.url;
+        capturedHeaders = request.headers;
         return HttpResponse.json(mockTiledResponse);
       })
     );
@@ -49,12 +49,11 @@ describe('Tiled Component Search Setup', () => {
 
     // Wait for the component to make the initial search request
     await waitFor(() => {
-      expect(capturedUrl).toContain('api_key=test-api-key-123');
+      expect(capturedHeaders).toBeTruthy();
     });
 
-    // Verify the URL contains the API key parameter
-    const url = new URL(capturedUrl);
-    expect(url.searchParams.get('api_key')).toBe('test-api-key-123');
+    // Verify the headers contain the API key
+    expect(capturedHeaders?.get('authorization')).toBe('Apikey test-api-key-123');
   });
 
   it('includes sort parameter when reverseSort is set to true', async () => {
@@ -120,12 +119,14 @@ describe('Tiled Component Search Setup', () => {
   it('combines apiKey, reverseSort, and initialPath when all are provided', async () => {
     let capturedUrl = '';
     let capturedPath = '';
-    
+    let capturedHeaders: Headers | null = null;
+
     // Mock handler that captures both URL and path
     server.use(
       http.get('https://test-server.example.com/api/v1/search/*', ({ request }) => {
         capturedUrl = request.url;
-        
+        capturedHeaders = request.headers;
+
         // Extract the path after /search/
         const url = new URL(request.url);
         const fullPath = url.pathname;
@@ -150,14 +151,14 @@ describe('Tiled Component Search Setup', () => {
 
     // Wait for the component to make the initial search request
     await waitFor(() => {
-      expect(capturedUrl).toContain('api_key=combined-test-key');
+      expect(capturedHeaders).toBeTruthy();
+      expect(capturedHeaders?.get('authorization')).toBe('Apikey combined-test-key');
       expect(capturedUrl).toContain('sort=-');
       expect(capturedPath).toBe('combined/test/path');
     });
 
     // Verify all parameters are present
     const url = new URL(capturedUrl);
-    expect(url.searchParams.get('api_key')).toBe('combined-test-key');
     expect(url.searchParams.get('sort')).toBe('-');
     expect(capturedPath).toBe('combined/test/path');
   });

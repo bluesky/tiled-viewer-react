@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { searchTiled } from './apiClient';
+import { getSearchResults } from './apiClient';
 import { TiledSearchConfig, TiledSearchFilters, TiledSearchOptions } from './apiTypes';
 
 interface SearchFormData {
@@ -191,7 +191,7 @@ export default function TiledSearch() {
         try {
             const config = buildSearchConfig();
             console.log('Search config:', config);
-            const results = await searchTiled(config);
+            const results = await getSearchResults(config);
             setSearchResults(results);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Search failed');
