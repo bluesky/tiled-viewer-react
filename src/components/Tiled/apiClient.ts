@@ -140,8 +140,6 @@ export const setBearerToken = (token:string) => {
         delete axios.defaults.headers.common['Authorization'];
     }
 };
-// const sampleTableUrl = http://localhost:8000/api/v1/table/partition/short_table?partition=0&format=application/json-seq
-
 
 /**
  * Searches for data in a Tiled server instance
@@ -515,9 +513,6 @@ export const resetGlobalState = () => {
     globalReverseSort = false;
     globalInitialPath = null;
 };
-
-
-//const sampleJsonRequestForXarray = "http://localhost:8000/api/v1/array/full/structured_data/xarray_dataset/time?format=application/json&slice=0:3"
 
 /**
  * Retrieves XArray data from a Tiled server for a specific stack
