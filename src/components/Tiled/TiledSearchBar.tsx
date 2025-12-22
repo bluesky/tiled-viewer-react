@@ -1,16 +1,22 @@
 import { MagnifyingGlass, CaretDown } from "@phosphor-icons/react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 type TiledSearchBarProps = {
     // Define any props needed for the TiledSearchBar component
     handleSearchIdClick?: (searchId: string) => void;
     handleSearchMetadataClick?: (metadata: string) => void;
     handleSearchSpecClick?: (spec: string) => void;
+    debounceMs?: number; // Allow customizable debounce delay
 };
 
 type SearchType = 'id' | 'metadata' | 'spec';
 
-export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetadataClick, handleSearchSpecClick }: TiledSearchBarProps) {
+export default function TiledSearchBar({ 
+    handleSearchIdClick, 
+    handleSearchMetadataClick, 
+    handleSearchSpecClick,
+    debounceMs = 300 
+}: TiledSearchBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
@@ -20,8 +26,51 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
     
     const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const searchOptions: SearchType[] = ['id', 'metadata', 'spec'];
+
+    // Debounced callback execution
+    const executeCallback = useCallback((input: string, type: SearchType | null) => {
+        if (!input.trim()) return;
+        
+        const searchType = type || 'id'; // Default to 'id' if no type is selected
+        
+        switch (searchType) {
+            case 'id':
+                handleSearchIdClick?.(input);
+                break;
+            case 'metadata':
+                handleSearchMetadataClick?.(input);
+                break;
+            case 'spec':
+                handleSearchSpecClick?.(input);
+                break;
+        }
+    }, [handleSearchIdClick, handleSearchMetadataClick, handleSearchSpecClick]);
+
+    // Debounced search effect
+    useEffect(() => {
+        console.log('TiledSearchBar.tsx useEffect - searchInput:', searchInput, 'selectedType:', selectedType, 'isExpanded:', isExpanded);
+        // Clear previous timeout
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+
+        // Only trigger search if there's input and the component is expanded
+        if (searchInput.trim() && isExpanded) {
+            debounceTimeoutRef.current = setTimeout(() => {
+                executeCallback(searchInput, selectedType);
+            }, debounceMs);
+        }
+
+        // Cleanup timeout on unmount or when dependencies change
+        return () => {
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+        };
+    }, [searchInput, isExpanded, debounceMs, executeCallback]);
 
     // Auto-focus when expanded
     useEffect(() => {
@@ -55,6 +104,7 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
         setSearchInput(value);
         setShowDropdown(value.length > 0);
         setFocusedOptionIndex(-1); // Reset focus when typing
+        
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -97,6 +147,9 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
                 e.preventDefault();
                 if (focusedOptionIndex >= 0 && focusedOptionIndex < searchOptions.length) {
                     handleOptionClick(searchOptions[focusedOptionIndex]);
+                } else {
+                    //default to id search if no option is focused
+                    handleOptionClick('id');
                 }
                 break;
             default:
@@ -169,11 +222,11 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
     };
 
     return (
-        <div className="relative flex justify-end w-64 h-10 overflow-hidden" ref={containerRef}>
+        <div className="relative flex justify-end w-64 h-10 " ref={containerRef}>
             {/* Main search component */}
             <div 
                 className={`
-                    flex items-center transition-all duration-200 ease-in-out cursor-pointer 
+                    flex items-center transition-all duration-300 ease-in-out cursor-pointer 
                     ${isExpanded 
                         ? 'w-64 h-full border border-slate-300 rounded-md px-3 py-4 bg-white' 
                         : 'w-8 h-full'
@@ -183,21 +236,21 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
             >
                 {/* Magnifying glass icon - always present and left-justified */}
                 <MagnifyingGlass 
-                    size={16} 
+                    size={20} 
                     className="text-slate-500 hover:text-slate-700 flex-shrink-0" 
                 />
                 
                 {/* Input field - only visible when expanded */}
-                {isExpanded && (
-                    <>
+                
+                    
                         <input
                             ref={inputRef}
                             type="text"
                             value={searchInput}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
-                            className="outline-none flex-1 ml-2 text-sm"
-                            placeholder="Hit Enter to Search..."
+                            className={`${isExpanded ? 'w-64 ml-2' : 'w-0 max-w-0 ml-0'} transition-all duration-300 ease-in-out outline-none flex-1 text-sm`}
+                            placeholder={isExpanded ? "Hit Enter to Search..." : ""}
                         />
                         
                         {/* Selected type indicator */}
@@ -236,28 +289,27 @@ export default function TiledSearchBar({ handleSearchIdClick, handleSearchMetada
                                 )}
                             </div>
                         )}
-                    </>
-                )}
+                    
+                
             </div>
 
             {/* Dropdown options - only visible when typing */}
             {showDropdown && searchInput.length > 0 && (
-                <div className="absolute top-full right-0 w-48 mt-1 bg-white border border-slate-300 rounded-md shadow-lg z-50">
+                <div className="absolute top-full right-0 w-full mt-1 bg-white border border-slate-300 rounded-md shadow-lg z-50">
                     {searchOptions.map((option, index) => (
                         <div 
                             key={option}
-                            className={`px-3 py-2 cursor-pointer border-b border-slate-100 ${
-                                focusedOptionIndex === index ? 'bg-blue-50' : ''
-                            } ${index === searchOptions.length - 1 ? 'border-b-0' : ''}`}
+                            className={`px-3 py-2 cursor-pointer border-b border-slate-100 
+                                ${index === searchOptions.length - 1 ? 'border-b-0' : ''}`}
                             onClick={() => handleOptionClick(option)}
                         >
                             <div className="text-xs text-slate-400 uppercase tracking-wide">{option}</div>
                             <div className={`text-sm text-slate-700 hover:bg-slate-50 rounded px-1 -mx-1 ${
-                                focusedOptionIndex === index ? 'bg-slate-50' : ''
+                                focusedOptionIndex === index ? 'bg-slate-300' : ''
                             }`}>
-                                {option === 'id' && `id is ${searchInput}`}
-                                {option === 'metadata' && `metadata key or value is ${searchInput}`}
-                                {option === 'spec' && `spec is ${searchInput}`}
+                                {option === 'id' && `id is "${searchInput}"`}
+                                {option === 'metadata' && `metadata key or value is "${searchInput}"`}
+                                {option === 'spec' && `spec is "${searchInput}"`}
                             </div>
                         </div>
                     ))}
