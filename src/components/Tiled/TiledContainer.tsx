@@ -60,7 +60,8 @@ export default function TiledContainer({
         handleRightArrowClick,
         resetAllData,
         warning,
-        handleNewPageClick
+        handleNewPageClick,
+        handleSearchId
     } = tiledData;
 
 
@@ -81,6 +82,7 @@ export default function TiledContainer({
                     secondaryTitle={url}
                     handleExpandClick={handleExpandClick}
                     isExpanded={isExpanded}
+                    handleSearchId={handleSearchId}
                 />
                 <TiledBody ref={scrollContainerRef}>
                     {/* <TiledColumns 

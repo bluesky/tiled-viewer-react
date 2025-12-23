@@ -20,6 +20,7 @@ type TiledHeaderProps = {
     handleExpandClick: () => void;
     isExpanded: boolean;
     showExpandButton?: boolean;
+    handleSearchId?: (id: string) => void;
 }
 export default function TiledHeader({
     breadcrumbs=[],
@@ -32,9 +33,9 @@ export default function TiledHeader({
     handleExpandClick,
     isExpanded,
     showExpandButton=true,
+    handleSearchId,
     ...props
 }: TiledHeaderProps) {
-    //console.log('render TiledHeader.tsx');
 
     type ArrowProps = {
         onClick?: () => void;
@@ -66,15 +67,14 @@ export default function TiledHeader({
                     <p className="text-sm">{secondaryTitle}</p>
                 </div>
             </div>
-            { showExpandButton &&
                 <div className="absolute top-0 right-0 mr-3 mt-3 h-10 items-center aspect-square  flex gap-2">
-                    <TiledSearchBar handleSearchIdClick={(id) => console.log(id)} handleSearchMetadataClick={(metadata) => console.log(metadata)} handleSearchSpecClick={(spec) => console.log(spec)} />
-                    <div className="h-6 aspect-square text-slate-500 hover:text-slate-900 hover:cursor-pointer"  onClick={handleExpandClick}>
-                        {isExpanded ? tailwindIcons.arrowsPointingIn :tailwindIcons.arrowsPointingOut}
-                    </div>
+                    <TiledSearchBar handleSearchIdClick={handleSearchId} handleSearchMetadataClick={(metadata) => console.log(metadata)} handleSearchSpecClick={(spec) => console.log(spec)} />
+                    { showExpandButton &&
+                        <div className="h-6 aspect-square text-slate-500 hover:text-slate-900 hover:cursor-pointer"  onClick={handleExpandClick}>
+                            {isExpanded ? tailwindIcons.arrowsPointingIn :tailwindIcons.arrowsPointingOut}
+                        </div>
+                    }
                 </div>
-            }
-
         </div>
     )
 }

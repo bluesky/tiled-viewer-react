@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath } from "./apiClient";
+import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath, searchById, getItemMetadata } from "./apiClient";
 import { getAuthFromLocalStorage } from "./utils";
 import { 
     TiledSearchResult, 
     TiledSearchItem, 
+    TiledSearchMetadataResult,
     Breadcrumb, 
     ArrayStructure,
     AwkwardStructure, 
@@ -20,6 +21,7 @@ import {
     SparseStructure
  } from "./types";
 import { getTiledStructureIcon, generateSearchPath, getLastSearchFromLocalStorage, writeSearchPathToLocalStorage} from "./utils";
+import meta from "@/stories/Tiled.stories";
 
 export type useTiledProps = {
     url?: string,
@@ -123,6 +125,14 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
                 return [...newState, newColumn];
             }
     
+            return newState;
+        });
+    }, []);
+
+    const replaceLastColumnWithSingleSearchResult = useCallback((newColumn:TiledSearchResult) => {
+        console.log({newColumn});
+        setColumns((prevState) => {
+            const newState = [...prevState.slice(0, -1), newColumn];
             return newState;
         });
     }, []);
@@ -240,7 +250,39 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         setPreviewItem(null);
         setPreviewSize('hidden');
        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
-    }
+    };
+
+    const handleSearchId = useCallback(async (id:string) => {
+        //the tiled api doesn't provide a direct way to do a partial search on id (only metadata and spec)
+        //so we make new api request to tiled for the specific id as the path in the url
+        //this is not really a 'search' as a much as a shot in the dark to see if there is a path
+        //perform the search off the existing searchPath or root if none provided
+
+        //concatenate the id onto the last column's path if it exists
+        console.log({ancestorStack});
+        const searchPathWithId = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1], id) : id;
+        console.log('search')
+
+        try{
+            //searchbyId will return null if no results found
+            const results:TiledSearchResult | null = await searchById({path:searchPathWithId, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}});
+            if (results) {
+                //insert the searched item into the last column
+                //the clickedItem here is the recently searched item. We don't yet have the proper information for it because we did a search on its contents..
+                const metadataResult: TiledSearchMetadataResult | null = await getItemMetadata(searchPathWithId, url || '');
+                if (metadataResult) {
+                    //construct new column array because metadata searches are missing the links field
+                    //wipe out the current column and place only the specified item
+                    const newColumn: TiledSearchResult = {data: [metadataResult.data], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 1}, error: metadataResult.error};
+                    replaceLastColumnWithSingleSearchResult(newColumn);
+                }
+
+            }
+        } catch(error) {
+            //blank for now
+        }
+
+    }, []);
 
     const initializeData = useCallback(async () => {
         //attempt to get data from base Tiled Url. Display error on UI if no data comes back
@@ -354,7 +396,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         handleRightArrowClick,
         resetAllData,
         warning,
-        handleNewPageClick
+        handleNewPageClick,
+        handleSearchId
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, previewItem, handleColumnItemClick, resetAllData, warning, handleNewPageClick])
 }

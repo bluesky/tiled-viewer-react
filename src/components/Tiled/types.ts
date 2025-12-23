@@ -39,6 +39,21 @@ export interface TiledSearchResult {
     meta: {
         count: number;
     };
+};
+
+export interface TiledSearchMetadataResult {
+    data: TiledSearchItem<TiledStructures>; // A SINGLE search item
+    error: string | null; // Error message, if any
+    links: {
+        self: string;
+        first: string;
+        last: string;
+        next: string | null;
+        prev: string | null;
+    };
+    meta: {
+        count: number;
+    };
 }
 
 export interface TiledItemLinks {

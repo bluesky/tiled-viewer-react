@@ -47,11 +47,11 @@ export default function TiledSearchBar({
                 handleSearchSpecClick?.(input);
                 break;
         }
-    }, [handleSearchIdClick, handleSearchMetadataClick, handleSearchSpecClick]);
+    }, [handleSearchIdClick]);
 
     // Debounced search effect
     useEffect(() => {
-        console.log('TiledSearchBar.tsx useEffect - searchInput:', searchInput, 'selectedType:', selectedType, 'isExpanded:', isExpanded);
+        //console.log('TiledSearchBar.tsx useEffect - searchInput:', searchInput, 'selectedType:', selectedType, 'isExpanded:', isExpanded);
         // Clear previous timeout
         if (debounceTimeoutRef.current) {
             clearTimeout(debounceTimeoutRef.current);

@@ -81,7 +81,7 @@ export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra
     let searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
     searchPath+=item.id;
     if (extra) {
-        searchPath+=extra;
+        searchPath+= `/${extra}`;
     }
     return searchPath;
 };

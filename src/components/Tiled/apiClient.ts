@@ -2,7 +2,7 @@ import axios from "axios";
 axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
-import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse } from "./types";
+import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse, TiledSearchMetadataResult } from "./types";
 import { TiledSearchConfig, TiledSearchOptions, TiledSearchFilters, TiledSpecsFilter } from './apiTypes';
 import { addBasicOptions, addSearchFilters } from './apiUtils';
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
@@ -94,7 +94,7 @@ axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    console.log('axios interceptor caught an error: ', error);
+    //console.log('axios interceptor caught an error: ', error);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -332,7 +332,7 @@ export const getSearchResultsBySpecs = async (
  * // Returns: { data: { id: "...", attributes: {...} }, ... }
  * ```
  */
-export const getItemMetadata = async(searchPath: string, url?: string, cb?: (metadata: { [key: string]: unknown }) => void): Promise<{ [key: string]: unknown } | null> => {
+export const getItemMetadata = async(searchPath: string, url?: string, cb?: (metadata: { [key: string]: unknown }) => void): Promise<TiledSearchMetadataResult | null> => {
     try {
         const baseUrl = url ? url : defaultTiledUrl;
         const apiPath = constructApiPath(searchPath);
@@ -939,4 +939,41 @@ export const searchByStructureFamily = async (
     };
 
     return getSearchResults(config);
+};
+
+export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearchResult)=>void): Promise<TiledSearchResult | null> => {
+    //unlike the normal getSearchResults, this function more gracefully handles a failed search path
+    const { baseUrl = defaultTiledUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
+    
+    try {
+        const apiPath = constructApiPath(path, initialPath);
+        const url = new URL(`${baseUrl}/search/${apiPath}`);
+        const params = url.searchParams;
+        
+        // Add basic search options
+        addBasicOptions(params, options, false);
+        
+        // Add search filters
+        if (filters) {
+            addSearchFilters(params, filters);
+        }
+        
+        const headers: Record<string, string> = {};
+        const currentApiKey = apiKey || globalApiKey;
+        if (currentApiKey) {
+            headers['Authorization'] = `Apikey ${currentApiKey}`;
+        }
+        
+        const response = await axios.get(url.toString(), { headers, validateStatus: status => status === 200 || status === 404 });
+        console.log({response})
+        if (response.status === 200) {
+            cb?.(response.data as TiledSearchResult);
+            return response.data as TiledSearchResult;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        //we expect this to error if there's no search path
+        return null;
+    }
 };
