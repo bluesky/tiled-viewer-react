@@ -3,7 +3,6 @@ import { getDefaultTiledUrl } from "./apiClient";
 //import blueskyLogo from "../../assets/bluesky-logo.png";
 import blueskyLogo from "./bluesky_logo.png"
 import { tailwindIcons } from "@/assets/icons";
-import { MagnifyingGlass } from "@phosphor-icons/react";
 import TiledSearchBar from "./TiledSearchBar";
 
 const defaultUrl = getDefaultTiledUrl();

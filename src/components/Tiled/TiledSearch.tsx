@@ -1,3 +1,5 @@
+//This is a large search component with many untested features, meant for demo purposes and not used in the main Tiled component
+
 import React, { useState } from 'react';
 import { getSearchResults } from './apiClient';
 import { TiledSearchConfig, TiledSearchFilters, TiledSearchOptions } from './apiTypes';

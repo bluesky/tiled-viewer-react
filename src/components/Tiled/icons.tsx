@@ -15,6 +15,7 @@ const tiledStructureIcons = {
     question: question,
     gridline: gridline,
     xarray: xarray,
-    blueskyRun: personRunning
+    blueskyRun: personRunning,
+    cloud: cloud,
 }
 export { tiledStructureIcons }

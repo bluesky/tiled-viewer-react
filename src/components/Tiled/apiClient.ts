@@ -3,7 +3,7 @@ axios.defaults.withCredentials = true; // ensure cookies are sent with requests
 
 import { sampleTiledSearchData } from "./sampleData";
 import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse, TiledSearchMetadataResult } from "./types";
-import { TiledSearchConfig, TiledSearchOptions, TiledSearchFilters, TiledSpecsFilter } from './apiTypes';
+import { TiledSearchConfig, TiledSearchOptions } from './apiTypes';
 import { addBasicOptions, addSearchFilters } from './apiUtils';
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
 
@@ -817,7 +817,7 @@ export const searchByFulltext = async (
 export const searchByMetadataEquals = async (
     baseUrl: string,
     key: string,
-    value: any,
+    value: string,
     path: string = '',
     options: TiledSearchOptions = {},
     apiKey?: string,
@@ -853,7 +853,7 @@ export const searchByMetadataComparison = async (
     baseUrl: string,
     key: string,
     operator: 'gt' | 'gte' | 'lt' | 'lte',
-    value: any,
+    value: string,
     path: string = '',
     options: TiledSearchOptions = {},
     apiKey?: string,
@@ -965,7 +965,6 @@ export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearch
         }
         
         const response = await axios.get(url.toString(), { headers, validateStatus: status => status === 200 || status === 404 });
-        console.log({response})
         if (response.status === 200) {
             cb?.(response.data as TiledSearchResult);
             return response.data as TiledSearchResult;
@@ -973,7 +972,7 @@ export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearch
             return null;
         }
     } catch (error) {
-        //we expect this to error if there's no search path
+        //we expect this to error if there's no matching valid search path, in which case return null
         return null;
     }
 };

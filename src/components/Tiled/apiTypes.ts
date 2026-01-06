@@ -1,5 +1,3 @@
-import { TiledSearchResult } from './types';
-
 /**
  * Configuration object for comprehensive Tiled search functionality
  */
@@ -105,7 +103,7 @@ export interface TiledRegexFilter {
  */
 export interface TiledEqualityFilter {
     key: string;
-    value: any;
+    value: string;
 }
 
 /**
@@ -114,7 +112,7 @@ export interface TiledEqualityFilter {
 export interface TiledComparisonFilter {
     operator: 'gt' | 'gte' | 'lt' | 'lte';
     key: string;
-    value: any;
+    value: string;
 }
 
 /**
@@ -122,7 +120,7 @@ export interface TiledComparisonFilter {
  */
 export interface TiledContainsFilter {
     key: string;
-    value: any;
+    value: string;
 }
 
 /**
@@ -130,7 +128,7 @@ export interface TiledContainsFilter {
  */
 export interface TiledInFilter {
     key: string;
-    value: any[];
+    value: string[];
 }
 
 /**

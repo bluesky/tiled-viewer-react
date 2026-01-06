@@ -135,11 +135,6 @@ describe('TiledColumn Component', () => {
     await waitFor(() => {
       // Should not show the pagination text for empty results
       expect(screen.queryByText('1 - 2 of 62')).not.toBeInTheDocument();
-      
-      // Look for empty state indicator or no items
-      // Adjust based on how your component handles empty states
-      const itemButtons = screen.queryAllByRole('button');
-      // Should have minimal buttons (maybe just UI controls, not data items)
     }, { timeout: 3000 });
   });
 

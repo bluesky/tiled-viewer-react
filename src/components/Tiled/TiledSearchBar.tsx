@@ -47,11 +47,10 @@ export default function TiledSearchBar({
                 handleSearchSpecClick?.(input);
                 break;
         }
-    }, [handleSearchIdClick]);
+    }, [handleSearchIdClick, handleSearchMetadataClick, handleSearchSpecClick]);
 
     // Debounced search effect
     useEffect(() => {
-        //console.log('TiledSearchBar.tsx useEffect - searchInput:', searchInput, 'selectedType:', selectedType, 'isExpanded:', isExpanded);
         // Clear previous timeout
         if (debounceTimeoutRef.current) {
             clearTimeout(debounceTimeoutRef.current);
@@ -174,6 +173,7 @@ export default function TiledSearchBar({
                 handleSearchIdClick?.(searchInput);
                 break;
             case 'metadata':
+                console.log("handleOptionClick metadata")
                 handleSearchMetadataClick?.(searchInput);
                 break;
             case 'spec':
@@ -199,6 +199,7 @@ export default function TiledSearchBar({
                     handleSearchIdClick?.(searchInput);
                     break;
                 case 'metadata':
+                    console.log("handleTypeChange metadata")
                     handleSearchMetadataClick?.(searchInput);
                     break;
                 case 'spec':

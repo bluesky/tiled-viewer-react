@@ -21,7 +21,6 @@ import {
     SparseStructure
  } from "./types";
 import { getTiledStructureIcon, generateSearchPath, getLastSearchFromLocalStorage, writeSearchPathToLocalStorage} from "./utils";
-import meta from "@/stories/Tiled.stories";
 
 export type useTiledProps = {
     url?: string,
@@ -130,7 +129,6 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     }, []);
 
     const replaceLastColumnWithSingleSearchResult = useCallback((newColumn:TiledSearchResult) => {
-        console.log({newColumn});
         setColumns((prevState) => {
             const newState = [...prevState.slice(0, -1), newColumn];
             return newState;
@@ -274,12 +272,16 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
                     replaceLastColumnWithSingleSearchResult(newColumn);
                 }
 
+            } else {
+                //TODO display something to say no results found
+                const emptyColumn: TiledSearchResult = {data: [], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 0}, error:null};
+                replaceLastColumnWithSingleSearchResult(emptyColumn);
             }
         } catch(error) {
-            //TODO display error. maybe something to say no results found
+            console.error('Error performing search by ID:', error);
         }
 
-    }, []);
+    }, [initialSearchPath, pageLimit, replaceLastColumnWithSingleSearchResult, reverseSort, url]);
 
     const handleSearchMetadata = useCallback(async (metadata:string) => {
         //perform a metadata search on the current path
@@ -288,12 +290,14 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             const results:TiledSearchResult | null = await getSearchResults({path:currentPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}, filters:{fulltext: {text:metadata}}} );
             if (results) {
                 //update the last column with the new search results
+                console.log("handleSearchMetadata results")
                 replaceLastColumnWithSingleSearchResult(results);
             }
         } catch(error) {
             //TODO display error. maybe something to say no results found
+            console.error('Error performing metadata search:', error);
         }
-    }, []);
+    }, [initialSearchPath, pageLimit, replaceLastColumnWithSingleSearchResult, reverseSort, url]);
 
     const handleSearchSpec = useCallback(async (spec:string) => {
         //perform a spec search on the current path
@@ -306,8 +310,9 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             }
         } catch(error) {
             //TODO display error. maybe something to say no results found
+            console.error('Error performing spec search:', error);
         }
-    }, []);
+    }, [initialSearchPath, pageLimit, replaceLastColumnWithSingleSearchResult, reverseSort, url]);
 
     const initializeData = useCallback(async () => {
         //attempt to get data from base Tiled Url. Display error on UI if no data comes back
@@ -332,7 +337,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         } else {
             setWarning('There was an error connecting to the Tiled server. Please check the console for more details.');
         }
-    }, [apiKey, bearerToken, reverseSort, searchPath, url]);
+    }, [apiKey, bearerToken, reverseSort, searchPath, url, initialSearchPath, pageLimit]);
 
     const reloadLastSearch = useCallback((searchPath:string) => {
             //make a search for the searchPath id in the last column

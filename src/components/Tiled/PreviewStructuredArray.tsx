@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { TiledSearchItem, StructuredArrayStructure, TiledTableRow, TiledStructuredArrayData } from "./types";
+import { TiledSearchItem, StructuredArrayStructure, TiledStructuredArrayData } from "./types";
 import { getStructuredArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";

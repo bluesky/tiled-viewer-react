@@ -22,7 +22,6 @@ import {
   TiledTableRow,
   TiledStructuredArrayData
 } from '../../components/Tiled/types';
-import { getTableDataAsSequence } from '../../components/Tiled/apiClient';
 
 // Mock the API client functions
 vi.mock('../../components/Tiled/apiClient', () => ({
