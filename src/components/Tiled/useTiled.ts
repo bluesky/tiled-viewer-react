@@ -259,10 +259,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //perform the search off the existing searchPath or root if none provided
 
         //concatenate the id onto the last column's path if it exists
-        console.log({ancestorStack});
         const searchPathWithId = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1], id) : id;
-        console.log('search')
-
         try{
             //searchbyId will return null if no results found
             const results:TiledSearchResult | null = await searchById({path:searchPathWithId, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}});
@@ -279,9 +276,37 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
             }
         } catch(error) {
-            //blank for now
+            //TODO display error. maybe something to say no results found
         }
 
+    }, []);
+
+    const handleSearchMetadata = useCallback(async (metadata:string) => {
+        //perform a metadata search on the current path
+        const currentPath = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1]) : '';
+        try{
+            const results:TiledSearchResult | null = await getSearchResults({path:currentPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}, filters:{fulltext: {text:metadata}}} );
+            if (results) {
+                //update the last column with the new search results
+                replaceLastColumnWithSingleSearchResult(results);
+            }
+        } catch(error) {
+            //TODO display error. maybe something to say no results found
+        }
+    }, []);
+
+    const handleSearchSpec = useCallback(async (spec:string) => {
+        //perform a spec search on the current path
+        const currentPath = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1]) : '';
+        try{
+            const results:TiledSearchResult | null = await getSearchResults({path:currentPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}, filters:{specs: {include:[spec], exclude:[]}}} );
+            if (results) {
+                //update the last column with the new search results
+                replaceLastColumnWithSingleSearchResult(results);
+            }
+        } catch(error) {
+            //TODO display error. maybe something to say no results found
+        }
     }, []);
 
     const initializeData = useCallback(async () => {
@@ -397,7 +422,9 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         resetAllData,
         warning,
         handleNewPageClick,
-        handleSearchId
+        handleSearchId,
+        handleSearchMetadata,
+        handleSearchSpec,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, previewItem, handleColumnItemClick, resetAllData, warning, handleNewPageClick])
 }

@@ -44,7 +44,6 @@ export {
   getXArrayData,
   
   // Comprehensive search functions
-  searchTiled,
   searchBySpecs,
   searchByFulltext,
   searchByMetadataEquals,
