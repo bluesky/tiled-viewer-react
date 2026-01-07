@@ -49,13 +49,18 @@ export interface TiledSearchMetadataResult {
 }
 
 export interface TiledItemLinks {
-        self: string;
-        full?: string;
-        block?: string;
-        buffers?: string;
-        partition?: string;
-        search?: string;
-        default?: string;
+    self: string;
+    full?: string;
+    block?: string;
+    buffers?: string;
+    partition?: string;
+    search?: string;
+    default?: string;
+}
+
+export interface TiledItemSelectionData extends TiledItemLinks {
+    refreshToken?: string | null;
+    accessToken?: string | null;
 }
 
 // Definition for a single search item

@@ -6,13 +6,13 @@ import OpenTiledRow from "./OpenTiledRow";
 import './Tiled.css'
 
 import { cn } from "@/lib/utils";
-import { TiledItemLinks, TiledSearchItem, TiledStructures } from "./types";
-import { generateLinksForCallback, getApiKeyFromLocalStorage } from "./utils";
+import { TiledItemSelectionData, TiledSearchItem, TiledStructures } from "./types";
+import { generateLinksForCallback, getApiKeyFromLocalStorage, getAuthFromLocalStorage } from "./utils";
 import { setAuthErrorCallback, setInitialPath } from "./apiClient";
 
 
 export type TiledProps = {
-    onSelectCallback?: (links: TiledItemLinks) => void,
+    onSelectCallback?: (data: TiledItemSelectionData) => void,
     apiKey?: string,
     bearerToken?: string,
     size?: 'small' | 'medium' | 'large'
@@ -35,6 +35,8 @@ export type TiledProps = {
     showPlanStartTime?: boolean,
     pageLimit?: number,
     reloadLastItemOnStartup?: boolean,
+    includeAuthTokensInSelectCallback?: boolean,
+
 }
 export default function Tiled({
     onSelectCallback,
@@ -60,6 +62,7 @@ export default function Tiled({
     showPlanStartTime,
     pageLimit,
     reloadLastItemOnStartup,
+    includeAuthTokensInSelectCallback=false,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -67,7 +70,7 @@ export default function Tiled({
     const [ isViewerOpen, setIsViewerOpen ] = useState<boolean>(!isButtonMode);
     const [ url, setUrl ] = useState<undefined | string>(tiledBaseUrl);
     const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
-    const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
+    const [ selectedData, setSelectedData ] = useState<TiledItemSelectionData | null>(null);
     const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
     const [ userInputReverseSort, setUserInputReverseSort ] = useState<boolean>(reverseSort || false);
     const [ showLogin, setShowLogin ] = useState<boolean>(false);
@@ -87,8 +90,19 @@ export default function Tiled({
     }, []);
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
-        const links = generateLinksForCallback(item, url);
+        const links: TiledItemSelectionData = generateLinksForCallback(item, url);
         setSelectedData(links);
+        if (includeAuthTokensInSelectCallback) {
+            //get from local storage
+            const tokens = getAuthFromLocalStorage();
+            if (tokens) {
+                links.refreshToken = tokens.refreshToken;
+                links.accessToken = tokens.accessToken;
+            } else {
+                links.refreshToken = null;
+                links.accessToken = null;
+            }
+        }
         onSelectCallback?.(links);
         if (closeOnSelect) {
             setIsClosed(true);
