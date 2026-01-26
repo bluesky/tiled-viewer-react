@@ -250,7 +250,7 @@ export default function TiledSearchBar({
                             value={searchInput}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
-                            className={`${isExpanded ? 'w-64 ml-2' : 'w-0 max-w-0 ml-0'} transition-all duration-300 ease-in-out outline-none flex-1 text-sm`}
+                            className={`${isExpanded ? 'w-full ml-2' : 'w-0 max-w-0 ml-0'} transition-all duration-300 ease-in-out outline-none flex-1 text-sm`}
                             placeholder={isExpanded ? "Hit Enter to Search..." : ""}
                         />
                         
