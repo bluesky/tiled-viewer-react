@@ -36,6 +36,7 @@ export type TiledProps = {
     pageLimit?: number,
     reloadLastItemOnStartup?: boolean,
     includeAuthTokensInSelectCallback?: boolean,
+    oidcRedirectUrl?: string,
 
 }
 export default function Tiled({
@@ -63,6 +64,7 @@ export default function Tiled({
     pageLimit,
     reloadLastItemOnStartup,
     includeAuthTokensInSelectCallback=false,
+    oidcRedirectUrl,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -193,7 +195,7 @@ export default function Tiled({
                                 ) : (
                                     <>
                                         {showLogin ? 
-                                            <Login onSuccess={handleLoginSuccess} url={url}/> 
+                                            <Login onSuccess={handleLoginSuccess} url={url} oidcRedirectUrl={oidcRedirectUrl}/> 
                                         :                                 
                                             <TiledContainer
                                                 url={url}

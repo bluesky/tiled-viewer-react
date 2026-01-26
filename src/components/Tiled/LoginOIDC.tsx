@@ -7,14 +7,17 @@ export type LoginOIDCProps = {
     handleCancel: () => void;
     provider: TiledAuthProvider;
     onSuccess: () => void;
+    oidcRedirectUrl?: string;
 }
 
-export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOIDCProps) {
+export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedirectUrl }: LoginOIDCProps) {
     const [status, setStatus] = useState<'waiting' | 'checking' | 'success' | 'error'>('waiting');
     const popupRef = useRef<Window | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const loginUrl = provider.links.auth_endpoint;
+    const defaultLoginUrl = provider.links.auth_endpoint;
+    const loginUrl = oidcRedirectUrl ? `${defaultLoginUrl}${defaultLoginUrl.includes('?') ? '&' : '?'}state=${oidcRedirectUrl}` : defaultLoginUrl;
+    //const loginUrlWithState = `${loginUrl}${loginUrl.includes('?') ? '&' : '?'}state=my_custom_url`;
 
     
 
