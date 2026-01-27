@@ -92,8 +92,14 @@ export const addSearchFilters = (params: URLSearchParams, filters: TiledSearchFi
     
     // Contains filter
     if (filters.contains) {
-        params.append('filter[contains][condition][key]', JSON.stringify(filters.contains.key));
         params.append('filter[contains][condition][value]', JSON.stringify(filters.contains.value));
+        if (filters.contains.key.includes('.')) {
+            //don't add quotes around the key if user wanted a nested key search
+            params.append('filter[contains][condition][key]', filters.contains.key);
+        } else {
+            //direct string search works only at the root level of metadata
+            params.append('filter[contains][condition][key]', JSON.stringify(filters.contains.key));
+        }
     }
     
     // In filter
