@@ -91,7 +91,7 @@ export default function Tiled({
         setShowLogin(false);
     }, []);
 
-    const handleSelectClick = (item:TiledSearchItem<TiledStructures>) => {
+    const handleSelectClick = (item:TiledSearchItem<TiledStructures>, currentSlice?: number[]) => {
         const links: TiledItemSelectionData = generateLinksForCallback(item, url);
         setSelectedData(links);
         if (includeAuthTokensInSelectCallback) {
@@ -104,6 +104,9 @@ export default function Tiled({
                 links.refreshToken = null;
                 links.accessToken = null;
             }
+        }
+        if (currentSlice) {
+            links.currentSlice = currentSlice;
         }
         onSelectCallback?.(links);
         if (closeOnSelect) {

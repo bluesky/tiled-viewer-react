@@ -28,7 +28,7 @@ import { tailwindIcons } from '@/assets/icons';
 type TiledPreviewProps = {
     previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | TiledSearchItem<StructuredArrayStructure>;
     previewSize: PreviewSize;
-    handleSelectClick?: (item: TiledSearchItem<TiledStructures>) => void;
+    handleSelectClick?: (item: TiledSearchItem<TiledStructures>, currentSlice?: number[]) => void;
     url?: string;
     scrollContainerRef: React.RefObject<HTMLDivElement>;
 }
@@ -69,7 +69,8 @@ export default function TiledPreview({
             return <PreviewTable tableItem={previewItem} url={url} />;
         }
         if (isArrayStructure(previewItem)) {
-            return <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth} />;
+            //array preview renders its own button so info on the currently selected slice can be sent into the callback
+            return <PreviewNDArray arrayItem={previewItem} url={url} isFullWidth={isFullWidth} handleSelectClick={handleSelectClick} />;
         }
         if (isAwkwardStructure(previewItem)) {
             return <PreviewAwkward awkwardItem={previewItem} />;
@@ -88,7 +89,7 @@ export default function TiledPreview({
             </div>
             <div className="w-full flex flex-col items-center space-y-8 py-4">
                 {renderPreviewComponent()}
-                {handleSelectClick && <Button text="Select" size="medium" cb={()=>handleSelectClick(previewItem)} />}
+                {(handleSelectClick && !isArrayStructure(previewItem)) && <Button text="Select" size="medium" cb={()=>handleSelectClick(previewItem)} />}
             </div>
             <TiledPreviewMetadata item={previewItem}/>
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import InputSlider from "../InputSlider";
+import Button from "../Button";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
 import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
 import { generateFullImagePngPath, getAuthenticatedImage } from "./apiClient";
@@ -10,12 +11,14 @@ type PreviewNDArrayProps = {
     arrayItem: TiledSearchItem<ArrayStructure>;
     url?: string;
     isFullWidth?: boolean;
+    handleSelectClick?: (item: TiledSearchItem<ArrayStructure>, currentSlice: number[]) => void;
 };    
 
 export default function PreviewNDArray({
     arrayItem,
     url,
     isFullWidth,
+    handleSelectClick
 }: PreviewNDArrayProps) {
     const [ sliders, setSliders ] = useState<Slider[]>([]);
     const [ imageUrl, setImageUrl ] = useState('');
@@ -59,18 +62,21 @@ export default function PreviewNDArray({
     }, [arrayItem, sliderCount, shape, updateImage]);
 
     return (
-        <div className="flex flex-col w-full space-y-2">
-            <p className="text-sky-900 text-center">{arrayItem.id}</p>
-            <div className={`${sliderCount > 2 ? 'flex-wrap' : 'flex-col'} flex items-center justify-center w-full`}>
-                <div className={`relative bg-slate-300 aspect-square m-auto ${isFullWidth ? 'w-7/12' : 'w-72'}`}>
-                    {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500">{tailwindIcons.arrowTopRight}</div>}
-                    {imageUrl && <img src={imageUrl} className="w-full h-full"/>}
-                    <p className="text-sm text-center text-slate-500">{`True Dimensions:  [${arrayItem.attributes.structure.shape.join(', ')}]`}</p>
-                </div>
-                <div className={`${sliderCount > 0 ? 'w-72' : 'hidden'} flex flex-col space-y-4 pt-6 px-4`}>
-                    {sliders.map((slider, index) => <InputSlider key={index} showSideInput={false} min={slider.min} max={slider.max} value={slider.value} onChange={(newValue)=>handleSliderChange(newValue, slider)}/>)}
+        <>
+            <div className="flex flex-col w-full space-y-2">
+                <p className="text-sky-900 text-center">{arrayItem.id}</p>
+                <div className={`${sliderCount > 2 ? 'flex-wrap' : 'flex-col'} flex items-center justify-center w-full`}>
+                    <div className={`relative bg-slate-300 aspect-square m-auto ${isFullWidth ? 'w-7/12' : 'w-72'}`}>
+                        {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500">{tailwindIcons.arrowTopRight}</div>}
+                        {imageUrl && <img src={imageUrl} className="w-full h-full"/>}
+                        <p className="text-sm text-center text-slate-500">{`True Dimensions:  [${arrayItem.attributes.structure.shape.join(', ')}]`}</p>
+                    </div>
+                    <div className={`${sliderCount > 0 ? 'w-72' : 'hidden'} flex flex-col space-y-4 pt-6 px-4`}>
+                        {sliders.map((slider, index) => (slider.min !== slider.max ? <InputSlider key={index} showSideInput={false} min={slider.min} max={slider.max} value={slider.value} onChange={(newValue)=>handleSliderChange(newValue, slider)}/> : <p className="text-xs text-center">{slider.min}</p>))}
+                    </div>
                 </div>
             </div>
-        </div>
+            {handleSelectClick &&<Button text="Select" size="medium" cb={()=>handleSelectClick(arrayItem, sliders.map((slider) => slider.value))} />}
+        </>
     )
 }

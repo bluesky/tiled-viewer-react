@@ -61,6 +61,7 @@ export interface TiledItemLinks {
 export interface TiledItemSelectionData extends TiledItemLinks {
     refreshToken?: string | null;
     accessToken?: string | null;
+    currentSlice?: number[];
 }
 
 // Definition for a single search item
