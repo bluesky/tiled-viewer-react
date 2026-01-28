@@ -6,7 +6,7 @@ import OpenTiledRow from "./OpenTiledRow";
 import './Tiled.css'
 
 import { cn } from "@/lib/utils";
-import { TiledItemSelectionData, TiledSearchItem, TiledStructures } from "./types";
+import { TiledItemLinks, TiledItemSelectionData, TiledSearchItem, TiledStructures } from "./types";
 import { generateLinksForCallback, getApiKeyFromLocalStorage, getAuthFromLocalStorage } from "./utils";
 import { setAuthErrorCallback, setInitialPath } from "./apiClient";
 
@@ -72,7 +72,7 @@ export default function Tiled({
     const [ isViewerOpen, setIsViewerOpen ] = useState<boolean>(!isButtonMode);
     const [ url, setUrl ] = useState<undefined | string>(tiledBaseUrl);
     const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
-    const [ selectedData, setSelectedData ] = useState<TiledItemSelectionData | null>(null);
+    const [ selectedData, setSelectedData ] = useState<TiledItemLinks | null>(null);
     const [ userInputApiKey, setUserInputApiKey ] = useState<string | undefined>(apiKey || getApiKeyFromLocalStorage());
     const [ userInputReverseSort, setUserInputReverseSort ] = useState<boolean>(reverseSort || false);
     const [ showLogin, setShowLogin ] = useState<boolean>(false);
@@ -92,23 +92,24 @@ export default function Tiled({
     }, []);
 
     const handleSelectClick = (item:TiledSearchItem<TiledStructures>, currentSlice?: number[]) => {
-        const links: TiledItemSelectionData = generateLinksForCallback(item, url);
+        const links: TiledItemLinks = generateLinksForCallback(item, url);
         setSelectedData(links);
+        const selectedDataInfo: TiledItemSelectionData =  {...links, id: item.id, ancestors: item.attributes.ancestors};
         if (includeAuthTokensInSelectCallback) {
             //get from local storage
             const tokens = getAuthFromLocalStorage();
             if (tokens) {
-                links.refreshToken = tokens.refreshToken;
-                links.accessToken = tokens.accessToken;
+                selectedDataInfo.refreshToken = tokens.refreshToken;
+                selectedDataInfo.accessToken = tokens.accessToken;
             } else {
-                links.refreshToken = null;
-                links.accessToken = null;
+                selectedDataInfo.refreshToken = null;
+                selectedDataInfo.accessToken = null;
             }
         }
         if (currentSlice) {
-            links.currentSlice = currentSlice;
+            selectedDataInfo.currentSlice = currentSlice;
         }
-        onSelectCallback?.(links);
+        onSelectCallback?.(selectedDataInfo);
         if (closeOnSelect) {
             setIsClosed(true);
         }

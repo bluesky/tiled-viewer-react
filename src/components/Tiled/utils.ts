@@ -1,5 +1,5 @@
 import { tiledStructureIcons } from "./icons";
-import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure  } from "./types";
+import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure, TiledItemSelectionData, TiledItemLinks  } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
 //const defaultTiledUrl = getDefaultTiledUrl();

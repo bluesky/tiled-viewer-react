@@ -59,6 +59,8 @@ export interface TiledItemLinks {
 }
 
 export interface TiledItemSelectionData extends TiledItemLinks {
+    id: string;
+    ancestors: string[];
     refreshToken?: string | null;
     accessToken?: string | null;
     currentSlice?: number[];
