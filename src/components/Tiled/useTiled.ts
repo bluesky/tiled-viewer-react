@@ -247,7 +247,8 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         currentAncestorId.current = -1;
         setPreviewItem(null);
         setPreviewSize('hidden');
-       getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
+        setColumns([]); //api call can take some time for larger dbs, so clear out existing columns first
+        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
     };
 
     const handleSearchId = useCallback(async (id:string) => {
