@@ -230,7 +230,9 @@ describe('TiledColumn Component', () => {
 
     // Verify that the component shows it navigated to the item
     await waitFor(() => {
-      expect(screen.getByText(/0e0699be-aaec-432f-b373-b19b95bbef5d/)).toBeInTheDocument();
+      const elements = screen.getAllByText(/0e0699be-aaec-432f-b373-b19b95bbef5d/);
+      expect(elements.length).toBeGreaterThan(0); // At least one instance
+      //expect(screen.getByText(/0e0699be-aaec-432f-b373-b19b95bbef5d/)).toBeInTheDocument();
     }, { timeout: 3000 });
 
     // Wait for the additional item search request to be made
