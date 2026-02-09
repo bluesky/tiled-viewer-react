@@ -14,6 +14,18 @@ let globalReverseSort:boolean = false;
 
 let globalInitialPath:string | null = null;
 
+/**
+ * Sets the global initial path that will be prepended to all search paths
+ * Automatically removes leading slash to ensure proper path formatting
+ * @param path - The initial path to set, or null to clear it
+ * @returns The formatted initial path that was set
+ * @example
+ * ```typescript
+ * setInitialPath('my-data-folder'); // Sets path to 'my-data-folder'
+ * setInitialPath('/my-data-folder'); // Also sets path to 'my-data-folder' (leading slash removed)
+ * setInitialPath(null); // Clears the initial path
+ * ```
+ */
 export const setInitialPath = (path:string | null) => {
     //reformat so that a leading '/' is removed
     if (path && path.startsWith('/')) {
@@ -35,10 +47,32 @@ export const setReverseSort = (reverse:boolean | undefined) => {
     globalReverseSort = reverse || false; //default to false if undefined
 };
 
+/**
+ * Retrieves the current global initial path setting
+ * @returns The current initial path string, or null if not set
+ * @example
+ * ```typescript
+ * const currentPath = getInitialPath();
+ * if (currentPath) {
+ *   console.log('Current initial path:', currentPath);
+ * }
+ * ```
+ */
 export const getInitialPath = () => {
     return globalInitialPath;
 };
 
+/**
+ * Sets the global API key that will be used for all subsequent Tiled API requests
+ * This key will be automatically included in authentication headers for API calls
+ * @param apiKey - The API key string to use for authentication, or null to clear it
+ * @returns The API key that was set
+ * @example
+ * ```typescript
+ * setGlobalApiKey('my-secret-api-key'); // Sets global API key
+ * setGlobalApiKey(null); // Clears the global API key
+ * ```
+ */
 export const setGlobalApiKey = (apiKey:string | null) => {
     globalApiKey = apiKey;
     return globalApiKey;
@@ -86,23 +120,33 @@ type AuthErrorCallback = (error: any) => void;
 
 let authErrorCallback: AuthErrorCallback | null = null;
 
+/**
+ * Sets a callback function to handle authentication errors
+ * This callback will be invoked when a 401 authentication error occurs and token refresh fails
+ * Useful for implementing custom error handling, logout flows, or user notifications
+ * @param callback - Function to call when authentication errors occur. Receives the error as a parameter
+ * @example
+ * ```typescript
+ * setAuthErrorCallback((error) => {
+ *   console.log('Authentication failed:', error);
+ *   // Redirect to login page or show error message
+ *   window.location.href = '/login';
+ * });
+ * ```
+ */
 export const setAuthErrorCallback = (callback: AuthErrorCallback) => {
   authErrorCallback = callback;
 };
 
+// Automatically attempt to refresh tokens on 401 responses and retry the original request
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    //console.log('axios interceptor caught an error: ', error);
-
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-
       try {
-        const auth = getAuthFromLocalStorage();
-        //const refreshToken = localStorage.getItem('tiledRefreshToken');
-        
+        const auth = getAuthFromLocalStorage();        
         if (auth) {
           const refreshResponse = await axios.post(`${defaultTiledUrl}/auth/refresh`, {
             refresh_token: auth.refreshToken
@@ -115,16 +159,25 @@ axios.interceptors.response.use(
             authErrorCallback?.(null);
         }
       } catch {
-        // Clear tokens and call the error callback
         clearAuthFromLocalStorage();        
         authErrorCallback?.(null);
       }
     }
-
     return Promise.reject(error);
   }
 );
 
+/**
+ * Determines the default Tiled server URL based on environment variables or current location
+ * First checks for VITE_API_TILED_URL environment variable, otherwise constructs URL from current hostname
+ * @returns The default Tiled server URL string
+ * @example
+ * ```typescript
+ * const url = getDefaultTiledUrl();
+ * // If VITE_API_TILED_URL is set: returns that value
+ * // Otherwise: returns "http://localhost:8000/api/v1" (or current hostname)
+ * ```
+ */
 export const getDefaultTiledUrl = () => {
     const address = window.location.hostname;
     const httpProto = window.location.protocol;
@@ -679,7 +732,6 @@ export const loginUserWithNamePassword = async(username: string, password: strin
     }
 };
 
-
 /**
  * Fetches an image with authentication and returns a blob URL
  * @param imagePath - The complete URL path to the image
@@ -941,8 +993,29 @@ export const searchByStructureFamily = async (
     return getSearchResults(config);
 };
 
+/**
+ * Searches for a specific item by ID with graceful error handling
+ * Unlike the normal getSearchResults, this function more gracefully handles failed search paths
+ * by returning null instead of throwing errors when the path is not found (404 status).
+ * @param config - Complete search configuration object including path, filters, and options
+ * @param cb - Optional callback function that receives the search results if found
+ * @returns Promise that resolves to TiledSearchResult if found, or null if not found or on error
+ * @example
+ * ```typescript
+ * const config = {
+ *   baseUrl: 'https://my-tiled-server.com/api/v1',
+ *   path: 'some-item-id',
+ *   apiKey: 'my-api-key'
+ * };
+ * const result = await searchById(config);
+ * if (result) {
+ *   console.log('Item found:', result.data);
+ * } else {
+ *   console.log('Item not found');
+ * }
+ * ```
+ */
 export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearchResult)=>void): Promise<TiledSearchResult | null> => {
-    //unlike the normal getSearchResults, this function more gracefully handles a failed search path
     const { baseUrl = defaultTiledUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
     
     try {
