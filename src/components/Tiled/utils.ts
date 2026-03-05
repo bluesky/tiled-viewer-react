@@ -277,6 +277,7 @@ export const getAuthFromLocalStorage = () => {
 export const clearAuthFromLocalStorage = () => {
     localStorage.removeItem('tiledRefreshToken');
     localStorage.removeItem('tiledAccessToken');
+    localStorage.removeItem('tiledApiKey');
 };
 
 /**
