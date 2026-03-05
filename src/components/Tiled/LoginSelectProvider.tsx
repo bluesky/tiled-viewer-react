@@ -8,7 +8,6 @@ export type LoginSelectProviderProps = {
 }
 
 export default function LoginSelectProvider({ handleClick, providers }: LoginSelectProviderProps) {
-    console.log({providers})
     return (
         <ul className="w-full flex justify-center flex-col mt-12 space-y-4 mb-4">
             <h2 className="text-center text-2xl text-slate-600 mb-4 font-light"> Select Login Provider </h2>

@@ -25,7 +25,6 @@ export default function Login({ onSuccess, url, oidcRedirectUrl }: LoginProps) {
     useEffect(() => {
         const fetchServerInfo = async () => {
             const info = await getServerInfo(url);
-            //console.log(info)
             if (info !== null) {
                 setServerInfo(info as TiledInfoResponse);
                 setWarning(null);
