@@ -23,6 +23,7 @@ export const initializeTestResults = (testItems: TestItemCollection): ManualTest
     if (storedResults) {
         const parsedResults = JSON.parse(storedResults);
         if (doesLocalStorageDataMatchTestItems(testItems, parsedResults)) {
+            console.log('Local storage data matches test items, loading stored results');
             // Merge testItems (which have React elements) with stored results (which have isPassing and comment)
             const enrichedResults: ManualTestCollection = Object.keys(testItems).reduce((acc, key) => {
                 const item = testItems[key];
@@ -50,9 +51,10 @@ export const initializeTestResults = (testItems: TestItemCollection): ManualTest
 
 const createTestResultsJSON = (testResults: ManualTestCollection) => {
     //can't convert a react element to JSON so we strip it out here
-    const sanitizedResults = Object.keys(testResults).map(key => {
+    const sanitizedResults: Record<string, { name: string; isPassing: boolean; comment?: string }> = {};
+    Object.keys(testResults).forEach(key => {
         const { name, isPassing, comment } = testResults[key];
-        return {
+        sanitizedResults[key] = {
             name,
             isPassing,
             comment

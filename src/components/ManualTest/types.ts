@@ -1,6 +1,8 @@
 export interface TestItem {
     name: string;
     element: JSX.Element;
+    info?: string;
+    command?: string;
 }
 
 export interface TestItemCollection {
