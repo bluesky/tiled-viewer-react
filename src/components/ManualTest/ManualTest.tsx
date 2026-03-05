@@ -3,6 +3,8 @@ import { useState, useEffect, useMemo } from "react";
 import { TestItemCollection, ManualTestItemRow, ManualTestCollection } from "./types";
 import { initializeTestResults, writeTestResultsToLocalStorage } from "./utils";
 import { resetGlobalState } from "../Tiled/apiClient";
+import { CaretLeft } from "@phosphor-icons/react";
+import { CaretRight } from "@phosphor-icons/react/dist/ssr";
 
 export type ManualTestProps = {
     testItems: TestItemCollection;
@@ -108,18 +110,16 @@ export default function ManualTest({ testItems }: ManualTestProps) {
 
 
     return (
-        <div className="p-4 max-w-4xl">
-            <h1 className="text-2xl font-bold mb-4">Manual Test Page</h1>
-            <p>This page is for manually testing the Tiled component and related features.</p>
-            <p>Use this space to render the Tiled component in various configurations, test authentication flows, and debug any issues that arise during development.</p>
+        <div className="p-4 w-full lg:w-3/4 max-w-6xl">
+            <h1 className="text-3xl text-center font-bold mb-4">Manual Test Page</h1>
             {/* A summary table that shows the test results, including id, name, passing status, and optional comment */}
-            <table className="min-w-full border-collapse border border-gray-200">
+            <table className="min-w-full border-collapse border border-gray-200 text-sm">
                 <thead>
                     <tr>
-                        <th className="border border-gray-200 p-2 w-1/12">ID</th>
-                        <th className="border border-gray-200 p-2 w-1/6">Name</th>
-                        <th className="border border-gray-200 p-2 w-1/12">Status</th>
-                        <th className="border border-gray-200 p-2 w-1/2">Comment</th>
+                        <th className="border border-gray-200 p-1 w-1/12">ID</th>
+                        <th className="border border-gray-200 p-1 w-1/6">Name</th>
+                        <th className="border border-gray-200 p-1 w-1/12">Status</th>
+                        <th className="border border-gray-200 p-1 w-1/2">Comment</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -127,16 +127,16 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                         const result = testResults[key];
                         return (
                             <tr key={key}>
-                                <td className="border border-gray-200 p-2">{key}</td>
-                                <td className="border border-gray-200 p-2">{result.name}</td>
-                                <td className="border border-gray-200 p-2 text-center">
+                                <td className="border border-gray-200 p-1">{key}</td>
+                                <td className="border border-gray-200 p-1">{result.name}</td>
+                                <td className="border border-gray-200 p-1 text-center">
                                     {result.isPassing ? (
-                                        <span className="text-green-500 text-xl">✓</span>
+                                        <span className="text-green-500 ">✓</span>
                                     ) : (
-                                        <span className="text-red-500 text-xl">✗</span>
+                                        <span className="text-red-500 ">✗</span>
                                     )}
                                 </td> 
-                                <td className="border border-gray-200 p-2">{result.comment}</td>
+                                <td className="border border-gray-200 p-1">{result.comment}</td>
                             </tr>
                         );
                     })}
@@ -144,26 +144,33 @@ export default function ManualTest({ testItems }: ManualTestProps) {
             </table>
 
             {/* Copy to Markdown button */}
-            <div className="mt-4">
+            {/* <div className="mt-4">
                 <button
                     onClick={handleCopyTableToMarkdown}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 >
                     {copyButtonText}
                 </button>
-            </div>
+            </div> */}
 
-            {/* Test Carousel Navigation */}
-            <div className="mt-6 mb-6">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">Test Carousel</h2>
-                    <div className="flex items-center space-x-4">
+            {/* Current Test Display */}
+            {currentTest && (
+                <div className="mt-8 max-w-xl m-auto" key={currentTest.name}>
+                    <h2 className="text-xl mb-2 font-light text-center">{currentTestKey}: {currentTest.name}</h2>
+                   
+                    {/* Tiled Component */}
+                    <div className="bg-red-500 w-full flex items-center justify-center">
+                        {currentTest.element}
+                    </div>
+
+                    {/* Test Carousel Navigation */}
+                    <div className="flex items-center space-x-4 justify-center w-full">
                         <button
                             onClick={prevTest}
                             disabled={currentTestIndex === 0}
-                            className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-2 text-gray-800 rounded hover:text-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
                         >
-                            ← Previous
+                            <CaretLeft className="inline mr-1" />
                         </button>
                         <span className="text-sm text-gray-600">
                             {currentTestIndex + 1} of {testKeys.length}
@@ -171,89 +178,36 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                         <button
                             onClick={nextTest}
                             disabled={currentTestIndex === testKeys.length - 1}
-                            className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-2 text-gray-800 rounded hover:text-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
                         >
-                            Next →
+                            <CaretRight className="inline ml-1" />
                         </button>
                     </div>
-                </div>
 
-                {/* Test Selection Tabs */}
-                <div className="flex space-x-2 mb-6 overflow-x-auto">
-                    {testKeys.map((key, index) => (
-                        <button
-                            key={key}
-                            onClick={() => handleTestChange(index)}
-                            className={`px-4 py-2 rounded whitespace-nowrap transition-colors ${
-                                index === currentTestIndex
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                            }`}
-                        >
-                            {key}: {testResults[key]?.name}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Current Test Display */}
-            {currentTest && (
-                <div className="border border-gray-200 rounded p-6 mt-4" key={currentTest.name}>
-                    <div className="mb-4">
-                        <h2 className="text-2xl font-semibold mb-2">{currentTest.name}</h2>
-                        <div className="text-sm text-gray-600 mb-2">Test ID: <span className="font-mono">{currentTestKey}</span></div>
-                        
-                        {/* Display info if available */}
-                        {currentTest.info && (
-                            <div className="mb-4">
-                                <p className="text-gray-600 text-sm bg-gray-50 p-3 rounded">{currentTest.info}</p>
-                            </div>
-                        )}
-                        
-                        {/* Display command with copy button if available */}
-                        {currentTest.command && (
-                            <div className="mb-4">
-                                <label className="block mb-2 text-sm font-medium">Tiled Startup Command:</label>
-                                <div className="flex items-center space-x-2">
-                                    <code className="flex-1 bg-gray-100 border border-gray-300 rounded p-3 text-sm font-mono overflow-x-auto">
-                                        {currentTest.command}
-                                    </code>
-                                    <button
-                                        onClick={() => handleCopyCommand(currentTestKey, currentTest.command!)}
-                                        className="px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors whitespace-nowrap"
-                                    >
-                                        {commandCopyStates[currentTestKey] || 'Copy'}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Test Controls */}
-                    <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded">
+                    {/* Test Pass/Fail slider */}
+                    <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-6">
                             <div className="flex items-center space-x-2">
-                                <span className="text-sm font-medium">Status:</span>
-                                <span className="text-sm">Passing</span>
+                                <span className="text-sm">Failing</span>
                                 <label className="relative inline-flex items-center cursor-pointer">
                                     <input
                                         type="checkbox"
                                         className="sr-only"
-                                        checked={!currentTest.isPassing}
+                                        checked={currentTest.isPassing}
                                         onChange={(e) => handleStatusToggle(e, currentTestKey)}
                                     />
                                     <div className={`w-11 h-6 rounded-full transition-colors ${currentTest.isPassing ? 'bg-green-500' : 'bg-red-500'}`}>
-                                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${currentTest.isPassing ? 'translate-x-0' : 'translate-x-5'} mt-0.5 ml-0.5`}></div>
+                                        <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${currentTest.isPassing ? 'translate-x-5' : 'translate-x-0'} mt-0.5 ml-0.5`}></div>
                                     </div>
                                 </label>
-                                <span className="text-sm">Failing</span>
+                                <span className="text-sm">Passing</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Comment Section */}
                     <div className="mb-6">
-                        <label className="block mb-2 text-sm font-medium">Test Comments:</label>
+                        <label className="block mb-2 text-sm font-light">Test Comments:</label>
                         <textarea 
                             className="w-full h-24 resize-none border border-gray-300 rounded p-3 align-top"
                             value={currentTest.comment || ''}
@@ -262,15 +216,37 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                         />
                     </div>
 
-                    {/* Tiled Component */}
-                    <div className="border-t pt-6">
-                        <h3 className="text-lg font-medium mb-4">Tiled Component:</h3>
-                        <div className="bg-white border border-gray-300 rounded p-4">
-                            {currentTest.element}
+                    {/*Optional Tiled Startup Command */}
+                    {currentTest.command && (
+                        <div className="mb-4">
+                            <div className="flex items-center space-x-2">
+                                <code className="flex-1 bg-gray-100 border border-gray-300 rounded p-3 text-sm font-mono overflow-x-auto max-w-fit">
+                                    {currentTest.command}
+                                </code>
+                                <button
+                                    onClick={() => handleCopyCommand(currentTestKey, currentTest.command!)}
+                                    className="px-3 py-2 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 transition-colors whitespace-nowrap"
+                                >
+                                    {commandCopyStates[currentTestKey] || 'Copy'}
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Display info if available */}
+                    {currentTest.info && (
+                        <div className="mb-4">
+                            <p className="text-gray-600 text-sm ">Info: {currentTest.info}</p>
+                        </div>
+                    )}
+                        
+                   
                 </div>
             )}
+
+        
+
+            
 
             {/* Render each test item element below the item's id and name. An input box will write to the testResults state comment for that item. A toggle switch changes the isPassing state for that item. */}
         </div>
