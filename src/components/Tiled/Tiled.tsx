@@ -119,7 +119,7 @@ export default function Tiled({
     };
 
     const handleClickOutside = () => {
-        setIsViewerOpen(false);
+        (isPopup || isButtonMode) && setIsViewerOpen(false);
     };
 
     const sizeClassMap = {
@@ -146,7 +146,6 @@ export default function Tiled({
         setUserInputApiKey(newApiKey);
         localStorage.setItem('tiledApiKey', newApiKey);
     };
-
 
     if (!isClosed) {
             return (
