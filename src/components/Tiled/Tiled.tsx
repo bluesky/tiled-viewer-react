@@ -44,7 +44,7 @@ export default function Tiled({
     onSelectCallback,
     apiKey,
     bearerToken,
-    size,
+    size='small',
     closeOnSelect=false,
     isPopup,
     enableStartupScreen=false,
@@ -184,7 +184,7 @@ export default function Tiled({
                                 className={cn(
                                     `
                                         flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
-                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (size ? sizeClassMap[size] : sizeClassMap['small'])} 
+                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (sizeClassMap[size])} 
                                         ${isFullWidth ? 'w-full' : ''} ${isExpanded ? cn((size ? expandedSizeClassMap[size] : 'h-full w-full'), expandedContentClassName) : ''}
                                     `,
                                     contentClassName
