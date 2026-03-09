@@ -260,19 +260,13 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //concatenate the id onto the last column's path if it exists
         const searchPathWithId = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1], id) : id;
         try{
-            //searchbyId will return null if no results found
-            const results:TiledSearchResult | null = await searchById({path:searchPathWithId, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}});
-            if (results) {
-                //insert the searched item into the last column
-                //the clickedItem here is the recently searched item. We don't yet have the proper information for it because we did a search on its contents..
-                const metadataResult: TiledSearchMetadataResult | null = await getItemMetadata(searchPathWithId, url || '');
-                if (metadataResult) {
-                    //construct new column array because metadata searches are missing the links field
-                    //wipe out the current column and place only the specified item
-                    const newColumn: TiledSearchResult = {data: [metadataResult.data], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 1}, error: metadataResult.error};
-                    replaceLastColumnWithSingleSearchResult(newColumn);
-                }
-
+            //check if the items metadata exists and append to the last column if it does
+            const metadataResult: TiledSearchMetadataResult | null = await getItemMetadata(searchPathWithId, url || '');
+            if (metadataResult) {           
+                //construct new column array because metadata searches are missing the links field
+                //wipe out the current column and place only the specified item
+                const newColumn: TiledSearchResult = {data: [metadataResult.data], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 1}, error: metadataResult.error};
+                replaceLastColumnWithSingleSearchResult(newColumn);
             } else {
                 //TODO display something to say no results found
                 const emptyColumn: TiledSearchResult = {data: [], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 0}, error:null};
