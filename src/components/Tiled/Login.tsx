@@ -41,7 +41,7 @@ export default function Login({ onSuccess, url, oidcRedirectUrl }: LoginProps) {
 
     return (
         <div className="w-full h-full bg-white flex flex-col items-center">
-            <TiledHeader handleExpandClick={()=>{}} isExpanded={false} secondaryTitle={url} showExpandButton={false}/>
+            <TiledHeader handleExpandClick={()=>{}} isExpanded={false} secondaryTitle={url} showExpandButton={false} showSearchBar={false}/>
             {selectedProvider === null &&
                 <LoginSelectProvider handleClick={setSelectedProvider} providers={serverInfo?.authentication?.providers || []} />        
             }

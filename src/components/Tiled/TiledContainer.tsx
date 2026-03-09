@@ -66,12 +66,10 @@ export default function TiledContainer({
         handleSearchSpec,
     } = tiledData;
 
-
-
     return (
         warning ? 
         <>
-            <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false}/>
+            <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false} showSearchBar={false} />
             <TiledStartupWarning warningMessage={warning} />    
         </>
             :
@@ -87,6 +85,7 @@ export default function TiledContainer({
                     handleSearchId={handleSearchId}
                     handleSearchMetadata={handleSearchMetadata}
                     handleSearchSpec={handleSearchSpec}
+                    showSearchBar={columns.length > 0}
                 />
                 <TiledBody ref={scrollContainerRef}>
                     {/* <TiledColumns 

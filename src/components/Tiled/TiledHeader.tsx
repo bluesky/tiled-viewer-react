@@ -19,6 +19,7 @@ type TiledHeaderProps = {
     handleExpandClick: () => void;
     isExpanded: boolean;
     showExpandButton?: boolean;
+    showSearchBar?: boolean;
     handleSearchId?: (id: string) => void;
     handleSearchMetadata?: (metadata: string) => void;
     handleSearchSpec?: (spec: string) => void;
@@ -34,6 +35,7 @@ export default function TiledHeader({
     handleExpandClick,
     isExpanded,
     showExpandButton=true,
+    showSearchBar=true,
     handleSearchId,
     handleSearchMetadata,
     handleSearchSpec,
@@ -71,7 +73,7 @@ export default function TiledHeader({
                 </div>
             </div>
                 <div className="absolute top-0 right-0 mr-3 mt-3 h-10 items-center aspect-square  flex gap-2">
-                    <TiledSearchBar handleSearchIdClick={handleSearchId} handleSearchMetadataClick={handleSearchMetadata} handleSearchSpecClick={handleSearchSpec} />
+                    {showSearchBar && <TiledSearchBar handleSearchIdClick={handleSearchId} handleSearchMetadataClick={handleSearchMetadata} handleSearchSpecClick={handleSearchSpec} /> }
                     { showExpandButton &&
                         <div className="h-6 aspect-square text-slate-500 hover:text-slate-900 hover:cursor-pointer"  onClick={handleExpandClick}>
                             {isExpanded ? tailwindIcons.arrowsPointingIn :tailwindIcons.arrowsPointingOut}
