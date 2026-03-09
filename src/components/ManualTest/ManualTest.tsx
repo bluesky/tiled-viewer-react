@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 
-import { TestItemCollection, ManualTestItemRow, ManualTestCollection } from "./types";
+import { TestItemCollection, ManualTestCollection } from "./types";
 import { initializeTestResults, writeTestResultsToLocalStorage } from "./utils";
 import { resetGlobalState } from "../Tiled/apiClient";
 import { CaretLeft } from "@phosphor-icons/react";
@@ -111,7 +111,7 @@ export default function ManualTest({ testItems }: ManualTestProps) {
 
     return (
         <div className="p-4 w-full lg:w-3/4 max-w-6xl">
-            <h1 className="text-3xl text-center font-bold mb-4">Manual Test Page</h1>
+            <h1 className="text-2xl text-center mb-4 text-sky-700">Finch Tiled Component Test Page</h1>
             {/* A summary table that shows the test results, including id, name, passing status, and optional comment */}
             <table className="min-w-full border-collapse border border-gray-200 text-sm">
                 <thead>
@@ -123,10 +123,17 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                     </tr>
                 </thead>
                 <tbody>
-                    {Object.keys(testResults).map(key => {
+                    {Object.keys(testResults).map((key, index) => {
                         const result = testResults[key];
+                        const isSelected = index === currentTestIndex;
                         return (
-                            <tr key={key}>
+                            <tr 
+                                key={key}
+                                onClick={() => handleTestChange(index)}
+                                className={`cursor-pointer hover:bg-blue-100 transition-colors ${
+                                    isSelected ? 'bg-sky-200' : ''
+                                }`}
+                            >
                                 <td className="border border-gray-200 p-1">{key}</td>
                                 <td className="border border-gray-200 p-1">{result.name}</td>
                                 <td className="border border-gray-200 p-1 text-center">
@@ -157,18 +164,12 @@ export default function ManualTest({ testItems }: ManualTestProps) {
             {currentTest && (
                 <div className="mt-8 max-w-xl m-auto" key={currentTest.name}>
                     <h2 className="text-xl mb-2 font-light text-center">{currentTestKey}: {currentTest.name}</h2>
-                   
-                    {/* Tiled Component */}
-                    <div className="bg-red-500 w-full flex items-center justify-center">
-                        {currentTest.element}
-                    </div>
-
-                    {/* Test Carousel Navigation */}
+                    {/* Carousel Navigation */}
                     <div className="flex items-center space-x-4 justify-center w-full">
                         <button
                             onClick={prevTest}
                             disabled={currentTestIndex === 0}
-                            className="px-3 py-2 text-gray-800 rounded hover:text-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-2 text-gray-800 rounded hover:text-sky-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
                         >
                             <CaretLeft className="inline mr-1" />
                         </button>
@@ -178,14 +179,20 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                         <button
                             onClick={nextTest}
                             disabled={currentTestIndex === testKeys.length - 1}
-                            className="px-3 py-2 text-gray-800 rounded hover:text-gray-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-2 text-gray-800 rounded hover:text-sky-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors"
                         >
                             <CaretRight className="inline ml-1" />
                         </button>
                     </div>
+                   
+                    {/* Tiled Component */}
+                    <div className=" w-full flex items-center justify-center">
+                        {currentTest.element}
+                    </div>
+
 
                     {/* Test Pass/Fail slider */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between py-4 mt-8">
                         <div className="flex items-center space-x-6">
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm">Failing</span>
@@ -207,7 +214,6 @@ export default function ManualTest({ testItems }: ManualTestProps) {
 
                     {/* Comment Section */}
                     <div className="mb-6">
-                        <label className="block mb-2 text-sm font-light">Test Comments:</label>
                         <textarea 
                             className="w-full h-24 resize-none border border-gray-300 rounded p-3 align-top"
                             value={currentTest.comment || ''}
@@ -240,7 +246,8 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                         </div>
                     )}
                         
-                   
+                   {/* Issues */}
+                   <p className="text-sm text-gray-500">Having issues? Make sure to clear your cookies and cache data when switching between auth providers with the Tiled server. You may need to manually empty the cache by inspecting the network requests.</p>
                 </div>
             )}
 
