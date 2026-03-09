@@ -23,6 +23,7 @@ export type TiledProps = {
     backgroundClassName?: string,
     singleColumnMode?: boolean,
     contentClassName?: string,
+    expandedContentClassName?: string,
     isFullWidth?: boolean,
     isButtonMode?: boolean,
     inButtonModeShowApiKeyInput?: boolean,
@@ -50,6 +51,7 @@ export default function Tiled({
     tiledBaseUrl,
     backgroundClassName,
     contentClassName,
+    expandedContentClassName,
     singleColumnMode=false,
     isFullWidth=false,
     isButtonMode=false,
@@ -182,8 +184,8 @@ export default function Tiled({
                                 className={cn(
                                     `
                                         flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
-                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (size ? sizeClassMap[size] : `h-1/2 w-1/2 min-w-[600px] min-h-[500px]`)} 
-                                        ${isFullWidth ? 'w-full' : ''} ${isExpanded ? (size ? expandedSizeClassMap[size] : 'h-full w-full') : ''}
+                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (size ? sizeClassMap[size] : sizeClassMap['small'])} 
+                                        ${isFullWidth ? 'w-full' : ''} ${isExpanded ? cn((size ? expandedSizeClassMap[size] : 'h-full w-full'), expandedContentClassName) : ''}
                                     `,
                                     contentClassName
                                 )}
