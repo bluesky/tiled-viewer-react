@@ -242,12 +242,14 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                     {/* Display info if available */}
                     {currentTest.info && (
                         <div className="mb-4">
-                            <p className="text-gray-600 text-sm ">Info: {currentTest.info}</p>
+                            <p className="text-gray-600 text-sm">Info: {currentTest.info}{currentTest.link && (
+                                <> <a className="text-blue-500 underline" href={currentTest.link} target="_blank" rel="noopener noreferrer">here</a></>
+                            )}</p>
                         </div>
                     )}
                         
                    {/* Issues */}
-                   <p className="text-sm text-gray-500">Having issues? Make sure to clear your cookies and cache data when switching between auth providers with the Tiled server. You may need to manually empty the cache by inspecting the network requests.</p>
+                   <p className="text-sm text-gray-500">Having issues? Make sure to clear your cookies and cache data when switching between auth providers with the Tiled server. You may need to manually empty the cache by inspecting the network requests. (see <a className="text-blue-500 underline" href="https://github.com/bluesky/tiled-viewer-react/blob/feature/main/tiled/README.md">here</a>)</p>
                 </div>
             )}
 

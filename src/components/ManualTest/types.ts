@@ -2,6 +2,7 @@ export interface TestItem {
     name: string;
     element: JSX.Element;
     info?: string;
+    link?: string;
     command?: string;
 }
 

@@ -35,15 +35,16 @@ function App() {
     Auth2: {
       name: 'OIDC Flow',
       element: <Tiled tiledBaseUrl='http://tiled.localhost:8000/api/v1' oidcRedirectUrl='http://localhost:5173'/>,
-      info: 'Tests if Tiled can follow OIDC flow. This is not going to work unless you provide env variables for ORCID as specified in the config.',
+      info: 'Tests if Tiled can follow OIDC flow. Follow the instructions in the README: ',
+      link: 'https://github.com/bluesky/tiled-viewer-react/blob/feature/main/tiled/README.md#orcid-oidc-setup-instructions',
       command: 'tiled serve config tiled/tiled_oidc.yml'
     },
-    Auth3: {
-      name: 'OIDC Authentication Central Tiled',
-      element: <Tiled tiledBaseUrl='https://tiled.computing.als.lbl.gov/api/v1' oidcRedirectUrl='http://tiled-test:5174' />,
-      info: 'Run the vite app under tiled-test:5174 to get around CORS. Configure /etc/hosts to point to localhost for tiled-test.',
-      command: 'tiled serve config tiled_orcid.yml'
-    }
+    // Auth3: {
+    //   name: 'OIDC Authentication Central Tiled',
+    //   element: <Tiled tiledBaseUrl='https://tiled.computing.als.lbl.gov/api/v1' oidcRedirectUrl='http://tiled-test:5174' />,
+    //   info: 'Run the vite app under tiled-test:5174 to get around CORS. Configure /etc/hosts to point to localhost for tiled-test.',
+    //   command: 'tiled serve config tiled_orcid.yml'
+    // }
   };
 
   return (
