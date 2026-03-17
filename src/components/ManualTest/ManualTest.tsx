@@ -249,7 +249,7 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                     )}
                         
                    {/* Issues */}
-                   <p className="text-sm text-gray-500">Having issues? Make sure to clear your cookies and cache data when switching between auth providers with the Tiled server. You may need to manually empty the cache by inspecting the network requests. (see <a className="text-blue-500 underline" href="https://github.com/bluesky/tiled-viewer-react/blob/feature/main/tiled/README.md">here</a>)</p>
+                   <p className="text-sm text-gray-500">Having issues? Make sure to clear your cookies and cache data when switching between auth providers with the Tiled server. You may need to manually empty the cache by inspecting the network requests. (see <a className="text-blue-500 underline" href="https://github.com/bluesky/tiled-viewer-react/blob/main/tiled/README.md">here</a>)</p>
                 </div>
             )}
 

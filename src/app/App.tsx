@@ -36,7 +36,7 @@ function App() {
       name: 'OIDC Flow',
       element: <Tiled tiledBaseUrl='http://tiled.localhost:8000/api/v1' oidcRedirectUrl='http://localhost:5173'/>,
       info: 'Tests if Tiled can follow OIDC flow. Follow the instructions in the README: ',
-      link: 'https://github.com/bluesky/tiled-viewer-react/blob/feature/main/tiled/README.md#orcid-oidc-setup-instructions',
+      link: 'https://github.com/bluesky/tiled-viewer-react/blob/main/tiled/README.md#orcid-oidc-setup-instructions',
       command: 'tiled serve config tiled/tiled_oidc.yml'
     },
     // Auth3: {
