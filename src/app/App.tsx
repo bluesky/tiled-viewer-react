@@ -1,20 +1,11 @@
 import './App.css';
 import Tiled from '../components/Tiled/Tiled';
-import Button from '@/components/Button';
 import bluesky_logo from '../assets/bluesky_tiled_logo_WithBskyLogo.svg';
-import TiledSearch from '@/components/Tiled/TiledSearch';
 import ManualTest from '@/components/ManualTest/ManualTest';
 import { TestItemCollection } from '@/components/ManualTest/types';
 
 
 function App() {
-
-  console.log('App component rendered');
-  const clearSavedTokensAndRefresh = () => {
-    localStorage.removeItem('tiledAccessToken');
-    localStorage.removeItem('tiledRefreshToken');
-    window.location.reload();
-  }
 
   const testItems: TestItemCollection = {
     Demo1: {
@@ -47,12 +38,12 @@ function App() {
       info: 'Tests if Tiled can follow OIDC flow. This is not going to work unless you provide env variables for ORCID as specified in the config.',
       command: 'tiled serve config tiled/tiled_oidc.yml'
     },
-    // Auth3: {
-    //   name: 'OIDC Authentication Central Tiled',
-    //   element: <Tiled tiledBaseUrl='https://tiled-staging.computing.als.lbl.gov/api/v1' oidcRedirectUrl='http://tiled-test:5174' />,
-    //   info: 'Run the vite app under tiled-test:5174 to get around CORS. Configure /etc/hosts to point to localhost for tiled-test.',
-    //   command: 'tiled serve config tiled_orcid.yml'
-    // }
+    Auth3: {
+      name: 'OIDC Authentication Central Tiled',
+      element: <Tiled tiledBaseUrl='https://tiled.computing.als.lbl.gov/api/v1' oidcRedirectUrl='http://tiled-test:5174' />,
+      info: 'Run the vite app under tiled-test:5174 to get around CORS. Configure /etc/hosts to point to localhost for tiled-test.',
+      command: 'tiled serve config tiled_orcid.yml'
+    }
   };
 
   return (
