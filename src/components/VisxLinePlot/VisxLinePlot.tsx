@@ -33,7 +33,7 @@ export default function VisxLinePlot({ plotData, domain, defaultHeight=400 }: XY
 
   return (
 
-    <ParentSize style={{minHeight:defaultHeight}} initialSize={{ width: 400, height: defaultHeight }}>{({width, height }) => 
+    <ParentSize style={{minHeight:defaultHeight}} initialSize={{ width: 400, height: defaultHeight }}>{() =>
       <PlotSettings data={dataWithIndex} dataKeys={selectedDataKeys} setSelectedDataKeys={setSelectedDataKeys}>
         {({
           accessors,

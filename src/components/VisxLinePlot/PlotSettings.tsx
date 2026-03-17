@@ -117,11 +117,13 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
   const [ showSettings, setShowSettings ] = useState<boolean>(false);
 
   // Generic settings updater
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateSetting = useCallback((key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   }, []);
 
   // Handle special cases for settings that affect other settings
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSettingsChange = useCallback((key: string, value: any) => {
     if (key === 'renderAreaLineOrStack' && (value === 'line' || value === 'area' || value === 'areastack')) {
       setSettings(prev => ({
@@ -262,9 +264,9 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
 
   // ... keep existing callbacks but update to use settings state ...
     // Available x-axis options (includes index + all data keys)
-  const xAxisOptions = useMemo(() => {
-    return ['__index', ...allowableDataKeys];
-  }, [allowableDataKeys]);
+  // const xAxisOptions = useMemo(() => {
+  //   return ['__index', ...allowableDataKeys];
+  // }, [allowableDataKeys]);
 
   const accessors = useMemo(() => {
     const xAccessors: Record<string, Accessor> = {};

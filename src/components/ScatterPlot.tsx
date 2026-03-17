@@ -28,7 +28,7 @@ export default function ScatterPlot({
  const accessors = {
         xAccessor: (d: TiledTableRow) => {
             // Add safety checks
-            if (!d || typeof d !== 'object' || !d.hasOwnProperty(xKey)) {
+            if (!d || typeof d !== 'object' || !Object.prototype.hasOwnProperty.call(d, xKey)) {
                 return 0;
             }
             const value = Number(d[xKey]);
@@ -36,7 +36,7 @@ export default function ScatterPlot({
         },
         yAccessor: (d: TiledTableRow) => {
             // Add safety checks
-            if (!d || typeof d !== 'object' || !d.hasOwnProperty(yKey)) {
+            if (!d || typeof d !== 'object' || !Object.prototype.hasOwnProperty.call(d, yKey)) {
                 return 0;
             }
             const value = Number(d[yKey]);
@@ -75,6 +75,7 @@ export default function ScatterPlot({
                     showHorizontalCrosshair
                     className='z-50'
                     renderTooltip={({ tooltipData }) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const datum = tooltipData?.nearestDatum?.datum as Record<string, any>;
                         return (
                             <div className="bg-white p-2 border rounded shadow">
