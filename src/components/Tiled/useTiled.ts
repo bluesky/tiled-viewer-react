@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath, searchById, getItemMetadata } from "./apiClient";
+import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath, getItemMetadata } from "./apiClient";
 import { getAuthFromLocalStorage } from "./utils";
 import { 
     TiledSearchResult, 
@@ -276,7 +276,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             console.error('Error performing search by ID:', error);
         }
 
-    }, [initialSearchPath, pageLimit, replaceLastColumnWithSingleSearchResult, reverseSort, url]);
+    }, [replaceLastColumnWithSingleSearchResult, url]);
 
     const handleSearchMetadata = useCallback(async (metadata:string) => {
         //perform a metadata search on the current path

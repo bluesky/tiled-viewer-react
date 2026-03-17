@@ -1046,6 +1046,7 @@ export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearch
         }
     } catch (error) {
         //we expect this to error if there's no matching valid search path, in which case return null
+        console.log('Error in searchById (this is expected if item not found):', error);
         return null;
     }
 };

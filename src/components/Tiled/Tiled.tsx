@@ -121,7 +121,9 @@ export default function Tiled({
     };
 
     const handleClickOutside = () => {
-        (isPopup || isButtonMode) && setIsViewerOpen(false);
+        if (isPopup || isButtonMode) {
+            setIsViewerOpen(false);
+        } 
     };
 
     const sizeClassMap = {

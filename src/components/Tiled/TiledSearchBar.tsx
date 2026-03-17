@@ -69,7 +69,7 @@ export default function TiledSearchBar({
                 clearTimeout(debounceTimeoutRef.current);
             }
         };
-    }, [searchInput, isExpanded, debounceMs, executeCallback]);
+    }, [searchInput, isExpanded, debounceMs, executeCallback, selectedType]);
 
     // Auto-focus when expanded
     useEffect(() => {
@@ -242,8 +242,6 @@ export default function TiledSearchBar({
                 />
                 
                 {/* Input field - only visible when expanded */}
-                
-                    
                         <input
                             ref={inputRef}
                             type="text"

@@ -1,4 +1,4 @@
-import { ManualTestItemRow, ManualTestCollection, TestItem, TestItemCollection } from "./types";
+import { ManualTestCollection, TestItemCollection } from "./types";
 
 export const writeTestResultsToLocalStorage = (testResults: ManualTestCollection) => {
     localStorage.setItem('manualTestResults', createTestResultsJSON(testResults));

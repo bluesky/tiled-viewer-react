@@ -12,7 +12,7 @@ export type ManualTestProps = {
 export default function ManualTest({ testItems }: ManualTestProps) {
     const initializedTestResults = useMemo(() => initializeTestResults(testItems), [testItems]);
     const [ testResults, setTestResults] = useState<ManualTestCollection>(initializedTestResults);
-    const [ copyButtonText, setCopyButtonText ] = useState<string>('Copy Table');
+    //const [ copyButtonText, setCopyButtonText ] = useState<string>('Copy Table');  
     const [ commandCopyStates, setCommandCopyStates ] = useState<Record<string, string>>({});
     const [ currentTestIndex, setCurrentTestIndex ] = useState<number>(0);
     
@@ -44,32 +44,32 @@ export default function ManualTest({ testItems }: ManualTestProps) {
         });
     }
 
-    const resetTestResults = () => {
-        const blankTestResults: ManualTestCollection = {};
-        Object.keys(testItems).forEach(key => {
-            blankTestResults[key] = { ...testItems[key], isPassing: false, comment: '' };
-        });
-        setTestResults(blankTestResults);
-        writeTestResultsToLocalStorage(blankTestResults);
-    };
+    // const resetTestResults = () => {
+    //     const blankTestResults: ManualTestCollection = {};
+    //     Object.keys(testItems).forEach(key => {
+    //         blankTestResults[key] = { ...testItems[key], isPassing: false, comment: '' };
+    //     });
+    //     setTestResults(blankTestResults);
+    //     writeTestResultsToLocalStorage(blankTestResults);
+    // };
 
-    const handleCopyTableToMarkdown = () => {
-        const header = '| ID | Name | Status | Comment |\n| --- | --- | --- | --- |\n';
-        const rows = Object.keys(testResults).map(key => {
-            const result = testResults[key];
-            const status = result.isPassing ? '✓' : '✗';
-            return `| ${key} | ${result.name} | ${status} | ${result.comment || ''} |`;
-        }).join('\n');
-        const markdownTable = header + rows;
-        navigator.clipboard.writeText(markdownTable)
-            .then(() => {
-                setCopyButtonText('Copied');
-                setTimeout(() => {
-                    setCopyButtonText('Copy Table');
-                }, 1000);
-            })
-            .catch(err => alert('Failed to copy test results: ' + err));
-    }   
+    // const handleCopyTableToMarkdown = () => {
+    //     const header = '| ID | Name | Status | Comment |\n| --- | --- | --- | --- |\n';
+    //     const rows = Object.keys(testResults).map(key => {
+    //         const result = testResults[key];
+    //         const status = result.isPassing ? '✓' : '✗';
+    //         return `| ${key} | ${result.name} | ${status} | ${result.comment || ''} |`;
+    //     }).join('\n');
+    //     const markdownTable = header + rows;
+    //     navigator.clipboard.writeText(markdownTable)
+    //         .then(() => {
+    //             setCopyButtonText('Copied');
+    //             setTimeout(() => {
+    //                 setCopyButtonText('Copy Table');
+    //             }, 1000);
+    //         })
+    //         .catch(err => alert('Failed to copy test results: ' + err));
+    // }   
 
     const handleCopyCommand = (key: string, command: string) => {
         navigator.clipboard.writeText(command)
@@ -251,11 +251,6 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                 </div>
             )}
 
-        
-
-            
-
-            {/* Render each test item element below the item's id and name. An input box will write to the testResults state comment for that item. A toggle switch changes the isPassing state for that item. */}
         </div>
     )
 }
