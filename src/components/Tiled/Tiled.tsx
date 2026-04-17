@@ -176,7 +176,8 @@ export default function Tiled({
                                 ? "fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
                                 : `flex w-full h-full min-w-[600px] min-h-[500px] justify-center items-center ${
                                     size && sizeClassMap[size]
-                                    } ${(size && isExpanded) && expandedSizeClassMap[size]}`,
+                                    } ${(size && isExpanded) && expandedSizeClassMap[size]}
+                                text-slate-700`,
                                 backgroundClassName
                             )}
                             onClick={handleClickOutside}

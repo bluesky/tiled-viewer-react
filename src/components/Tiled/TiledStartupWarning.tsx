@@ -5,7 +5,7 @@ export interface TiledStartupWarningProps {
 }
 export default function TiledStartupWarning({ warningMessage }: TiledStartupWarningProps) {
     return (
-        <div className="p-4 max-w-[800px] m-auto mt-4 overflow-auto">
+        <div className="p-4 max-w-[800px] m-auto mt-4 overflow-auto overflow-y-scroll">
             <Warning size={64} className="text-yellow-500 m-auto" />
             <h2 className="text-lg font-semibold mb-2 text-center">Warning</h2>
             <p className="mb-4">{warningMessage || "Unable to connect to Tiled server"}</p>
