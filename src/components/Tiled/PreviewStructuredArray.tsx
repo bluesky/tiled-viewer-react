@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TiledSearchItem, StructuredArrayStructure, TiledStructuredArrayData } from "./types";
 import { getStructuredArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
-//import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
 import SelectInteger from "../SelectInteger";
 import Table from "./Table";
 
@@ -26,7 +25,7 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
 
     // Calculate block count based on chunks (similar to partitions for tables)
     const blockCount = structuredArrayItem.attributes.structure.chunks[0].length;
-    const searchPath = generateSearchPath(structuredArrayItem);
+    const searchPath = useMemo(() => generateSearchPath(structuredArrayItem), [structuredArrayItem]);
     const rowLoadSize = 20;
 
     // Extract column names from the structured array fields
@@ -49,7 +48,6 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
-        const searchPath = generateSearchPath(structuredArrayItem);
         setBlock(0);
         getStructuredArrayData(searchPath, 0, url, updateStructuredArray);
     }, [structuredArrayItem, searchPath, url]);

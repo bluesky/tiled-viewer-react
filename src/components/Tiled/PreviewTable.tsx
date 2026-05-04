@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
 import { getTableDataAsSequence } from "./apiClient";
 import { generateSearchPath } from "./utils";
@@ -23,7 +23,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
     const partitionCount = tableItem.attributes.structure.npartitions;
-    const searchPath = generateSearchPath(tableItem);
+    const searchPath = useMemo(() => generateSearchPath(tableItem), [tableItem]);
     const rowLoadSize = 20;
 
     const columns = tableData.length > 0 ? Object.keys(tableData[0]) : [];
@@ -45,7 +45,6 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0
         }
-        const searchPath = generateSearchPath(tableItem);
         setPartition(0);
         getTableDataAsSequence(searchPath, 0, url, updateTable);
 

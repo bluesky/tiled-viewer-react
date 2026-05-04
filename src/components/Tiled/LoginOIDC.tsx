@@ -11,15 +11,12 @@ export type LoginOIDCProps = {
 }
 
 export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedirectUrl }: LoginOIDCProps) {
-    const [status, setStatus] = useState<'waiting' | 'checking' | 'success' | 'error'>('waiting');
+    const [status, setStatus] = useState<'waiting' | 'checking' | 'success' | 'error' | 'errorMissingToken'>('waiting');
     const popupRef = useRef<Window | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const defaultLoginUrl = provider.links.auth_endpoint;
     const loginUrl = oidcRedirectUrl ? `${defaultLoginUrl}${defaultLoginUrl.includes('?') ? '&' : '?'}state=${oidcRedirectUrl}` : defaultLoginUrl;
-    //const loginUrlWithState = `${loginUrl}${loginUrl.includes('?') ? '&' : '?'}state=my_custom_url`;
-
-    
 
     const cleanup = () => {
         if (intervalRef.current) {
@@ -65,7 +62,7 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedir
                     currentUrl.includes('code=') || 
                     currentUrl.includes('/callback')) {
                     
-                    console.log('Callback URL detected:', currentUrl);
+                    console.log('Callback URL detected (token extraction in progress)');
                     
                     // Extract tokens from URL
                     const urlParams = new URLSearchParams(currentUrl.split('?')[1] || '');
@@ -74,22 +71,21 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedir
                     const code = urlParams.get('code');
                     
                     if (accessToken || code) {
-                        setStatus('success');
                         
-                        // Handle the tokens
                         if (accessToken) {
                             // Direct token response
                             localStorage.setItem('tiledAccessToken', accessToken);
+                            setStatus('success');
                             if (refreshToken) {
                                 localStorage.setItem('tiledRefreshToken', refreshToken);
                             }
+                            onSuccess();
                         } else if (code) {
                             // Authorization code was found, but no direct token. Tiled issue
-                            console.log('Authorization code received:', code);
+                            console.log('Missing access_token from redirect url after attempted login. Ensure Tiled is configured properly. Only received Tiled authorization code:', code);
+                            setStatus('errorMissingToken');
                         }
-                        
                         cleanup();
-                        onSuccess();
                     }
                 }
             } catch {
@@ -117,6 +113,7 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedir
                 {status === 'checking' && 'Checking authentication...'}
                 {status === 'success' && 'Authentication successful!'}
                 {status === 'error' && 'Authentication failed'}
+                {status === 'errorMissingToken' && 'Authentication failed, missing access token in redirect URL. Check Tiled configuration.'}
             </h2>
             
             {status === 'waiting' && (

@@ -1,6 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 
 import Button from "../Button";
+import { loginUserWithNamePassword } from "./apiClient";
+import { TiledAuthProvider } from "./types";
 export type LoginUsernamePasswordProps = {
     onSuccess: () => void;
     url?: string;
@@ -8,8 +10,6 @@ export type LoginUsernamePasswordProps = {
     handleCancel: () => void;
     provider?: TiledAuthProvider;
 }
-import { loginUserWithNamePassword } from "./apiClient";
-import { TiledAuthProvider } from "./types";
 export default function LoginUsernamePassword({ onSuccess, url, setWarning, handleCancel, provider }: LoginUsernamePasswordProps) {
     const [ username, setUsername ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');

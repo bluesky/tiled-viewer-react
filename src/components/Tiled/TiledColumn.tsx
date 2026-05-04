@@ -48,7 +48,7 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                     const blueskyRunPlanStartTime = item?.attributes?.metadata?.start?.time 
                         ? dayjs.unix(item.attributes.metadata.start.time).format('MM/DD HH:mm')
                         : '';
-                    const displayText = `${showPlanStartTime && blueskyRunPlanStartTime} ${showPlanName && blueskyRunPlanName}  ${item.id}`;
+                    const displayText = `${showPlanStartTime ? blueskyRunPlanStartTime : ''} ${showPlanName ? blueskyRunPlanName : ''}  ${item.id}`;
                     return (
                         <li 
                             className={`${ (breadcrumbs.length > index) && breadcrumbs[index].label === item.id ? 'bg-sky-200 hover:bg-sky-300' : 'hover:bg-sky-300'} flex space-x-2 px-2 rounded-sm hover:cursor-pointer relative`} 

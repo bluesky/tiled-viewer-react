@@ -21,21 +21,25 @@ export const initializeTestResults = (testItems: TestItemCollection): ManualTest
     //first check if we have existing results in local storage, if so then check if the ids and names match the testItems, if they do then return those results
     const storedResults = localStorage.getItem('manualTestResults');
     if (storedResults) {
-        const parsedResults = JSON.parse(storedResults);
-        if (doesLocalStorageDataMatchTestItems(testItems, parsedResults)) {
-            console.log('Local storage data matches test items, loading stored results');
-            // Merge testItems (which have React elements) with stored results (which have isPassing and comment)
-            const enrichedResults: ManualTestCollection = Object.keys(testItems).reduce((acc, key) => {
-                const item = testItems[key];
-                const storedResult = parsedResults[key];
-                acc[key] = {
-                    ...item, // includes all original properties including the React element
-                    isPassing: storedResult?.isPassing || false,
-                    comment: storedResult?.comment || ''
-                };
-                return acc;
-            }, {} as ManualTestCollection);
-            return enrichedResults;
+        try {
+            const parsedResults = JSON.parse(storedResults);
+            if (doesLocalStorageDataMatchTestItems(testItems, parsedResults)) {
+                console.log('Local storage data matches test items, loading stored results');
+                // Merge testItems (which have React elements) with stored results (which have isPassing and comment)
+                const enrichedResults: ManualTestCollection = Object.keys(testItems).reduce((acc, key) => {
+                    const item = testItems[key];
+                    const storedResult = parsedResults[key];
+                    acc[key] = {
+                        ...item, // includes all original properties including the React element
+                        isPassing: storedResult?.isPassing || false,
+                        comment: storedResult?.comment || ''
+                    };
+                    return acc;
+                }, {} as ManualTestCollection);
+                return enrichedResults;
+            }
+        } catch (error) {
+            console.warn('Failed to parse stored manual test results. Ignoring invalid localStorage data.', error);
         }
     }
 
