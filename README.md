@@ -282,19 +282,30 @@ For maintainers publishing to npm:
    git status  # Should be clean
    ```
 
-3. **Version bump:**
+3. **Version bump and push tag:**
    ```bash
    npm version patch  # or minor/major
+   git push origin main --follow-tags  # Pushes the version commit and tag
    ```
 
-4. **Build and publish:**
-   ```bash
-   npm run build
-   npm publish
-   ```
+4. **Create GitHub release:**
+   - Go to [GitHub Releases](https://github.com/bluesky/tiled-viewer-react/releases)
+   - Click "Create a new release"
+   - Use the version number from step 3 as the tag (e.g., `v1.2.3`)
+   - Add release notes describing the changes
+   - Click "Publish release"
 
-5. **Verify publication:**
+5. **Automated publishing:**
+   The GitHub Actions workflow will automatically:
+   - Build the package
+   - Run tests and linting
+   - Publish to npm with provenance information
+   - Use OIDC authentication (no tokens needed)
+
+6. **Verify publication:**
    Check [npmjs.com/package/@blueskyproject/tiled](https://www.npmjs.com/package/@blueskyproject/tiled)
+
+**Note:** `npm version patch` creates both a commit and an annotated git tag. The `--follow-tags` flag ensures both are pushed together. The workflow only runs on published releases, so ensure you use "Publish release" (not "Save draft") to trigger the npm publication. You can also manually trigger the workflow from the Actions tab if needed for testing.
 
 ## Project Structure
 
