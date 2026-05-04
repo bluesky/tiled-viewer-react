@@ -35,6 +35,7 @@ jobs:
   publish:
     needs: [dist]
     runs-on: ubuntu-latest
+    environment: npm
     permissions:
       id-token: write
       contents: read
@@ -52,7 +53,8 @@ jobs:
         with:
           name: dist
           path: dist/
-
+      - run: node --version
+      - run: npm --version
       - run: npm ci
 
       # Needed for npm trusted publishing support
