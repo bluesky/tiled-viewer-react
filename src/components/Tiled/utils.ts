@@ -32,7 +32,7 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
  * @example
  * ```typescript
  * const icon = getTiledStructureIcon('array');
- * // Returns: tiledStructureIcons.brackestSqaure
+ * // Returns: tiledStructureIcons.bracketSquare
  * ```
  */
 export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) => {
@@ -46,7 +46,7 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
             if (isXArrayStructure(item)) {
                 icon = tiledStructureIcons.xarray;
             } else {
-                icon = tiledStructureIcons.brackestSqaure;
+                icon = tiledStructureIcons.bracketSquare;
             }
         }
     }
