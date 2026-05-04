@@ -1,8 +1,7 @@
 import { tiledStructureIcons } from "./icons";
-import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure  } from "./types";
+import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
-//const defaultTiledUrl = getDefaultTiledUrl();
 
 /**
  * Generates links for a TiledSearchItem, including a default link
@@ -18,7 +17,7 @@ import { Slider } from "./types";
 export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>, url?:string) => {
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
-    var links= {...item.links};
+    const links= {...item.links};
     const baseUrl = url ? url : getDefaultTiledUrl();
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
@@ -32,12 +31,12 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
  * @example
  * ```typescript
  * const icon = getTiledStructureIcon('array');
- * // Returns: tiledStructureIcons.brackestSqaure
+ * // Returns: tiledStructureIcons.bracketSquare
  * ```
  */
 export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) => {
-    var structureFamily = item.attributes.structure_family;
-    var icon = tiledStructureIcons.question;
+    const structureFamily = item.attributes.structure_family;
+    let icon = tiledStructureIcons.question;
     if (structureFamily === 'array' || structureFamily === 'awkward' || structureFamily === 'sparse') {
         //structured arrays technically are shown as arrays from tiled, but we visually display as a table
         if (isStructuredArrayStructure(item)) {
@@ -46,7 +45,7 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
             if (isXArrayStructure(item)) {
                 icon = tiledStructureIcons.xarray;
             } else {
-                icon = tiledStructureIcons.brackestSqaure;
+                icon = tiledStructureIcons.bracketSquare;
             }
         }
     }
@@ -54,7 +53,12 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
         icon = tiledStructureIcons.gridline;
     }
     if (structureFamily === 'container' || structureFamily === 'composite') {
-        icon = tiledStructureIcons.folder;
+        //some containers are from tiledWriter, so they are containers for bluesky plans. show them with a bluesky folder icon
+        if (isItemBlueskyRun(item)) {
+            icon = tiledStructureIcons.blueskyRun;
+        } else {
+            icon = tiledStructureIcons.folder;
+        }
     }
 
     return icon;
@@ -73,10 +77,10 @@ export const getTiledStructureIcon = (item: TiledSearchItem<TiledStructures>) =>
  */
 export const generateSearchPath = (item: TiledSearchItem<TiledStructures>, extra?:string):string => {
     const ancestors = item.attributes.ancestors;
-    var searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
+    let searchPath:string = ancestors.length > 0 ? item.attributes.ancestors.join('/') + '/' : '';
     searchPath+=item.id;
     if (extra) {
-        searchPath+=extra;
+        searchPath+= `/${extra}`;
     }
     return searchPath;
 };
@@ -157,7 +161,7 @@ export const onPopoutClick =(popoutUrl:string) => {
  * ```
  */
 export const createSliders = (sliderCount:number, shape:number[]) => {
-    var initialSliders:Slider[] = [];
+    const initialSliders:Slider[] = [];
     //the first values from shape represent the number of stacks, the last two dims are the actual 'image' size
     for ( let i = 0; i < sliderCount; i++) {
         const newSlider = {
@@ -232,6 +236,18 @@ export const getApiKeyFromLocalStorage = () => {
     return undefined;
 }
 
+/**
+ * Retrieves authentication tokens (refresh and access tokens) from local storage
+ * @returns Object containing refreshToken and accessToken if both exist and are non-empty, undefined otherwise
+ * @example
+ * ```typescript
+ * const auth = getAuthFromLocalStorage();
+ * if (auth) {
+ *   console.log('Access token:', auth.accessToken);
+ *   console.log('Refresh token:', auth.refreshToken);
+ * }
+ * ```
+ */
 export const getAuthFromLocalStorage = () => {
     const refreshToken = localStorage.getItem('tiledRefreshToken');
     const accessToken = localStorage.getItem('tiledAccessToken');
@@ -248,19 +264,51 @@ export const getAuthFromLocalStorage = () => {
     return undefined;
 }
 
+/**
+ * Removes authentication tokens from local storage
+ * Clears both 'tiledRefreshToken' and 'tiledAccessToken' items
+ * @example
+ * ```typescript
+ * clearAuthFromLocalStorage();
+ * // Both tokens are now removed from localStorage
+ * ```
+ */
 export const clearAuthFromLocalStorage = () => {
     localStorage.removeItem('tiledRefreshToken');
     localStorage.removeItem('tiledAccessToken');
+    localStorage.removeItem('tiledApiKey');
 };
 
+/**
+ * Saves authentication tokens to local storage
+ * @param refreshToken - The refresh token string to store
+ * @param accessToken - The access token string to store
+ * @example
+ * ```typescript
+ * saveAuthToLocalStorage('refresh_token_here', 'access_token_here');
+ * // Tokens are now saved to localStorage
+ * ```
+ */
 export const saveAuthToLocalStorage = (refreshToken:string, accessToken:string) => {
     localStorage.setItem('tiledRefreshToken', refreshToken);
     localStorage.setItem('tiledAccessToken', accessToken);
 };
 
+/**
+ * Calculates optimal step sizes for image downsampling to stay within memory limits
+ * Used to reduce image size when requesting PNG data from large arrays
+ * @param arrayItem - The TiledSearchItem containing array structure information
+ * @param maxBytesAllowed - Optional maximum bytes allowed (defaults to 1MB if not provided)
+ * @returns Object containing stepX and stepY values for downsampling
+ * @example
+ * ```typescript
+ * const steps = generateStepsForImagePath(largeArrayItem, 2000000); // 2MB limit
+ * // Returns: { stepX: 2, stepY: 2 } for 4x downsampling if needed
+ * ```
+ */
 export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructure>, maxBytesAllowed?:number) => {
-    var stepX = 1;
-    var stepY = 1;
+    let stepX = 1;
+    let stepY = 1;
     const letter = arrayItem.attributes.structure.data_type.kind[0] as keyof typeof numpyTypeSizesBytes;
     const bytesPerElement = numpyTypeSizesBytes[letter];
     const shape = arrayItem.attributes.structure.shape;
@@ -269,7 +317,7 @@ export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructu
     const maxBytes = maxBytesAllowed ? maxBytesAllowed : 1000000; //default to 1MB if not provided
     if (totalImageSizeBytes > maxBytes) {
         const ratio = totalImageSizeBytes / maxBytes;
-        let squareStep = Math.ceil(Math.sqrt(ratio));
+        const squareStep = Math.ceil(Math.sqrt(ratio));
         //TO DO - downsamplke for rectangular images instead of assumed square
         stepX = squareStep;
         stepY = squareStep;
@@ -279,4 +327,26 @@ export const generateStepsForImagePath = (arrayItem:TiledSearchItem<ArrayStructu
         stepX,
         stepY
     };
+};
+
+/**
+ * Determines if a TiledSearchItem represents a Bluesky run as written by TiledWriter
+ * Checks for container structure family and the BlueskyRun spec inside attributes
+ * @param item - The TiledSearchItem to check
+ * @returns True if the item is a Bluesky run, false otherwise
+ * @example
+ * ```typescript
+ * if (isItemBlueskyRun(item)) {
+ *   console.log('This is a Bluesky experimental run');
+ *   // Access Bluesky-specific metadata like plan_name, detectors, etc.
+ * }
+ * ```
+ */
+export const isItemBlueskyRun = (item:TiledSearchItem<TiledStructures>) => {
+    if (item.attributes.structure_family === 'container' ) {
+        if (item?.attributes?.specs?.[0]?.name === 'BlueskyRun') {
+            return true;
+        }
+    }
+    return false;
 }

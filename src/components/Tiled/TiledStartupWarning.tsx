@@ -5,7 +5,7 @@ export interface TiledStartupWarningProps {
 }
 export default function TiledStartupWarning({ warningMessage }: TiledStartupWarningProps) {
     return (
-        <div className="p-4 max-w-[800px] m-auto mt-4">
+        <div className="p-4 max-w-[800px] m-auto mt-4 overflow-auto overflow-y-scroll">
             <Warning size={64} className="text-yellow-500 m-auto" />
             <h2 className="text-lg font-semibold mb-2 text-center">Warning</h2>
             <p className="mb-4">{warningMessage || "Unable to connect to Tiled server"}</p>
@@ -20,8 +20,7 @@ export default function TiledStartupWarning({ warningMessage }: TiledStartupWarn
                 You reached a Tiled server, but it just wasn't configured to talk to this client!
                 You will need to configure the Tiled server and allow connections to this client. Try using the "TILED_ALLOW_ORIGINS" environment variable when starting the Tiled server,
                 or if using a configuration file add an allow_origins entry with a list of urls you need to allow. See the Tiled documentation for more details. <a className="text-blue-500 underline" href="https://blueskyproject.io/tiled/reference/service-configuration.html#allow-origins">https://blueskyproject.io/tiled/reference/service-configuration.html#allow-origins</a>
-
-                </p>
+            </p>
         </div>
     );
 }

@@ -29,7 +29,11 @@ test('Primary story renders correctly', async () => {
       canvas,
       args: Primary.args || {},
       step: () => Promise.resolve(),
-      context: { loaded: {}, mount: () => Promise.resolve() } as any
+      context: { 
+        loaded: {}, 
+        mount: () => Promise.resolve(within(container))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any
     });
   }
 });

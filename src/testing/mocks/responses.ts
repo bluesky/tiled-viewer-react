@@ -568,3 +568,173 @@ export const mockTiled401Response = {
 export const mockTiled404Response = {
     "detail": "Not Found"
 };
+
+//a search result from http://tiled.localhost:8000/api/v1/search/?page%5Blimit%5D=2&sort=-
+export const mockTiledSearch2PageLimitResponse: TiledSearchResult= {
+    "data": [
+        {
+            "id": "0e0699be-aaec-432f-b373-b19b95bbef5d",
+            "attributes": {
+                "ancestors": [],
+                "structure_family": "container",
+                "specs": [
+                    {
+                        "name": "BlueskyRun",
+                        "version": "3.0"
+                    }
+                ],
+                "metadata": {
+                    "start": {
+                        "uid": "0e0699be-aaec-432f-b373-b19b95bbef5d",
+                        "time": 1764698478.53384,
+                        "versions": {
+                            "ophyd": "1.11.0",
+                            "bluesky": "1.14.4"
+                        },
+                        "scan_id": 1,
+                        "plan_type": "generator",
+                        "plan_name": "count",
+                        "detectors": [
+                            "jittery_motor1"
+                        ],
+                        "num_points": 5,
+                        "num_intervals": 4,
+                        "plan_args": {
+                            "detectors": [
+                                "SynAxis(prefix='', name='jittery_motor1', read_attrs=['readback', 'setpoint'], configuration_attrs=['velocity', 'acceleration'])"
+                            ],
+                            "num": 5,
+                            "delay": 1
+                        },
+                        "hints": {
+                            "dimensions": [
+                                [
+                                    [
+                                        "time"
+                                    ],
+                                    "primary"
+                                ]
+                            ]
+                        }
+                    },
+                    "stop": {
+                        "uid": "e4790eba-2eae-4a33-abd5-30dcbabb649c",
+                        "time": 1764698483.965216,
+                        "run_start": "0e0699be-aaec-432f-b373-b19b95bbef5d",
+                        "exit_status": "success",
+                        "reason": "",
+                        "num_events": {
+                            "baseline": 2,
+                            "primary": 5
+                        }
+                    }
+                },
+                "structure": {
+                    "contents": null,
+                    "count": 1
+                },
+                "access_blob": {},
+                "sorting": [
+                    {
+                        "key": "",
+                        "direction": 1
+                    }
+                ],
+                "data_sources": null
+            },
+            "links": {
+                "self": "http://tiled.localhost:8000/api/v1/metadata/0e0699be-aaec-432f-b373-b19b95bbef5d",
+                "search": "http://tiled.localhost:8000/api/v1/search/0e0699be-aaec-432f-b373-b19b95bbef5d",
+                "full": "http://tiled.localhost:8000/api/v1/container/full/0e0699be-aaec-432f-b373-b19b95bbef5d"
+            },
+            "meta": null
+        },
+        {
+            "id": "547e809b-57ed-488b-897e-4595ccb17efa",
+            "attributes": {
+                "ancestors": [],
+                "structure_family": "container",
+                "specs": [
+                    {
+                        "name": "BlueskyRun",
+                        "version": "3.0"
+                    }
+                ],
+                "metadata": {
+                    "start": {
+                        "uid": "547e809b-57ed-488b-897e-4595ccb17efa",
+                        "time": 1764111549.736429,
+                        "versions": {
+                            "ophyd": "1.11.0",
+                            "bluesky": "1.14.4"
+                        },
+                        "scan_id": 2,
+                        "plan_type": "generator",
+                        "plan_name": "count",
+                        "detectors": [
+                            "det"
+                        ],
+                        "num_points": 10,
+                        "num_intervals": 9,
+                        "plan_args": {
+                            "detectors": [
+                                "SynGauss(prefix='', name='det', read_attrs=['val'], configuration_attrs=['Imax', 'center', 'sigma', 'noise', 'noise_multiplier'])"
+                            ],
+                            "num": 10,
+                            "delay": 10
+                        },
+                        "hints": {
+                            "dimensions": [
+                                [
+                                    [
+                                        "time"
+                                    ],
+                                    "primary"
+                                ]
+                            ]
+                        }
+                    },
+                    "stop": {
+                        "uid": "255a9f7c-9ff7-4fa6-8644-c16bce61330e",
+                        "time": 1764114304.857074,
+                        "run_start": "547e809b-57ed-488b-897e-4595ccb17efa",
+                        "exit_status": "abort",
+                        "reason": "",
+                        "num_events": {
+                            "primary": 3
+                        }
+                    }
+                },
+                "structure": {
+                    "contents": null,
+                    "count": 1
+                },
+                "access_blob": {},
+                "sorting": [
+                    {
+                        "key": "",
+                        "direction": 1
+                    }
+                ],
+                "data_sources": null
+            },
+            "links": {
+                "self": "http://tiled.localhost:8000/api/v1/metadata/547e809b-57ed-488b-897e-4595ccb17efa",
+                "search": "http://tiled.localhost:8000/api/v1/search/547e809b-57ed-488b-897e-4595ccb17efa",
+                "full": "http://tiled.localhost:8000/api/v1/container/full/547e809b-57ed-488b-897e-4595ccb17efa"
+            },
+            "meta": null
+        }
+    ],
+    "error": null,
+    "links": {
+        "self": "http://tiled.localhost:8000/api/v1/search/?page[offset]=0&page[limit]=2",
+        "first": "http://tiled.localhost:8000/api/v1/search/?page[offset]=0&page[limit]=2",
+        "last": "http://tiled.localhost:8000/api/v1/search/?page[offset]=62&page[limit]=2",
+        "next": "http://tiled.localhost:8000/api/v1/search/?page[offset]=2&page[limit]=2",
+        "prev": null
+    },
+    "meta": {
+        "count": 62
+    }
+};

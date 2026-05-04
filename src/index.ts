@@ -7,7 +7,56 @@ export type { TiledProps } from './components/Tiled/Tiled';
 //HOOKS
 
 //TYPES
-export type { TiledItemLinks, TiledSearchItem, TiledStructures, TiledTableRow, TableStructure, ArrayStructure, ContainerStructure, AwkwardStructure, AwkwardForm, SparseStructure } from './components/Tiled/types';
+export type {TiledSearchResult, TiledItemLinks, TiledSearchItem, TiledBlueskyPlanMetadataResponse, TiledStructures, TiledTableRow, TableStructure, TiledTableJSONResponse, ArrayStructure, ContainerStructure, AwkwardStructure, AwkwardForm, SparseStructure } from './components/Tiled/types';
+export type { 
+  TiledSearchConfig, 
+  TiledSearchOptions, 
+  TiledSearchFilters,
+  TiledSpecsFilter,
+  TiledFulltextFilter,
+  TiledRegexFilter,
+  TiledEqualityFilter,
+  TiledComparisonFilter,
+  TiledStructureFamilyFilter
+} from './components/Tiled/apiTypes';
 //UTILS
-export {getSearchResults, getDefaultTiledUrl, getTableData, getFirstSearchWithApiKey, setBearerToken, generateFullImagePngPath, setReverseSort} from './components/Tiled/apiClient';
+export {
+  // Path management
+  setInitialPath,
+  getInitialPath,
+  
+  // Authentication and server configuration
+  setAuthErrorCallback,
+  getDefaultTiledUrl,
+  setBearerToken,
+  getServerInfo,
+  loginUserWithNamePassword,
+  
+  // Search and data retrieval
+  getSearchResults,
+  getSearchResultsBySpecs,
+  getItemMetadata,
+  getBlueskyPlanMetadata,
+  getFirstSearchWithApiKey,
+  getTableDataAsJson,
+  getTableDataAsSequence,
+  getStructuredArrayData,
+  getXArrayData,
+  
+  // Comprehensive search functions
+  searchBySpecs,
+  searchByFulltext,
+  searchByMetadataEquals,
+  searchByMetadataComparison,
+  searchByRegex,
+  searchByStructureFamily,
+  
+  // Image handling
+  generateFullImagePngPath,
+  getAuthenticatedImage,
+  
+  // Configuration and state management
+  setReverseSort,
+  resetGlobalState
+} from './components/Tiled/apiClient';
 export { isArrayStructure, isTableStructure, isContainerStructure} from './components/Tiled/types';

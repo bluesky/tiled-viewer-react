@@ -1,6 +1,6 @@
 import { TiledSearchItem, AwkwardStructure } from "./types";
 
-export default function PreviewAwkward({ awkwardItem, url }: { awkwardItem: TiledSearchItem<AwkwardStructure>; url?: string }) {
+export default function PreviewAwkward({ awkwardItem }: { awkwardItem: TiledSearchItem<AwkwardStructure> }) {
     console.log({awkwardItem})
     return (
         <div className="w-full flex flex-col items-center space-y-8 py-8">

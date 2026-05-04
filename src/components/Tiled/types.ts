@@ -8,7 +8,7 @@ export type Breadcrumb = {
     labelStyle?: string;
     icon?: JSX.Element;
     iconStyle?: string;
-    onClick?: Function;
+    onClick?: () => void;
 }
 export type Slider = {
     min: number;
@@ -39,16 +39,31 @@ export interface TiledSearchResult {
     meta: {
         count: number;
     };
+};
+
+export interface TiledSearchMetadataResult {
+    data: TiledSearchItem<TiledStructures>; // A SINGLE search item
+    error: string | null; // Error message, if any
+    links: null;
+    meta: null;
 }
 
 export interface TiledItemLinks {
-        self: string;
-        full?: string;
-        block?: string;
-        buffers?: string;
-        partition?: string;
-        search?: string;
-        default?: string;
+    self: string;
+    full?: string;
+    block?: string;
+    buffers?: string;
+    partition?: string;
+    search?: string;
+    default?: string;
+}
+
+export interface TiledItemSelectionData extends TiledItemLinks {
+    id: string;
+    ancestors: string[];
+    refreshToken?: string | null;
+    accessToken?: string | null;
+    currentSlice?: number[];
 }
 
 // Definition for a single search item
@@ -58,8 +73,9 @@ export interface TiledSearchItem<StructureType> {
         ancestors: string[]; // Array of ancestor IDs
         structure_family: "array" | "table" | "container" | "awkward" | "sparse" | "composite"; // Enum for structure families
         specs: Spec[]; // Optional specs
-        metadata: Record<string, unknown>; // Metadata as a dictionary
+        metadata: TiledMetadata; // Metadata with optional Bluesky fields and arbitrary JSON
         structure: StructureType;
+        access_blob?: Record<string, unknown>; // Optional access blob URL
         sorting: Sorting[] | null; // Sorting details, if applicable
         data_sources: string | null; // Data source, if any
     };
@@ -171,41 +187,81 @@ export interface XArrayStructure {
 
 export type PreviewSize = 'hidden' | 'small' | 'medium' | 'large';
 
+export type TiledMetadata = {
+    start?: {
+        uid: string;
+        time: number;
+        versions: {
+            [key: string]: string;
+        };
+        scan_id: number;
+        plan_type: string;
+        plan_name: string;
+        detectors: string[];
+        num_points: number;
+        num_intervals: number;
+        plan_args: {
+            [key: string]: unknown;
+        };
+        hints: {
+            dimensions: unknown[];
+        };
+    };
+    stop?: {
+        uid: string;
+        time: number;
+        run_start: string;
+        exit_status: string;
+        reason: string;
+        num_events: {
+            [stream: string]: number;
+        };
+    };
+    [key: string]: unknown; // Allow arbitrary nested JSON
+};
+
 export interface TiledTableRow {
-    [column: string]: number
+    [column: string]: number;
 }
 
-export interface TiledStructuredArrayRow extends Array<string | number> {}
+export type TiledStructuredArrayRow = Array<string | number>;
 
 export type TiledTableData = TiledTableRow[];
 
 export type TiledStructuredArrayData = TiledStructuredArrayRow[];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ArrayStructure> => {
     return item.attributes.structure_family === 'array';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isTableStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<TableStructure> => {
     return item.attributes.structure_family === 'table';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isContainerStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<ContainerStructure> => {
     return (item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite');
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isAwkwardStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<AwkwardStructure> => {
     return item.attributes.structure_family === 'awkward';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isSparseStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<SparseStructure> => {
     return item.attributes.structure_family === 'sparse';
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isStructuredArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<StructuredArrayStructure> => {
     return item.attributes.structure_family === 'array' && 
            'fields' in item.attributes.structure.data_type;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isXArrayStructure = (item: TiledSearchItem<any>): item is TiledSearchItem<XArrayStructure> => {
     return item.attributes.structure_family === 'array' && 
            item.attributes.specs.some(spec => 
@@ -225,6 +281,7 @@ export type TiledAuthProvider = {
         [key: string]: string;
     };
     confirmation_message: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
 
@@ -268,6 +325,7 @@ export type TiledInfoResponse = {
     };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidTiledInfoResponse(data: any): data is TiledInfoResponse {
     return data &&
            typeof data.api_version === 'number' &&
@@ -277,7 +335,7 @@ export function isValidTiledInfoResponse(data: any): data is TiledInfoResponse {
 }
 
 
-const sampleTiledInfoResponse: TiledInfoResponse = {
+export const sampleTiledInfoResponse: TiledInfoResponse = {
     "api_version": 0,
     "library_version": "0.1.dev2523+g6314f1d.d20250507",
     "formats": {
@@ -577,4 +635,78 @@ const sampleTiledInfoResponse: TiledInfoResponse = {
     "meta": {
         "root_path": "/api"
     }
+};
+
+export type TiledTableJSONResponse = {
+    [column: string]: number[];
+}
+
+export type TiledBlueskyPlanMetadataResponse = {
+    data: {
+        id: string;
+        attributes: {
+            ancestors: string[];
+            structure_family: string;
+            specs: Array<{
+                name: string;
+                version: string | null;
+            }>;
+            metadata: {
+                start?: {
+                    uid: string;
+                    time: number;
+                    versions: {
+                        [key: string]: string;
+                    };
+                    scan_id: number;
+                    plan_type: string;
+                    plan_name: string;
+                    detectors: string[];
+                    num_points: number;
+                    num_intervals: number;
+                    plan_args: {
+                        [key: string]: unknown;
+                    };
+                    hints: {
+                        dimensions: unknown[];
+                    };
+                };
+                stop?: {
+                    uid: string;
+                    time: number;
+                    run_start: string;
+                    exit_status: string;
+                    reason: string;
+                    num_events: {
+                        [stream: string]: number;
+                    };
+                };
+                [key: string]: unknown; // Allow additional metadata fields
+            };
+            structure: {
+                contents: unknown | null;
+                count: number;
+            };
+            access_blob: {
+                [key: string]: unknown;
+            };
+            sorting: Array<{
+                key: string;
+                direction: number;
+            }>;
+            data_sources: unknown | null;
+        };
+        links: {
+            self: string;
+            search: string;
+            full: string;
+            [key: string]: string; // Allow additional links
+        };
+        meta: unknown | null;
+    };
+    error: unknown | null;
+    links: unknown | null;
+    meta: {
+        [key: string]: unknown;
+    };
 };

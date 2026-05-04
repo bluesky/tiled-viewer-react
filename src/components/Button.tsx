@@ -1,8 +1,6 @@
-import { cn } from "@/lib/utils";
-
 export type ButtonProps = {
     /** callback function on click */
-    cb?: Function;
+    cb?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
     /** text inside button */ 
     text?: string;
     /** Tailwind ClassName */

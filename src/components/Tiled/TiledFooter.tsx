@@ -7,8 +7,7 @@ export default function TiledFooter({
     breadcrumbs,
     ...props
 }: TiledFooterProps) {
-    //console.log('render TiledFooter.tsx')
-    const handleClick = (cb:undefined | Function) => {
+    const handleClick = (cb: undefined | (() => void)) => {
         console.log('click')
         console.log({cb})
         if (cb!== undefined) {
@@ -16,7 +15,6 @@ export default function TiledFooter({
             cb();
         }
     };
-    //console.log({breadcrumbs})
     return (
         <div className="w-full h-8 flex-shrink-0 pl-2 overflow-x-auto" {...props}>
             <div className="flex space-x-2">

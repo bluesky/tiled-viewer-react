@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
+import { render, screen, waitFor } from '@testing-library/react';
 import { setupServer } from 'msw/node';
 
 // Import all Preview components
@@ -20,14 +19,15 @@ import {
   StructuredArrayStructure,
   TableStructure,
   XArrayStructure,
-  TiledTableRow
+  TiledTableRow,
+  TiledStructuredArrayData
 } from '../../components/Tiled/types';
 
 // Mock the API client functions
 vi.mock('../../components/Tiled/apiClient', () => ({
   getAuthenticatedImage: vi.fn().mockResolvedValue('data:image/png;base64,mockimage'),
   generateFullImagePngPath: vi.fn().mockReturnValue('http://mock-url/image.png'),
-  getTableData: vi.fn(),
+  getTableDataAsSequence: vi.fn(),
   getStructuredArrayData: vi.fn(),
   getXArrayData: vi.fn(),
 }));
@@ -295,10 +295,10 @@ describe('Preview Components', () => {
   ];
 
   // Mock structured array data (should be arrays, not objects)
-  const mockStructuredArrayData = [
-    [1, 2.5, 100],
-    [4, 5.5, 200],
-    [7, 8.5, 300]
+  const mockStructuredArrayData: TiledStructuredArrayData = [
+    ['rex', 2.5, 100],
+    ['fido', 5.5, 200],
+    ['max', 8.5, 300]
   ];
 
   describe('PreviewNDArray Component', () => {
@@ -368,7 +368,7 @@ describe('Preview Components', () => {
     });
 
     it('should handle custom URL prop', () => {
-      render(<PreviewAwkward awkwardItem={mockAwkwardItem} url="https://custom-url.com" />);
+      render(<PreviewAwkward awkwardItem={mockAwkwardItem} />);
       
       expect(screen.getByText('Awkward item ID: test-awkward')).toBeInTheDocument();
     });
@@ -384,7 +384,7 @@ describe('Preview Components', () => {
     });
 
     it('should handle custom URL prop', () => {
-      render(<PreviewSparse sparseItem={mockSparseItem} url="https://custom-url.com" />);
+      render(<PreviewSparse sparseItem={mockSparseItem} />);
       
       expect(screen.getByText('Sparse item ID: test-sparse')).toBeInTheDocument();
     });
@@ -394,7 +394,7 @@ describe('Preview Components', () => {
     beforeEach(async () => {
       // Mock the API call to return structured array data
       const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getStructuredArrayData).mockImplementation(async (_searchPath: string, _block: number, _url?: string, cb?: (parsedData: TiledStructuredArrayData) => void) => {
         if (cb) cb(mockStructuredArrayData);
         return mockStructuredArrayData;
       });
@@ -413,7 +413,7 @@ describe('Preview Components', () => {
 
     it('should show loading state initially', async () => {
       const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getStructuredArrayData).mockImplementation(async (/* _searchPath: string, _block: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
         // Don't call callback to simulate loading
         return Promise.resolve();
       });
@@ -435,8 +435,8 @@ describe('Preview Components', () => {
   describe('PreviewTable Component', () => {
     beforeEach(async () => {
       // Mock the API call to return table data
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (searchPath: string, partition: number, url?: string, cb?: (parsedData: any) => void) => {
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
         if (cb) cb(mockTableData);
         return mockTableData;
       });
@@ -507,7 +507,7 @@ describe('Preview Components', () => {
     beforeEach(async () => {
       // Mock the API call to return xarray data
       const { getXArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getXArrayData).mockImplementation(async (searchPath: string, stack: number[], url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getXArrayData).mockImplementation(async (_searchPath: string, _stack: number[], _url?: string, cb?: (parsedData: number[][]) => void) => {
         const mockData = [[1, 2], [3, 4]]; // Mock 2D array data
         if (cb) cb(mockData);
         return mockData;
@@ -556,8 +556,8 @@ describe('Preview Components', () => {
 
   describe('Component Error Handling', () => {
     it('should handle API errors gracefully in PreviewTable', async () => {
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (searchPath: string, partition: number, url?: string, cb?: (parsedData: any) => void) => {
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (/* _searchPath: string, _partition: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
         // Simulate API error by not calling callback
         console.error('Mock API error');
         return Promise.reject(new Error('Mock API error'));
@@ -571,7 +571,7 @@ describe('Preview Components', () => {
 
     it('should handle API errors gracefully in PreviewStructuredArray', async () => {
       const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (searchPath: string, block: number, url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getStructuredArrayData).mockImplementation(async (/* _searchPath: string, _block: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
         // Simulate API error by not calling callback
         console.error('Mock API error');
         return Promise.reject(new Error('Mock API error'));
@@ -585,7 +585,7 @@ describe('Preview Components', () => {
 
     it('should handle API errors gracefully in PreviewXArray', async () => {
       const { getXArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getXArrayData).mockImplementation(async (searchPath: string, stack: number[], url?: string, cb?: (parsedData: any) => void) => {
+      vi.mocked(getXArrayData).mockImplementation(async (/* _searchPath: string, _stack: number[], _url?: string, _cb?: (parsedData: unknown) => void */) => {
         // Simulate API error by not calling callback
         console.error('Mock API error');
         return Promise.reject(new Error('Mock API error'));
@@ -633,9 +633,9 @@ describe('Preview Components', () => {
     });
 
     it('should handle empty data gracefully', async () => {
-      const { getTableData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableData).mockImplementation(async (searchPath: string, partition: number, url?: string, cb?: (parsedData: any) => void) => {
-        const emptyData: any[] = []; // Empty data
+      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
+      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
+        const emptyData: TiledTableRow[] = []; // Empty data
         if (cb) cb(emptyData);
         return emptyData;
       });

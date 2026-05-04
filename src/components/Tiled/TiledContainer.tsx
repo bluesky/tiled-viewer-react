@@ -17,12 +17,16 @@ type TiledContainerProps = {
     url: string | undefined,
     handleSelectClick: (item: TiledSearchItem<TiledStructures> ) => void,
     singleColumnMode?: boolean,
-    handleExpandClick: Function,
+    handleExpandClick: () => void,
     isExpanded: boolean,
     apiKey?: string,
     bearerToken?: string,
     initialSearchPath?: string,
     reverseSort?: boolean,
+    showPlanName?: boolean,
+    showPlanStartTime?: boolean,
+    pageLimit?: number,
+    reloadLastItemOnStartup?: boolean,
 }
 export default function TiledContainer({
     url,
@@ -32,13 +36,15 @@ export default function TiledContainer({
     isExpanded,
     apiKey,
     bearerToken,
-    initialSearchPath,
     reverseSort,
-    ...props
+    showPlanName,
+    showPlanStartTime,
+    pageLimit,
+    reloadLastItemOnStartup,
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort  });
+    const tiledData = useTiled({ url, apiKey, bearerToken, reverseSort, pageLimit, reloadLastItemOnStartup });
 
     if (!tiledData) {
         return <div>Error: Unable to load tiled data. Check console for error logs.</div>;
@@ -54,15 +60,16 @@ export default function TiledContainer({
         handleRightArrowClick,
         resetAllData,
         warning,
-        handleNewPageClick
+        handleNewPageClick,
+        handleSearchId,
+        handleSearchMetadata,
+        handleSearchSpec,
     } = tiledData;
-
-
 
     return (
         warning ? 
         <>
-            <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false}/>
+            <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false} showSearchBar={false} />
             <TiledStartupWarning warningMessage={warning} />    
         </>
             :
@@ -75,6 +82,10 @@ export default function TiledContainer({
                     secondaryTitle={url}
                     handleExpandClick={handleExpandClick}
                     isExpanded={isExpanded}
+                    handleSearchId={handleSearchId}
+                    handleSearchMetadata={handleSearchMetadata}
+                    handleSearchSpec={handleSearchSpec}
+                    showSearchBar={columns.length > 0}
                 />
                 <TiledBody ref={scrollContainerRef}>
                     {/* <TiledColumns 
@@ -96,6 +107,8 @@ export default function TiledContainer({
                             className={singleColumnMode ? "w-full max-w-full" : ""}
                             showTooltip={singleColumnMode ? false : true}
                             handleNewPageClick={handleNewPageClick}
+                            showPlanName={showPlanName}
+                            showPlanStartTime={showPlanStartTime}
                         />
                     )}
                     {previewItem && 

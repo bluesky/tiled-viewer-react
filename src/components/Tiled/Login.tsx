@@ -1,13 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import TiledHeader from "./TiledHeader";
 import LoginUsernamePassword from "./LoginUsernamePassword";
 import LoginSelectProvider from "./LoginSelectProvider";
 import LoginOIDC from "./LoginOIDC";
 import LoginHelp from "./LoginHelp";
-import Button from "../Button";
 
-import { Warning, Key, Info, Lock } from "@phosphor-icons/react";
+import { Warning } from "@phosphor-icons/react";
 
 import { getServerInfo } from "./apiClient";
 import { TiledAuthProvider, TiledInfoResponse } from "./types";
@@ -16,8 +15,9 @@ import { TiledAuthProvider, TiledInfoResponse } from "./types";
 export type LoginProps = {
     onSuccess: () => void;
     url?: string;
+    oidcRedirectUrl?: string;
 }
-export default function Login({ onSuccess, url }: LoginProps) {
+export default function Login({ onSuccess, url, oidcRedirectUrl }: LoginProps) {
     const [ warning, setWarning ] = useState< string | null>(null);
     const [ serverInfo, setServerInfo ] = useState<TiledInfoResponse | null>(null);
     const [ selectedProvider, setSelectedProvider ] = useState<TiledAuthProvider | null>(null);
@@ -25,7 +25,6 @@ export default function Login({ onSuccess, url }: LoginProps) {
     useEffect(() => {
         const fetchServerInfo = async () => {
             const info = await getServerInfo(url);
-            //console.log(info)
             if (info !== null) {
                 setServerInfo(info as TiledInfoResponse);
                 setWarning(null);
@@ -38,11 +37,11 @@ export default function Login({ onSuccess, url }: LoginProps) {
             }
         };
         fetchServerInfo();
-    }, []);
+    }, [url]);
 
     return (
-        <div className="w-full h-full bg-white flex flex-col items-center">
-            <TiledHeader handleExpandClick={()=>{}} isExpanded={false} secondaryTitle={url} showExpandButton={false}/>
+        <div className="w-full h-full bg-white flex flex-col items-center overflow-auto">
+            <TiledHeader handleExpandClick={()=>{}} isExpanded={false} secondaryTitle={url} showExpandButton={false} showSearchBar={false}/>
             {selectedProvider === null &&
                 <LoginSelectProvider handleClick={setSelectedProvider} providers={serverInfo?.authentication?.providers || []} />        
             }
@@ -50,7 +49,7 @@ export default function Login({ onSuccess, url }: LoginProps) {
                 <LoginUsernamePassword onSuccess={onSuccess} url={url} setWarning={setWarning} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {selectedProvider?.mode === 'external' && 
-                <LoginOIDC onSuccess={onSuccess} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
+                <LoginOIDC oidcRedirectUrl={oidcRedirectUrl} onSuccess={onSuccess} handleCancel={() => setSelectedProvider(null)} provider={selectedProvider}/>
             }
             {warning && 
                 <section className="flex items-center max-w-72 m-auto space-x-4 my-4 flex-shrink-0">

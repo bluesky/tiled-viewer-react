@@ -6,13 +6,12 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 //import Portal from '@visx/tooltip/lib/Portal';
 
 export type XYChartProps = {
-  width?: number;
-  height?: number;
+  defaultHeight?: number;
   plotData: Record<string, number>[];
   domain?: [number, number];
 };
 
-export default function VisxLinePlot({ width, height, plotData, domain }: XYChartProps) {
+export default function VisxLinePlot({ plotData, domain, defaultHeight=400 }: XYChartProps) {
 
     const dataWithIndex = useMemo(() => {
         if (!domain) {
@@ -29,20 +28,12 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
             }));
     }, [plotData, domain]);
 
-      // Get data keys dynamically
-    const dataKeys = useMemo(() => {
-      if (!dataWithIndex || dataWithIndex.length === 0) return [];
-      return Object.keys(dataWithIndex[0]).filter(key => key !== '__index');
-    }, [dataWithIndex]);
-
-    console.log({plotData})
-
     const [ selectedDataKeys, setSelectedDataKeys ] = React.useState<string[]>( plotData ? [Object.keys(plotData[0])[0] as string] : []); //auto display the first key
 
 
   return (
 
-    <ParentSize>{({ width, height }) => 
+    <ParentSize style={{minHeight:defaultHeight}} initialSize={{ width: 400, height: defaultHeight }}>{() =>
       <PlotSettings data={dataWithIndex} dataKeys={selectedDataKeys} setSelectedDataKeys={setSelectedDataKeys}>
         {({
           accessors,
@@ -60,8 +51,6 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
           renderAreaSeries,
           renderAreaStack,
           renderBarGroup,
-          renderBarSeries,
-          renderBarStack,
           renderGlyph,
           renderGlyphSeries,
           enableTooltipGlyph,
@@ -88,9 +77,6 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
           AreaSeries,
           AreaStack,
           Axis,
-          BarGroup,
-          BarSeries,
-          BarStack,
           GlyphSeries,
           Grid,
           LineSeries,
@@ -106,7 +92,7 @@ export default function VisxLinePlot({ width, height, plotData, domain }: XYChar
             theme={theme}
             xScale={config.x}
             yScale={config.y}
-            height={Math.min(400, height)}
+            height={Math.max(400, defaultHeight)}
             captureEvents={!editAnnotationLabelPosition}
             onPointerUp={(d) => {
               if (dataKeys.includes(d.key)) {

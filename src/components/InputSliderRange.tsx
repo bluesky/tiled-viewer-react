@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 
 type InputSliderRangeProps = {
@@ -43,7 +43,7 @@ export default function InputSliderRange({
   shorthandUnits,
   marks,
   step=1,
-  size='medium',
+  // size='medium',
   allowValueOverlap=false,
   width='w-full',
   showSideInput=true,
@@ -52,36 +52,12 @@ export default function InputSliderRange({
   className = "",
   ...props
 }: InputSliderRangeProps) {
-    //todo: remove this
-    const [currentValue, setCurrentValue] = useState(value);
-
-    //todo: create thumb styles with a few different options, no way to control thumb style without direct CSS
-    const thumbStyleCSS = ``;
-
-    //todo: create slider styles with a few different options, no way to control all aspects of slider style without direct CSS
-    const sliderStyleCSS = ``;
-
-    //todo: implement
-    const tickMarkSizes = {
-        small: '',
-        medium: '',
-        large: ''
-    };
-
-    //todo: implement
-    const thumbInputSizes = {
-        small: '',
-        medium: '',
-        large: ''
-    }
-
-    //todo: make this variable based on a thumb size
     const thumbWidth = 16; //pixels
 
     const handleInputChange = (index: 0| 1, newValue: number) => {
         if (newValue < min) newValue = min;
         if (newValue > max) newValue = max;
-        var newRange:[number, number] = [...value];
+        const newRange:[number, number] = [...value];
         newRange[index] = newValue;
         //prevent the range from being reversed
         if (allowValueOverlap) {
@@ -93,22 +69,21 @@ export default function InputSliderRange({
                 return;
             }
         }
-        setCurrentValue(newRange);
         if (onChange) onChange(newRange);
     };
 
     const handleDrag = (index: 0 | 1, e: React.ChangeEvent<HTMLInputElement>) => {
         if (isDisabled) return;
-        var newValue = Number(e.target.value);
-        var newRange:[number, number] = [...value];
+        const newValue = Number(e.target.value);
+        const newRange:[number, number] = [...value];
         newRange[index] = newValue;
         handleInputChange(index, newValue);
     };
 
     const handleChange = (index: 0 | 1, e: React.ChangeEvent<HTMLInputElement>) => {
         if (isDisabled) return;
-        var newValue = Number(e.target.value);
-        var newRange:[number, number] = [...value];
+        const newValue = Number(e.target.value);
+        const newRange:[number, number] = [...value];
         newRange[index] = newValue;
         handleInputChange(index, newValue);
     };
@@ -130,15 +105,6 @@ export default function InputSliderRange({
         return trackWidthStyle;
     }
 
-
-    if (marks) {
-        for ( let i = 0; i < marks?.length; i++) {
-            let val = marks[i];
-            let cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
-            //console.log(cssStyle);
-        }
-    }
-
     type TickMarkProps = {
         mark: number,
         displayValue?: boolean
@@ -158,7 +124,7 @@ export default function InputSliderRange({
         return `calc(${((mark - min) / (max - min)) * 100}% + ${(-((mark - min) / (max - min))*thumbWidth) + thumbWidth/2}px)`;
     };
 
-    const isIndexFirstOrLast = (array:Number[], index: number): boolean => {
+    const isIndexFirstOrLast = (array:number[], index: number): boolean => {
         return (array.length - 1 === index || index === 0) ? true : false;
     };
 

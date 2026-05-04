@@ -7,16 +7,29 @@ export type LoginOIDCProps = {
     handleCancel: () => void;
     provider: TiledAuthProvider;
     onSuccess: () => void;
+    oidcRedirectUrl?: string;
 }
 
-export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOIDCProps) {
-    const [status, setStatus] = useState<'waiting' | 'checking' | 'success' | 'error'>('waiting');
+export default function LoginOIDC({ handleCancel, provider, onSuccess, oidcRedirectUrl }: LoginOIDCProps) {
+    const [status, setStatus] = useState<'waiting' | 'checking' | 'success' | 'error' | 'errorMissingToken'>('waiting');
     const popupRef = useRef<Window | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    const loginUrl = provider.links.auth_endpoint;
+    const defaultLoginUrl = provider.links.auth_endpoint;
+    const loginUrl = oidcRedirectUrl ? `${defaultLoginUrl}${defaultLoginUrl.includes('?') ? '&' : '?'}state=${oidcRedirectUrl}` : defaultLoginUrl;
 
-    const openLoginWindow = () => {
+    const cleanup = () => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (popupRef.current && !popupRef.current.closed) {
+            popupRef.current.close();
+        }
+    };
+
+    useEffect(() => {
+        const openLoginWindow = () => {
         // Open the popup window
         popupRef.current = window.open(
             loginUrl, 
@@ -49,7 +62,7 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
                     currentUrl.includes('code=') || 
                     currentUrl.includes('/callback')) {
                     
-                    console.log('Callback URL detected:', currentUrl);
+                    console.log('Callback URL detected (token extraction in progress)');
                     
                     // Extract tokens from URL
                     const urlParams = new URLSearchParams(currentUrl.split('?')[1] || '');
@@ -58,48 +71,35 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
                     const code = urlParams.get('code');
                     
                     if (accessToken || code) {
-                        setStatus('success');
                         
-                        // Handle the tokens
                         if (accessToken) {
                             // Direct token response
                             localStorage.setItem('tiledAccessToken', accessToken);
+                            setStatus('success');
                             if (refreshToken) {
                                 localStorage.setItem('tiledRefreshToken', refreshToken);
                             }
+                            onSuccess();
                         } else if (code) {
                             // Authorization code was found, but no direct token. Tiled issue
-                            console.log('Authorization code received:', code);
+                            console.log('Missing access_token from redirect url after attempted login. Ensure Tiled is configured properly. Only received Tiled authorization code:', code);
+                            setStatus('errorMissingToken');
                         }
-                        
                         cleanup();
-                        onSuccess();
                     }
                 }
-            } catch (error) {
+            } catch {
                 // Cross-origin error - popup is on different domain
                 // This is expected during the OIDC flow
                 console.log('Cross-origin access (expected during OIDC flow)');
             }
         }, 1000);
     };
-
-    const cleanup = () => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        }
-        if (popupRef.current && !popupRef.current.closed) {
-            popupRef.current.close();
-        }
-    };
-
-    useEffect(() => {
         openLoginWindow();
         
         // Cleanup on component unmount
         return cleanup;
-    }, []);
+    }, [loginUrl, onSuccess]);
 
     const handleCancelClick = () => {
         cleanup();
@@ -113,6 +113,7 @@ export default function LoginOIDC({ handleCancel, provider, onSuccess }: LoginOI
                 {status === 'checking' && 'Checking authentication...'}
                 {status === 'success' && 'Authentication successful!'}
                 {status === 'error' && 'Authentication failed'}
+                {status === 'errorMissingToken' && 'Authentication failed, missing access token in redirect URL. Check Tiled configuration.'}
             </h2>
             
             {status === 'waiting' && (

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
 import Button from '../Button';
-import { getSearchResults } from './apiClient';
+import { getServerInfo } from './apiClient';
 
 type StartupScreenProps = {
     url: string | undefined,
-    handleUrlChange: Function,
-    handleSubmit: Function
+    handleUrlChange: (url: string) => void,
+    handleSubmit: () => void
 }
 export default function StartupScreen({
     url,
@@ -18,17 +18,11 @@ export default function StartupScreen({
     const [ warning, setWarning ] = useState< JSX.Element | null>(null);
 
     const testTiledConnection = async (url:string | undefined) => {
-        console.log({url})
         //ping the tiled server at the url and check if we get a response.
-        const res = await getSearchResults('', url);
-        //console.log(typeof res)
-        if (res !== null && typeof res !== 'string' && 'data' in res) {
-            //Tiled will return a data field when it's working
-            console.log({res})
+        const res = await getServerInfo(url);
+        if (res) {
             handleSubmit();
         } else {
-            //warn the user that the url isn't working
-            console.log({res})
             setWarning(
                 <p className="px-8">
                     Did not receive a valid response from <b><i>{url}</i></b>, please verify your Tiled server can be reached from this path. The most common issue is CORS restrictions, which need to be set during Tiled server initialization. Check the console for more details.
@@ -54,7 +48,7 @@ export default function StartupScreen({
                     value={url ? url : ''} 
                     onKeyDown={handleEnterKey}
                     onChange={e=> handleUrlChange(e.target.value)}
-                    placeholder="e.g. http://localhost:8000"
+                    placeholder="e.g. http://localhost:8000/api/v1"
                 >
                 </input>
                 <Button disabled={url ? false : true} text="Submit" cb={()=>testTiledConnection(url)}/>

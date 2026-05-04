@@ -2,9 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { TiledSearchItem, XArrayStructure, TiledTableRow } from "./types";
 import { getXArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
-import InputSliderRange from "../InputSliderRange";
-import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
-import SelectInteger from "../SelectInteger";
 import Table from "./Table";
 
 type PreviewXArrayProps = {
@@ -16,7 +13,6 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
     const [xarrayData, setXarrayData] = useState<number[][]>([]);
     const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
 
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
@@ -28,13 +24,13 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
     // Extract dimension names and calculate block counts for each dimension
     const dims = structure.dims;
     const shape = structure.shape;
-    const chunks = structure.chunks;
+    //const chunks = structure.chunks;
     
     // For table display, use dimension names as columns
     const columns = dims;
 
     // Convert multi-dimensional array data to table format for display
-    const convertToTableFormat = (data: number[][]): TiledTableRow[] => {
+    const convertToTableFormat = useCallback((data: number[][]): TiledTableRow[] => {
         if (!data || data.length === 0) return [];
         
         // For 1D data
@@ -47,10 +43,10 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         
         // For 2D+ data, flatten and create coordinate pairs
         const tableRows: TiledTableRow[] = [];
-        const flattenData = (arr: any[], coords: number[] = []): void => {
+        const flattenData = (arr: unknown[], coords: number[] = []): void => {
             if (Array.isArray(arr[0])) {
                 arr.forEach((subArr, index) => {
-                    flattenData(subArr, [...coords, index]);
+                    flattenData(subArr as unknown[], [...coords, index]);
                 });
             } else {
                 arr.forEach((value, index) => {
@@ -58,7 +54,7 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
                     dims.forEach((dim, dimIndex) => {
                         row[dim] = coords[dimIndex] || index;
                     });
-                    row.value = value;
+                    row.value = value as number;
                     tableRows.push(row);
                 });
             }
@@ -66,22 +62,21 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         
         flattenData(data);
         return tableRows;
-    };
+    }, [dims]);
 
-    const updateXArray = (newXArrayData: number[][]) => {
+    const updateXArray = useCallback((newXArrayData: number[][]) => {
         setXarrayData(newXArrayData);
         const tableData = convertToTableFormat(newXArrayData);
         setVisibleData(tableData.slice(0, rowLoadSize));
         setIsLoading(false);
-        setDomain([0, tableData.length - 1]);
-    };
+    }, [convertToTableFormat, rowLoadSize]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
         getXArrayData(searchPath, [], url, updateXArray);
-    }, [xarrayItem]);
+    }, [xarrayItem, searchPath, url, updateXArray]);
 
     const loadMoreRows = useCallback(() => {
         const tableData = convertToTableFormat(xarrayData);
@@ -89,7 +84,7 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
             const nextRows = tableData.slice(prev.length, prev.length + rowLoadSize);
             return [...prev, ...nextRows];
         });
-    }, [xarrayData]);
+    }, [xarrayData, convertToTableFormat, rowLoadSize]);
 
     useEffect(() => {
         if (!observerRef.current) return;
@@ -125,50 +120,6 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
                 visibleData={visibleData}
                 observerRef={observerRef}
             />
-
-            {/* Block selectors for each dimension */}
-            {/* {dims.length > 1 && (
-                <div className="mt-4 space-y-2">
-                    {dims.map((dim, dimIndex) => {
-                        const maxBlocks = chunks[dimIndex]?.length || 1;
-                        return maxBlocks > 1 ? (
-                            <SelectInteger
-                                key={dim}
-                                value={block || 0}
-                                min={0}
-                                max={maxBlocks - 1}
-                                onChange={(newValue) => handleBlockChange(dimIndex, newValue)}
-                                label={`${dim} Block`}
-                                className="inline-block mr-4"
-                            />
-                        ) : null;
-                    })}
-                </div>
-            )} */}
-
-            {/* Line plot for 1D data or coordinate visualization */}
-            {/* {dims.length <= 2 && (
-                <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
-                    <h3 className="text-center mt-4">{xarrayItem.id}</h3>
-                    <p className="text-center text-sm text-gray-500">
-                        {dims.map((dim, i) => `${dim}: ${shape[i]}`).join(' × ')}
-                    </p>
-
-                    <InputSliderRange
-                        min={0}
-                        max={visibleData.length - 1}
-                        value={domain || [0, visibleData.length - 1]}
-                        showSideInput={false}
-                        onChange={setDomain}
-                        className="px-12"
-                    />
-
-                    <VisxLinePlot
-                        plotData={visibleData}
-                        domain={domain}
-                    />
-                </div>
-            )} */}
         </div>
     );
 }

@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { TiledSearchItem, StructuredArrayStructure, TiledTableRow } from "./types";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { TiledSearchItem, StructuredArrayStructure, TiledStructuredArrayData } from "./types";
 import { getStructuredArrayData } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
-import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
 import SelectInteger from "../SelectInteger";
 import Table from "./Table";
 
@@ -13,8 +12,8 @@ type PreviewStructuredArrayProps = {
 };
 
 export default function PreviewStructuredArray({ structuredArrayItem, url }: PreviewStructuredArrayProps) {
-    const [structuredArrayData, setStructuredArrayData] = useState<TiledTableRow[]>([]);
-    const [visibleData, setVisibleData] = useState<TiledTableRow[]>([]);
+    const [structuredArrayData, setStructuredArrayData] = useState<TiledStructuredArrayData>([]);
+    const [visibleData, setVisibleData] = useState<TiledStructuredArrayData>([]);
     const [block, setBlock] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [domain, setDomain] = useState<[number, number] | undefined>(undefined);
@@ -22,15 +21,17 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
     const observerRef = useRef<HTMLDivElement | null>(null);
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
+    const showPlot = false;
+
     // Calculate block count based on chunks (similar to partitions for tables)
     const blockCount = structuredArrayItem.attributes.structure.chunks[0].length;
-    const searchPath = generateSearchPath(structuredArrayItem);
+    const searchPath = useMemo(() => generateSearchPath(structuredArrayItem), [structuredArrayItem]);
     const rowLoadSize = 20;
 
     // Extract column names from the structured array fields
     const columns = structuredArrayItem.attributes.structure.data_type.fields.map(field => field.name);
 
-    const updateStructuredArray = (newStructuredArrayData: TiledTableRow[]) => {
+    const updateStructuredArray = (newStructuredArrayData: TiledStructuredArrayData) => {
         setStructuredArrayData(newStructuredArrayData);
         setVisibleData(newStructuredArrayData.slice(0, rowLoadSize));
         setIsLoading(false);
@@ -41,16 +42,15 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
         setIsLoading(true);
         getStructuredArrayData(searchPath, newValue, url, updateStructuredArray);
         setBlock(newValue);
-    }, [structuredArrayItem, searchPath, url]);
+    }, [searchPath, url]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
-        const searchPath = generateSearchPath(structuredArrayItem);
         setBlock(0);
         getStructuredArrayData(searchPath, 0, url, updateStructuredArray);
-    }, [structuredArrayItem]);
+    }, [structuredArrayItem, searchPath, url]);
 
     const loadMoreRows = useCallback(() => {
         setVisibleData((prev) => {
@@ -101,7 +101,7 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
             }
 
             {/* scatter plot, to be implemented later if it makes sense for structured data */}
-            {false && (
+            {showPlot && (
                 <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
                     <h3 className="text-center mt-4">{structuredArrayItem.id}</h3>
                     {blockCount > 1 && (
@@ -118,10 +118,10 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
                     />
 
                     {/* Scatter plot */}
-                    <VisxLinePlot
+                    {/* <VisxLinePlot
                         plotData={structuredArrayData}
                         domain={domain}
-                    />
+                    /> */}
                 </div>
             )}
         </div>

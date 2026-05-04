@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { TiledSearchItem, TableStructure, TiledTableRow, StructuredArrayStructure } from "./types";
-import { getTableData } from "./apiClient";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
+import { getTableDataAsSequence } from "./apiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
 import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
@@ -23,7 +23,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
     const tableContainerRef = useRef<HTMLDivElement | null>(null);
 
     const partitionCount = tableItem.attributes.structure.npartitions;
-    const searchPath = generateSearchPath(tableItem);
+    const searchPath = useMemo(() => generateSearchPath(tableItem), [tableItem]);
     const rowLoadSize = 20;
 
     const columns = tableData.length > 0 ? Object.keys(tableData[0]) : [];
@@ -37,19 +37,18 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
 
     const handlePartitionChange = useCallback((newValue: number) => {
         setIsLoading(true);
-        getTableData(searchPath, newValue, url, updateTable);
+        getTableDataAsSequence(searchPath, newValue, url, updateTable);
         setPartition(newValue);
-    }, [tableItem]);
+    }, [searchPath, url]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0
         }
-        const searchPath = generateSearchPath(tableItem);
         setPartition(0);
-        getTableData(searchPath, 0, url, updateTable);
+        getTableDataAsSequence(searchPath, 0, url, updateTable);
 
-    }, [tableItem]);
+    }, [tableItem, searchPath, url]);
 
     const loadMoreRows = useCallback(() => {
         setVisibleData((prev) => {
@@ -119,6 +118,7 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                     <VisxLinePlot
                         plotData={tableData}
                         domain={domain}
+                        defaultHeight={400}
                     />
                 </div>
             )}
