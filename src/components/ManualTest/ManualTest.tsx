@@ -3,8 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { TestItemCollection, ManualTestCollection } from "./types";
 import { initializeTestResults, writeTestResultsToLocalStorage } from "./utils";
 import { resetGlobalState } from "../Tiled/apiClient";
-import { CaretLeft } from "@phosphor-icons/react";
-import { CaretRight } from "@phosphor-icons/react/dist/ssr";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export type ManualTestProps = {
     testItems: TestItemCollection;
@@ -12,7 +11,6 @@ export type ManualTestProps = {
 export default function ManualTest({ testItems }: ManualTestProps) {
     const initializedTestResults = useMemo(() => initializeTestResults(testItems), [testItems]);
     const [ testResults, setTestResults] = useState<ManualTestCollection>(initializedTestResults);
-    //const [ copyButtonText, setCopyButtonText ] = useState<string>('Copy Table');  
     const [ commandCopyStates, setCommandCopyStates ] = useState<Record<string, string>>({});
     const [ currentTestIndex, setCurrentTestIndex ] = useState<number>(0);
     
@@ -43,33 +41,6 @@ export default function ManualTest({ testItems }: ManualTestProps) {
             return updatedResults;
         });
     }
-
-    // const resetTestResults = () => {
-    //     const blankTestResults: ManualTestCollection = {};
-    //     Object.keys(testItems).forEach(key => {
-    //         blankTestResults[key] = { ...testItems[key], isPassing: false, comment: '' };
-    //     });
-    //     setTestResults(blankTestResults);
-    //     writeTestResultsToLocalStorage(blankTestResults);
-    // };
-
-    // const handleCopyTableToMarkdown = () => {
-    //     const header = '| ID | Name | Status | Comment |\n| --- | --- | --- | --- |\n';
-    //     const rows = Object.keys(testResults).map(key => {
-    //         const result = testResults[key];
-    //         const status = result.isPassing ? '✓' : '✗';
-    //         return `| ${key} | ${result.name} | ${status} | ${result.comment || ''} |`;
-    //     }).join('\n');
-    //     const markdownTable = header + rows;
-    //     navigator.clipboard.writeText(markdownTable)
-    //         .then(() => {
-    //             setCopyButtonText('Copied');
-    //             setTimeout(() => {
-    //                 setCopyButtonText('Copy Table');
-    //             }, 1000);
-    //         })
-    //         .catch(err => alert('Failed to copy test results: ' + err));
-    // }   
 
     const handleCopyCommand = (key: string, command: string) => {
         navigator.clipboard.writeText(command)
@@ -149,16 +120,6 @@ export default function ManualTest({ testItems }: ManualTestProps) {
                     })}
                 </tbody>
             </table>
-
-            {/* Copy to Markdown button */}
-            {/* <div className="mt-4">
-                <button
-                    onClick={handleCopyTableToMarkdown}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                >
-                    {copyButtonText}
-                </button>
-            </div> */}
 
             {/* Current Test Display */}
             {currentTest && (

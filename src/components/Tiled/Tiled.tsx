@@ -152,84 +152,83 @@ export default function Tiled({
     };
 
     if (!isClosed) {
-            return (
-                <>
-                    { isButtonMode && (
-                        <OpenTiledRow
-                            userInputApiKey={userInputApiKey}
-                            setIsViewerOpen={setIsViewerOpen}
-                            buttonModeText={buttonModeText}
-                            selectedData={selectedData}
-                            userInputReverseSort={userInputReverseSort}
-                            handleReverseSortChange={setUserInputReverseSort}
-                            handleInputChange={handleApiKeyChange}
-                            showApiKeyInput={inButtonModeShowApiKeyInput}
-                            showReverseSortInput={inButtonModeShowReverseSortInput}
-                            showSelectedData={inButtonModeShowSelectedData}
-                        />
-                    )}
+        return (
+            <>
+                { isButtonMode && (
+                    <OpenTiledRow
+                        userInputApiKey={userInputApiKey}
+                        setIsViewerOpen={setIsViewerOpen}
+                        buttonModeText={buttonModeText}
+                        selectedData={selectedData}
+                        userInputReverseSort={userInputReverseSort}
+                        handleReverseSortChange={setUserInputReverseSort}
+                        handleInputChange={handleApiKeyChange}
+                        showApiKeyInput={inButtonModeShowApiKeyInput}
+                        showReverseSortInput={inButtonModeShowReverseSortInput}
+                        showSelectedData={inButtonModeShowSelectedData}
+                    />
+                )}
 
-                    { isViewerOpen && (
+                { isViewerOpen && (
+                    <div
+                        className={cn(
+                            (isPopup || isButtonMode)
+                            ? "fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
+                            : `flex w-full h-full min-w-[600px] min-h-[500px] justify-center items-center ${
+                                size && sizeClassMap[size]
+                                } ${(size && isExpanded) && expandedSizeClassMap[size]}
+                            text-slate-700`,
+                            backgroundClassName
+                        )}
+                        onClick={handleClickOutside}
+                        {...props}
+                    >
                         <div
                             className={cn(
-                                (isPopup || isButtonMode)
-                                ? "fixed inset-0 z-50 bg-black/50 flex items-center justify-center"
-                                : `flex w-full h-full min-w-[600px] min-h-[500px] justify-center items-center ${
-                                    size && sizeClassMap[size]
-                                    } ${(size && isExpanded) && expandedSizeClassMap[size]}
-                                text-slate-700`,
-                                backgroundClassName
+                                `
+                                    flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
+                                    ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (sizeClassMap[size])} 
+                                    ${isFullWidth ? 'w-full' : ''} ${isExpanded ? cn((size ? expandedSizeClassMap[size] : 'h-full w-full'), expandedContentClassName) : ''}
+                                `,
+                                contentClassName
                             )}
-                            onClick={handleClickOutside}
-                            {...props}
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <div
-                                className={cn(
-                                    `
-                                        flex flex-col border border-slate-400 shadow-lg rounded-md bg-white max-w-full max-h-full 
-                                        ${ (isPopup || isButtonMode) ? 'h-full w-full max-h-[calc(100vh-12rem)] min-h-[500px] max-w-[calc(100vw-12rem)] min-w-[500px]' : (sizeClassMap[size])} 
-                                        ${isFullWidth ? 'w-full' : ''} ${isExpanded ? cn((size ? expandedSizeClassMap[size] : 'h-full w-full'), expandedContentClassName) : ''}
-                                    `,
-                                    contentClassName
-                                )}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {enableStartupScreen && showStartupScreen ? (
-                                    <StartupScreen
-                                        url={url}
-                                        handleUrlChange={setUrl}
-                                        handleSubmit={handleStartupScreenSubmit}
-                                    />
-                                ) : (
-                                    <>
-                                        {showLogin ? 
-                                            <Login onSuccess={handleLoginSuccess} url={url} oidcRedirectUrl={oidcRedirectUrl}/> 
-                                        :                                 
-                                            <TiledContainer
-                                                url={url}
-                                                handleSelectClick={handleSelectClick}
-                                                singleColumnMode={singleColumnMode}
-                                                handleExpandClick={handleExpandClick}
-                                                isExpanded={isExpanded}
-                                                apiKey={userInputApiKey}
-                                                bearerToken={bearerToken}
-                                                reverseSort={userInputReverseSort}
-                                                showPlanName={showPlanName}
-                                                showPlanStartTime={showPlanStartTime}
-                                                pageLimit={pageLimit}
-                                                reloadLastItemOnStartup={reloadLastItemOnStartup}
-                                            />
-                                        }
-                                        {(isPopup || isButtonMode) && (
-                                            <p className="w-full absolute top-8 text-center text-gray-200 text-3xl -translate-x-1/2 left-1/2 hover:cursor-default" onClick={handleClickOutside}>Select an Item or Click Outside to Close</p>
-                                        )}
-                                    </>
-                                )}
-                            </div>
+                            {enableStartupScreen && showStartupScreen ? (
+                                <StartupScreen
+                                    url={url}
+                                    handleUrlChange={setUrl}
+                                    handleSubmit={handleStartupScreenSubmit}
+                                />
+                            ) : (
+                                <>
+                                    {showLogin ? 
+                                        <Login onSuccess={handleLoginSuccess} url={url} oidcRedirectUrl={oidcRedirectUrl}/> 
+                                    :                                 
+                                        <TiledContainer
+                                            url={url}
+                                            handleSelectClick={handleSelectClick}
+                                            singleColumnMode={singleColumnMode}
+                                            handleExpandClick={handleExpandClick}
+                                            isExpanded={isExpanded}
+                                            apiKey={userInputApiKey}
+                                            bearerToken={bearerToken}
+                                            reverseSort={userInputReverseSort}
+                                            showPlanName={showPlanName}
+                                            showPlanStartTime={showPlanStartTime}
+                                            pageLimit={pageLimit}
+                                            reloadLastItemOnStartup={reloadLastItemOnStartup}
+                                        />
+                                    }
+                                    {(isPopup || isButtonMode) && (
+                                        <p className="w-full absolute top-8 text-center text-gray-200 text-3xl -translate-x-1/2 left-1/2 hover:cursor-default" onClick={handleClickOutside}>Select an Item or Click Outside to Close</p>
+                                    )}
+                                </>
+                            )}
                         </div>
-                    )}
-                </>
-            ) 
-        // }
+                    </div>
+                )}
+            </>
+        ) 
     }
 }

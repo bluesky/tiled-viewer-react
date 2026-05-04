@@ -11,7 +11,6 @@ interface TableProps {
 }
 
 export default function Table({ isLoading, columns, visibleData, observerRef, precision, isStructuredArray=false }: TableProps) {
-    //const [ isExpanded, setIsExpanded ] = useState<boolean>(false);
     const isExpanded = false;
     const dataHasKeys = !isStructuredArray //structured arrays have data formatted as true arrays, tables on the other hand have objects for each element
     const precisionValue = precision !== undefined ? precision : 4;

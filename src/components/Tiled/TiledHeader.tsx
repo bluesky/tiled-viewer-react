@@ -1,6 +1,5 @@
 import { Breadcrumb } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
-//import blueskyLogo from "../../assets/bluesky-logo.png";
 import blueskyLogo from "./bluesky_logo.png"
 import { tailwindIcons } from "@/assets/icons";
 import TiledSearchBar from "./TiledSearchBar";

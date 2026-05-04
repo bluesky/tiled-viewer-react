@@ -52,30 +52,6 @@ export default function InputSliderRange({
   className = "",
   ...props
 }: InputSliderRangeProps) {
-    //todo: remove this
-    // const [currentValue, setCurrentValue] = useState(value);
-
-    //todo: create thumb styles with a few different options, no way to control thumb style without direct CSS
-    // const thumbStyleCSS = ``;
-
-    //todo: create slider styles with a few different options, no way to control all aspects of slider style without direct CSS
-    // const sliderStyleCSS = ``;
-
-    //todo: implement
-    // const tickMarkSizes = {
-    //     small: '',
-    //     medium: '',
-    //     large: ''
-    // };
-
-    //todo: implement
-    // const thumbInputSizes = {
-    //     small: '',
-    //     medium: '',
-    //     large: ''
-    // }
-
-    //todo: make this variable based on a thumb size
     const thumbWidth = 16; //pixels
 
     const handleInputChange = (index: 0| 1, newValue: number) => {
@@ -93,7 +69,6 @@ export default function InputSliderRange({
                 return;
             }
         }
-        // setCurrentValue(newRange);
         if (onChange) onChange(newRange);
     };
 
@@ -129,15 +104,6 @@ export default function InputSliderRange({
         const trackWidthStyle = `calc(${((maxValue - minValue) / (max - min)) * 100}% + ${(-((maxValue - minValue) / (max - min))*thumbWidth)}px)`
         return trackWidthStyle;
     }
-
-
-    // if (marks) {
-    //     for ( let i = 0; i < marks?.length; i++) {
-    //         const val = marks[i];
-    //         // const cssStyle = `calc(${((val - min) / (max - min)) * 100}% + ${(-((val - min) / (max - min))*8) + thumbWidth/2}px)`
-    //         //console.log(cssStyle);
-    //     }
-    // }
 
     type TickMarkProps = {
         mark: number,

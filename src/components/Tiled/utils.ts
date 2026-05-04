@@ -2,7 +2,6 @@ import { tiledStructureIcons } from "./icons";
 import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
-//const defaultTiledUrl = getDefaultTiledUrl();
 
 /**
  * Generates links for a TiledSearchItem, including a default link

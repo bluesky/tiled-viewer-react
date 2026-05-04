@@ -262,12 +262,6 @@ export default function PlotSettings({ children, data, dataKeys, setSelectedData
     updateSetting('gridColumns', columns === 'true');
   }, [updateSetting]);
 
-  // ... keep existing callbacks but update to use settings state ...
-    // Available x-axis options (includes index + all data keys)
-  // const xAxisOptions = useMemo(() => {
-  //   return ['__index', ...allowableDataKeys];
-  // }, [allowableDataKeys]);
-
   const accessors = useMemo(() => {
     const xAccessors: Record<string, Accessor> = {};
     const yAccessors: Record<string, Accessor> = {};

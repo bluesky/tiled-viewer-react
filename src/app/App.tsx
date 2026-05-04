@@ -57,9 +57,6 @@ function App() {
             className="h-16 w-auto mx-auto opacity-80 hover:animate-pulse ml-2 mt-2"
           />
         </div>
-        {/* <Tiled isButtonMode={true} size='medium' tiledBaseUrl='http://tiled.localhost:8000/api/v1'/>
-        <Button cb={clearSavedTokensAndRefresh} text="Clear saved tokens and Refresh" isSecondary={true} styles='mt-12'/>
-        <Tiled isPopup={true}  tiledBaseUrl='http://tiled.localhost:8000/api/v1' pageLimit={10} reloadLastItemOnStartup={true} onSelectCallback={(data) => console.log(data)} includeAuthTokensInSelectCallback={true} oidcRedirectUrl='http://localhost:5173'/> */}
         <ManualTest testItems={testItems} />
       </section>
     </>

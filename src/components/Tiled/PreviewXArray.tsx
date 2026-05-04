@@ -120,50 +120,6 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
                 visibleData={visibleData}
                 observerRef={observerRef}
             />
-
-            {/* Block selectors for each dimension */}
-            {/* {dims.length > 1 && (
-                <div className="mt-4 space-y-2">
-                    {dims.map((dim, dimIndex) => {
-                        const maxBlocks = chunks[dimIndex]?.length || 1;
-                        return maxBlocks > 1 ? (
-                            <SelectInteger
-                                key={dim}
-                                value={block || 0}
-                                min={0}
-                                max={maxBlocks - 1}
-                                onChange={(newValue) => handleBlockChange(dimIndex, newValue)}
-                                label={`${dim} Block`}
-                                className="inline-block mr-4"
-                            />
-                        ) : null;
-                    })}
-                </div>
-            )} */}
-
-            {/* Line plot for 1D data or coordinate visualization */}
-            {/* {dims.length <= 2 && (
-                <div className={`${isLoading ? 'animate-pulse opacity-50' : ''} mt-8 mb-4 shadow-md p-2 rounded border border-slate-100`}>
-                    <h3 className="text-center mt-4">{xarrayItem.id}</h3>
-                    <p className="text-center text-sm text-gray-500">
-                        {dims.map((dim, i) => `${dim}: ${shape[i]}`).join(' × ')}
-                    </p>
-
-                    <InputSliderRange
-                        min={0}
-                        max={visibleData.length - 1}
-                        value={domain || [0, visibleData.length - 1]}
-                        showSideInput={false}
-                        onChange={setDomain}
-                        className="px-12"
-                    />
-
-                    <VisxLinePlot
-                        plotData={visibleData}
-                        domain={domain}
-                    />
-                </div>
-            )} */}
         </div>
     );
 }
