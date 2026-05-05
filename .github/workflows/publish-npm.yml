@@ -39,6 +39,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    if: github.event_name == 'release' && github.event.action == 'published'
 
     steps:
       - uses: actions/checkout@v4
@@ -53,11 +54,9 @@ jobs:
         with:
           name: dist
           path: dist/
-      - run: node --version
-      - run: npm --version
       - run: npm ci
 
-      # Needed for npm trusted publishing support
+      # Needed for npm trusted publishing support, using latest gives error so pin a recent version
       - run: npm install -g npm@11.6.2
 
       - run: npm publish --access public --provenance
