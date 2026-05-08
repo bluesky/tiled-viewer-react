@@ -1,7 +1,7 @@
 import { Breadcrumb } from "./types";
 import { getDefaultTiledUrl } from "./apiClient";
 import blueskyLogo from "./bluesky_logo.png"
-import { tailwindIcons } from "@/assets/icons";
+import { CaretLeft, CaretRight, ArrowsIn, ArrowsOut } from "@phosphor-icons/react";
 import TiledSearchBar from "./TiledSearchBar";
 
 const defaultUrl = getDefaultTiledUrl();
@@ -59,8 +59,8 @@ export default function TiledHeader({
     return (
         <div className="flex w-full min-h-14 pb-2 pt-2 relative pl-4 " {...props}>
             <div className="flex items-end w-1/4">
-                <Arrow onClick={onLeftArrowClick} icon={tailwindIcons.chevronLeft}/>
-                <Arrow onClick={onRightArrowClick} icon={tailwindIcons.chevronRight} />
+                <Arrow onClick={onLeftArrowClick} icon={<CaretLeft className="w-full h-full" />}/>
+                <Arrow onClick={onRightArrowClick} icon={<CaretRight className="w-full h-full" />} />
                 <p className="truncate"> {breadcrumbs.length > 0 && breadcrumbs[breadcrumbs.length - 1].label }</p>
             </div>
             
@@ -75,7 +75,7 @@ export default function TiledHeader({
                     {showSearchBar && <TiledSearchBar handleSearchIdClick={handleSearchId} handleSearchMetadataClick={handleSearchMetadata} handleSearchSpecClick={handleSearchSpec} /> }
                     { showExpandButton &&
                         <div className="h-6 aspect-square text-slate-500 hover:text-slate-900 hover:cursor-pointer"  onClick={handleExpandClick}>
-                            {isExpanded ? tailwindIcons.arrowsPointingIn :tailwindIcons.arrowsPointingOut}
+                            {isExpanded ? <ArrowsIn className="w-full h-full" /> : <ArrowsOut className="w-full h-full" />}
                         </div>
                     }
                 </div>

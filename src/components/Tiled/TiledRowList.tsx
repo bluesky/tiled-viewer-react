@@ -1,7 +1,6 @@
 import { TiledSearchItem, TiledStructures, Breadcrumb, TiledSearchResult } from "./types";
-import { getTiledStructureIcon } from "./utils";
-import { tailwindIcons } from "@/assets/icons";
 import { isContainerStructure } from "./types";
+import { TiledRowItem } from "./TiledRowItem";
 import dayjs from "dayjs";
 
 type TiledRowListProps = {
@@ -51,25 +50,14 @@ export default function TiledRowList({
 
                     return (
                         <div key={`${item.id}-${depth}`}>
-                            <div
-                                className={`flex items-center space-x-2 px-2 py-0.5 rounded-sm hover:cursor-pointer hover:bg-sky-300 ${
-                                    isExpanded || (!isContainer && breadcrumbs.length > depth && breadcrumbs[depth].label === item.id)
-                                        ? 'bg-sky-200 hover:bg-sky-300'
-                                        : ''
-                                }`}
-                                style={{ paddingLeft: `${depth * 1.25 + 0.5}rem` }}
+                            <TiledRowItem
+                                item={item}
+                                displayText={displayText}
+                                isSelected={isExpanded || (!isContainer && breadcrumbs.length > depth && breadcrumbs[depth].label === item.id)}
+                                isExpanded={isExpanded}
                                 onClick={() => onItemClick(item, depth)}
-                            >
-                                <div className={`w-5 h-5 flex-shrink-0 ${isContainer ? 'text-sky-700' : ''}`}>
-                                    {getTiledStructureIcon(item)}
-                                </div>
-                                <p className="truncate flex-grow text-sm">{displayText}</p>
-                                {isContainer && (
-                                    <div className="flex-shrink-0 text-slate-400 w-fit h-fit">
-                                        {isExpanded ? tailwindIcons.chevronUp : tailwindIcons.chevronDown}
-                                    </div>
-                                )}
-                            </div>
+                                depth={depth}
+                            />
                             {isExpanded && renderLevel(depth + 1)}
                         </div>
                     );

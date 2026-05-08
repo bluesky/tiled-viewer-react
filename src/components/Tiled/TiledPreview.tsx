@@ -23,7 +23,7 @@ import {
     isXArrayStructure
 } from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
-import { tailwindIcons } from '@/assets/icons';
+import { ArrowsIn, ArrowsOut, DownloadSimple } from "@phosphor-icons/react";
 
 type TiledPreviewProps = {
     previewItem: TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | TiledSearchItem<StructuredArrayStructure>;
@@ -84,8 +84,8 @@ export default function TiledPreview({
     return (
         <div className={`${previewSizeMap[previewSize]} flex-grow h-full flex flex-col overflow-y-auto relative max-w-full ${isFullWidth && 'min-w-full'}`} {...props}>
             <div className="flex justify-between px-2 pt-2 absolute top-0 w-full">
-                <div className="h-6 aspect-square hover:cursor-pointer hover:text-slate-600" onClick={()=>setIsFullWidth(!isFullWidth)}>{isFullWidth ? tailwindIcons.arrowsPointingIn : tailwindIcons.arrowsPointingOut}</div>
-                <div className="h-6 aspect-square hover:cursor-pointer hover:text-slate-600">{tailwindIcons.arrowDownTray}</div>
+                <div className="h-6 aspect-square hover:cursor-pointer hover:text-slate-600" onClick={()=>setIsFullWidth(!isFullWidth)}>{isFullWidth ? <ArrowsIn className="w-full h-full" /> : <ArrowsOut className="w-full h-full" />}</div>
+                <div className="h-6 aspect-square hover:cursor-pointer hover:text-slate-600"><DownloadSimple className="w-full h-full" /></div>
             </div>
             <div className="w-full flex flex-col items-center space-y-8 py-4">
                 {renderPreviewComponent()}

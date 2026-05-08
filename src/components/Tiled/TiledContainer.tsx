@@ -95,7 +95,7 @@ export default function TiledContainer({
                 />
                 {displayMode === 'rows' ? (
                     <div className="w-full flex min-h-0 flex-grow border overflow-hidden">
-                        <div className="w-80 flex-shrink-0 border-r border-r-slate-300 overflow-y-auto scrollbar-always-visible">
+                        <div className="w-80 flex-shrink-0 border-r border-r-slate-300 overflow-y-auto scrollbar-always-visible px-4">
                             <TiledRowList
                                 columns={columns}
                                 breadcrumbs={breadcrumbs}
