@@ -1,11 +1,11 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import './Tiled.css';
 
-type TiledBodyProps = {
+type TiledBodyScrollRightProps = {
     children?: React.ReactNode;
 }
 
-const TiledBody = forwardRef<HTMLDivElement, TiledBodyProps>(({ children, ...props }, ref) => {
+const TiledBodyScrollRight = forwardRef<HTMLDivElement, TiledBodyScrollRightProps>(({ children, ...props }, ref) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     
     // Expose internal ref to parent via forwarded ref
@@ -28,4 +28,4 @@ const TiledBody = forwardRef<HTMLDivElement, TiledBodyProps>(({ children, ...pro
     );
 });
 
-export default TiledBody;
+export default TiledBodyScrollRight;

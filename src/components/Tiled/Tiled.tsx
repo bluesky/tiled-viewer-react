@@ -38,6 +38,7 @@ export type TiledProps = {
     reloadLastItemOnStartup?: boolean,
     includeAuthTokensInSelectCallback?: boolean,
     oidcRedirectUrl?: string,
+    displayMode?: 'columns' | 'rows',
 
 }
 export default function Tiled({
@@ -67,6 +68,7 @@ export default function Tiled({
     reloadLastItemOnStartup,
     includeAuthTokensInSelectCallback=false,
     oidcRedirectUrl,
+    displayMode='columns',
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -218,6 +220,7 @@ export default function Tiled({
                                             showPlanStartTime={showPlanStartTime}
                                             pageLimit={pageLimit}
                                             reloadLastItemOnStartup={reloadLastItemOnStartup}
+                                            displayMode={displayMode}
                                         />
                                     }
                                     {(isPopup || isButtonMode) && (

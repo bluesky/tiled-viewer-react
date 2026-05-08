@@ -10,11 +10,17 @@ function App() {
   const testItems: TestItemCollection = {
     Demo1: {
       name: 'Default View',
-      element: <Tiled />,
+      element: <Tiled/>,
       info: 'This is the default view which should render the viewer properly.',
       command: 'tiled serve config tiled/tiled_demo.yml'
     },
     Demo2: {
+      name: 'Row Mode',
+      element: <Tiled displayMode='rows'/>,
+      info: 'This is the second view mode which renders all items in a single column with indented rows to indicate depth. The right column will always preview the selected container or data',
+      command: 'tiled serve config tiled/tiled_demo.yml'
+    },
+    Demo3: {
       name: 'Button Mode',
       element: <Tiled  isButtonMode={true}/>,
       info: 'This renders a button that when clicked should open up the viewer. Clicking outside the viewer should close it.',

@@ -3,9 +3,11 @@ import { useRef } from 'react';
 import TiledHeader from "./TiledHeader";
 import TiledPreview from "./TiledPreview";
 import TiledFooter from "./TiledFooter";
-import TiledBody from "./TiledBody";
+import TiledBodyScrollRight from "./TiledBodyScrollRight";
 import TiledStartupWarning from './TiledStartupWarning';
 import { TiledColumn } from "./TiledColumn";
+import TiledRowList from "./TiledRowList";
+import TiledRowPreview from "./TiledRowPreview";
 import './Tiled.css'
 
 
@@ -27,6 +29,7 @@ type TiledContainerProps = {
     showPlanStartTime?: boolean,
     pageLimit?: number,
     reloadLastItemOnStartup?: boolean,
+    displayMode?: 'columns' | 'rows',
 }
 export default function TiledContainer({
     url,
@@ -41,6 +44,7 @@ export default function TiledContainer({
     showPlanStartTime,
     pageLimit,
     reloadLastItemOnStartup,
+    displayMode = 'columns',
 }: TiledContainerProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -50,13 +54,13 @@ export default function TiledContainer({
         return <div>Error: Unable to load tiled data. Check console for error logs.</div>;
     }
 
-    const { 
-        columns, 
+    const {
+        columns,
         breadcrumbs,
         previewItem,
         previewSize,
         handleColumnItemClick,
-        handleLeftArrowClick, 
+        handleLeftArrowClick,
         handleRightArrowClick,
         resetAllData,
         warning,
@@ -64,21 +68,23 @@ export default function TiledContainer({
         handleSearchId,
         handleSearchMetadata,
         handleSearchSpec,
+        selectedContainerForPreview,
+        handleRowItemClick,
     } = tiledData;
 
     return (
-        warning ? 
+        warning ?
         <>
             <TiledHeader secondaryTitle={url} handleExpandClick={()=>{}} isExpanded={false} showExpandButton={false} showSearchBar={false} />
-            <TiledStartupWarning warningMessage={warning} />    
+            <TiledStartupWarning warningMessage={warning} />
         </>
             :
             <>
-                <TiledHeader 
-                    breadcrumbs={breadcrumbs} 
-                    onLeftArrowClick={handleLeftArrowClick} 
-                    onRightArrowClick={handleRightArrowClick} 
-                    onHomeClick={resetAllData} 
+                <TiledHeader
+                    breadcrumbs={breadcrumbs}
+                    onLeftArrowClick={handleLeftArrowClick}
+                    onRightArrowClick={handleRightArrowClick}
+                    onHomeClick={resetAllData}
                     secondaryTitle={url}
                     handleExpandClick={handleExpandClick}
                     isExpanded={isExpanded}
@@ -87,42 +93,61 @@ export default function TiledContainer({
                     handleSearchSpec={handleSearchSpec}
                     showSearchBar={columns.length > 0}
                 />
-                <TiledBody ref={scrollContainerRef}>
-                    {/* <TiledColumns 
-                        columns={columns} 
-                        breadcrumbs={breadcrumbs} 
-                        onItemClick={handleColumnItemClick} 
-                        handleSelectClick={handleSelectClick}
-                    /> */}
-                    {columns.map((column, index) => 
-                        <TiledColumn 
-                            handleSelectClick={handleSelectClick} 
-                            data={column.data} 
-                            meta={column.meta}
-                            links={column.links}
-                            key={index} 
-                            index={index} 
-                            onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick} 
-                            breadcrumbs={breadcrumbs}
-                            className={singleColumnMode ? "w-full max-w-full" : ""}
-                            showTooltip={singleColumnMode ? false : true}
-                            handleNewPageClick={handleNewPageClick}
-                            showPlanName={showPlanName}
-                            showPlanStartTime={showPlanStartTime}
-                        />
-                    )}
-                    {previewItem && 
-                        <TiledPreview 
-                            previewItem={previewItem} 
-                            previewSize={previewSize} 
-                            handleSelectClick={handleSelectClick} 
-                            url={url}
-                            scrollContainerRef={scrollContainerRef}
-                        />
-                    }
-                </TiledBody>
+                {displayMode === 'rows' ? (
+                    <div className="w-full flex min-h-0 flex-grow border overflow-hidden">
+                        <div className="w-80 flex-shrink-0 border-r border-r-slate-300 overflow-y-auto scrollbar-always-visible">
+                            <TiledRowList
+                                columns={columns}
+                                breadcrumbs={breadcrumbs}
+                                onItemClick={handleRowItemClick}
+                                handleNewPageClick={handleNewPageClick}
+                                showPlanName={showPlanName}
+                                showPlanStartTime={showPlanStartTime}
+                            />
+                        </div>
+                        <div className="flex-grow overflow-y-auto">
+                            <TiledRowPreview
+                                selectedContainerForPreview={selectedContainerForPreview}
+                                previewItem={previewItem}
+                                previewSize={previewSize}
+                                handleSelectClick={handleSelectClick}
+                                url={url}
+                                scrollContainerRef={scrollContainerRef}
+                            />
+                        </div>
+                    </div>
+                ) : (
+                    <TiledBodyScrollRight ref={scrollContainerRef}>
+                        {columns.map((column, index) =>
+                            <TiledColumn
+                                handleSelectClick={handleSelectClick}
+                                data={column.data}
+                                meta={column.meta}
+                                links={column.links}
+                                key={index}
+                                index={index}
+                                onItemClick={singleColumnMode ? handleSelectClick : handleColumnItemClick}
+                                breadcrumbs={breadcrumbs}
+                                className={singleColumnMode ? "w-full max-w-full" : ""}
+                                showTooltip={singleColumnMode ? false : true}
+                                handleNewPageClick={handleNewPageClick}
+                                showPlanName={showPlanName}
+                                showPlanStartTime={showPlanStartTime}
+                            />
+                        )}
+                        {previewItem &&
+                            <TiledPreview
+                                previewItem={previewItem}
+                                previewSize={previewSize}
+                                handleSelectClick={handleSelectClick}
+                                url={url}
+                                scrollContainerRef={scrollContainerRef}
+                            />
+                        }
+                    </TiledBodyScrollRight>
+                )}
                 <TiledFooter breadcrumbs={breadcrumbs}/>
             </>
-        
+
     )
 }
