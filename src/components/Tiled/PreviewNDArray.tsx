@@ -4,7 +4,7 @@ import Button from "../Button";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
 import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
 import { generateFullImagePngPath, getAuthenticatedImage } from "./apiClient";
-import { tailwindIcons } from "@/assets/icons";
+import { ArrowUpRight } from "@phosphor-icons/react";
 
 
 type PreviewNDArrayProps = {
@@ -67,7 +67,7 @@ export default function PreviewNDArray({
                 <p className="text-sky-900 text-center">{arrayItem.id}</p>
                 <div className={`${sliderCount > 2 ? 'flex-wrap' : 'flex-col'} flex items-center justify-center w-full`}>
                     <div className={`relative bg-slate-300 aspect-square m-auto ${isFullWidth ? 'w-7/12' : 'w-72'}`}>
-                        {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500">{tailwindIcons.arrowTopRight}</div>}
+                        {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500"><ArrowUpRight className="w-full h-full" /></div>}
                         {imageUrl && <img src={imageUrl} className="w-full h-full"/>}
                         <p className="text-sm text-center text-slate-500">{`True Dimensions:  [${arrayItem.attributes.structure.shape.join(', ')}]`}</p>
                     </div>

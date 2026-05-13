@@ -449,13 +449,27 @@ export const getTableDataAsSequence = async(searchPath:string, partition:number,
         const baseUrl = url ? url : defaultTiledUrl;
         const apiPath = constructApiPath(searchPath);
         const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));        
-        const parsedData = response.data
-            .trim() // Remove any extra newlines at start or end
-            .split("\n") // Split by line
-            .map((line:string) => JSON.parse(line)); // Parse each line as JSON
-        //parsedData [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
-        cb?.(parsedData);
-        return parsedData;
+        //Single Row Table elements will return a single Object
+        //Multi Row Table elements will return a JSON string
+        if (typeof response.data === 'string') {
+            console.log({response})
+            //Multi Row
+            const parsedData = response.data
+                .trim() // Remove any extra newlines at start or end
+                .split("\n") // Split by line
+                .map((line:string) => JSON.parse(line)); // Parse each line as JSON
+            //parsedData [{ A: 0.5699, B: 1.1398, C: 1.7098 }, ...]
+            cb?.(parsedData);
+            return parsedData;
+        } else if (typeof response.data === 'object') {
+            //Single Row
+            const parsedObjectData = [response.data];
+            cb?.(parsedObjectData)
+            return parsedObjectData;
+        } else {
+            console.error('Could not parse table data: ', response.data)
+            return null;
+        }
     } catch (error) {
         console.error('Error searching table data: ', error);
         return null;

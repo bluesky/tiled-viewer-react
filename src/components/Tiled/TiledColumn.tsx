@@ -1,8 +1,6 @@
 import { TiledSearchItem, TiledStructures, Breadcrumb, TiledSearchResult } from "./types";
-import { Tooltip } from "react-tooltip";
 import { cn } from "@/lib/utils";
-import Button from "../Button";
-import { getTiledStructureIcon } from "./utils";
+import { TiledRowItem } from "./TiledRowItem";
 import dayjs from "dayjs";
 
 type TiledColumnProps = {
@@ -42,48 +40,26 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                 </p>
             ) : null}
             <ul className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
-                {data.map((item:TiledSearchItem<TiledStructures>) => {
+                {data.map((item: TiledSearchItem<TiledStructures>) => {
                     const id = `item-${item.id}${index}`;
                     const blueskyRunPlanName = item?.attributes?.metadata?.start?.plan_name || '';
-                    const blueskyRunPlanStartTime = item?.attributes?.metadata?.start?.time 
+                    const blueskyRunPlanStartTime = item?.attributes?.metadata?.start?.time
                         ? dayjs.unix(item.attributes.metadata.start.time).format('MM/DD HH:mm')
                         : '';
                     const displayText = `${showPlanStartTime ? blueskyRunPlanStartTime : ''} ${showPlanName ? blueskyRunPlanName : ''}  ${item.id}`;
                     return (
-                        <li 
-                            className={`${ (breadcrumbs.length > index) && breadcrumbs[index].label === item.id ? 'bg-sky-200 hover:bg-sky-300' : 'hover:bg-sky-300'} flex space-x-2 px-2 rounded-sm hover:cursor-pointer relative`} 
+                        <TiledRowItem
                             key={id}
-                            onClick={()=>onItemClick(item, index)}
                             id={id}
-                        >
-                            <div className={`w-6 aspect-square flex-shrink-0 ${item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite' ? 'text-sky-700' : ''}`}>{getTiledStructureIcon(item)}</div>
-                            <p className="truncate max-w-full">{displayText}</p>
-                            {(item.attributes.structure_family === 'container' || item.attributes.structure_family === 'composite') ? <p className="absolute right-1 text-slate-500">&gt;</p> : ''}
-                            {(handleSelectClick && showTooltip) &&
-                                <Tooltip 
-                                    children={
-                                        <Button 
-                                            text="Select" 
-                                            size="small" 
-                                            cb={(e?:React.MouseEvent)=> {
-                                                e?.stopPropagation();
-                                                handleSelectClick(item);
-                                            }
-                                        
-                                        }/>
-                                    } 
-                                    anchorSelect={`#${id}`} 
-                                    clickable 
-                                    delayShow={600}
-                                    opacity={1} 
-                                    offset={10} 
-                                    place="top" 
-                                    variant="info" 
-                                    style={{'maxWidth' : "500px", margin:"0", padding:"0.3rem", 'height': 'fit-content', backgroundColor: "#e9e8eb", borderWidth: "1px", borderRadius: "1rem"}}
-                                />
-                            }
-                        </li>
-                    )
+                            item={item}
+                            displayText={displayText}
+                            isSelected={(breadcrumbs.length > index) && breadcrumbs[index].label === item.id}
+                            onClick={() => onItemClick(item, index)}
+                            handleSelectClick={handleSelectClick}
+                            showTooltip={showTooltip}
+                            columnMode
+                        />
+                    );
                 })}
             </ul>
         </div>

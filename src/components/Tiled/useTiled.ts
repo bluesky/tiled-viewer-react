@@ -2,17 +2,17 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
 import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath, getItemMetadata } from "./apiClient";
 import { getAuthFromLocalStorage } from "./utils";
-import { 
-    TiledSearchResult, 
-    TiledSearchItem, 
+import {
+    TiledSearchResult,
+    TiledSearchItem,
     TiledSearchMetadataResult,
-    Breadcrumb, 
+    Breadcrumb,
     ArrayStructure,
-    AwkwardStructure, 
-    ContainerStructure, 
-    TableStructure, 
+    AwkwardStructure,
+    ContainerStructure,
+    TableStructure,
     TiledStructures,
-    PreviewSize, 
+    PreviewSize,
     isArrayStructure,
     isContainerStructure,
     isTableStructure,
@@ -69,6 +69,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     const [ popoutUrl, setPopoutUrl ] = useState<string | undefined>();
     const [ previewSize, setPreviewSize ] = useState<PreviewSize>('hidden');
     const [ previewItem, setPreviewItem ]  = useState<TiledSearchItem<ArrayStructure> | TiledSearchItem<TableStructure> | TiledSearchItem<AwkwardStructure> | TiledSearchItem<SparseStructure> | null >(null);
+    const [ selectedContainerForPreview, setSelectedContainerForPreview ] = useState<TiledSearchItem<ContainerStructure> | null>(null);
     const [ warning, setWarning ] = useState<string | undefined>(undefined);
     const [ remainingHistoryArray, setRemainingHistoryArray ] = useState<string[] | null>(null);
     const ancestorStack = useRef<TiledSearchItem<TiledStructures>[]>([]);
@@ -178,6 +179,51 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const handleRowItemClick = useCallback((item: TiledSearchItem<TiledStructures>, depth: number) => {
+        if (isContainerStructure(item)) {
+            setBreadcrumbs((prevBreadcrumbs) => {
+                // if already expanded at this depth, collapse
+                if (prevBreadcrumbs.length > depth && prevBreadcrumbs[depth].label === item.id) {
+                    setColumns((prevCols) => prevCols.slice(0, depth + 1));
+                    setSelectedContainerForPreview(null);
+                    setPreviewItem(null);
+                    ancestorStack.current = ancestorStack.current.slice(0, depth);
+                    currentAncestorId.current = depth - 1;
+                    return prevBreadcrumbs.slice(0, depth);
+                }
+                // otherwise expand: fire network request
+                const searchPath = generateSearchPath(item);
+                const firstSortKey = item.attributes.sorting ? item.attributes.sorting[0].key : undefined;
+                getSearchResults(
+                    { path: searchPath, baseUrl: url, initialPath: initialSearchPath, options: { sort: firstSortKey, pageLimit: pageLimit } },
+                    (res: TiledSearchResult) => {
+                        updateColumns(item, res);
+                    }
+                );
+                setSelectedContainerForPreview(item);
+                setPreviewItem(null);
+                setPreviewSize('hidden');
+                updateAncestorRefs(item);
+                writeSearchPathToLocalStorage(item);
+
+                const newState = prevBreadcrumbs.slice(0, depth);
+                const newBreadcrumb: Breadcrumb = {
+                    label: item.id,
+                    icon: getTiledStructureIcon(item),
+                    onClick: () => handleRowItemClick(item, depth),
+                };
+                return [...newState, newBreadcrumb];
+            });
+        } else {
+            // non-container: show preview
+            updateAncestorRefs(item);
+            updateCurrentSelectedItem(item);
+            writeSearchPathToLocalStorage(item);
+            setSelectedContainerForPreview(null);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [url, initialSearchPath, pageLimit, updateColumns]);
+
     const updateCurrentSelectedItem = (item:TiledSearchItem<TiledStructures>) => {
         if (isArrayStructure(item)) {
             handleArrayClick(item); 
@@ -246,6 +292,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         ancestorStack.current = [];
         currentAncestorId.current = -1;
         setPreviewItem(null);
+        setSelectedContainerForPreview(null);
         setPreviewSize('hidden');
         setColumns([]); //api call can take some time for larger dbs, so clear out existing columns first
         getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
@@ -416,7 +463,9 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         popoutUrl,
         previewSize,
         previewItem,
+        selectedContainerForPreview,
         handleColumnItemClick,
+        handleRowItemClick,
         handleLeftArrowClick,
         handleRightArrowClick,
         resetAllData,
@@ -426,5 +475,5 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         handleSearchMetadata,
         handleSearchSpec,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, previewItem, handleColumnItemClick, resetAllData, warning, handleNewPageClick])
+    }), [columns, breadcrumbs, imageUrl, popoutUrl, previewSize, previewItem, selectedContainerForPreview, handleColumnItemClick, handleRowItemClick, resetAllData, warning, handleNewPageClick])
 }

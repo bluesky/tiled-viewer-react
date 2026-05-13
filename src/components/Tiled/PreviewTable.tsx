@@ -105,14 +105,16 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
                         <p className="text-center text-sm text-gray-500">Partition: {partition}</p>
                     )}
 
-                    <InputSliderRange
-                        min={0}
-                        max={tableData.length - 1}
-                        value={domain || [0, tableData.length - 1]}
-                        showSideInput={false}
-                        onChange={setDomain}
-                        className="px-12"
-                    />
+                    {tableData.length > 1 &&
+                        <InputSliderRange
+                            min={0}
+                            max={tableData.length - 1}
+                            value={domain || [0, tableData.length - 1]}
+                            showSideInput={false}
+                            onChange={setDomain}
+                            className="px-12"
+                        />
+                    }
 
                     {/* Scatter plot */}
                     <VisxLinePlot

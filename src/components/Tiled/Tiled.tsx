@@ -12,32 +12,60 @@ import { setAuthErrorCallback, setInitialPath } from "./apiClient";
 
 
 export type TiledProps = {
+    /** Callback fired when a user selects an item, receives the item's selection data (links, structure, slice info, etc.). */
     onSelectCallback?: (data: TiledItemSelectionData) => void,
+    /** API key used to authenticate requests to the Tiled server. If omitted, the key is read from local storage. */
     apiKey?: string,
+    /** Bearer token used to authenticate requests to the Tiled server. */
     bearerToken?: string,
+    /** Overall size preset for the viewer UI. Defaults to `'small'`. */
     size?: 'small' | 'medium' | 'large'
+    /** If true, the viewer closes itself after a selection is made. Defaults to `false`. */
     closeOnSelect?: boolean,
+    /** Renders the viewer in popup-style chrome (e.g. with a close affordance). */
     isPopup?: boolean,
+    /** When true, displays a startup screen prompting the user to enter / confirm the Tiled URL before loading. Defaults to `false`. */
     enableStartupScreen?: boolean,
+    /** Base URL of the Tiled server to connect to. Falls back to the default configured URL when omitted. */
     tiledBaseUrl?: string,
+    /** Additional className applied to the outer background wrapper. */
     backgroundClassName?: string,
+    /** When true, container navigation collapses into a single column instead of the Miller-column layout. Defaults to `false`. */
     singleColumnMode?: boolean,
+    /** Additional className applied to the main content wrapper. */
     contentClassName?: string,
+    /** Additional className applied to the content wrapper when the viewer is expanded. */
     expandedContentClassName?: string,
+    /** If true, the viewer renders at full width on mount. Defaults to `false`. */
     isFullWidth?: boolean,
+    /** If true, the component renders as a button that opens the viewer on click. Defaults to `false`. */
     isButtonMode?: boolean,
+    /** In button mode, show the API-key input alongside the trigger button. */
     inButtonModeShowApiKeyInput?: boolean,
+    /** In button mode, show the reverse-sort toggle alongside the trigger button. */
     inButtonModeShowReverseSortInput?: boolean,
+    /** In button mode, render a panel showing the currently selected data. */
     inButtonModeShowSelectedData?: boolean,
+    /** Label text for the trigger button in button mode. Defaults to `"Select Data"`. */
     buttonModeText?: string,
+    /** Sort listings in descending order (newest first). Defaults to `true`. */
     reverseSort?: boolean,
+    /** Path within the Tiled tree to open on mount (e.g. `"my/dataset"`). */
     initialPath?: string,
+    /** When true, show the Bluesky `plan_name` next to each item in the listing if available. */
     showPlanName?: boolean,
+    /** When true, show the Bluesky run start time next to each item in the listing if available. */
     showPlanStartTime?: boolean,
+    /** Number of items to fetch per page when listing a container. */
     pageLimit?: number,
+    /** When true, restore the last visited item from local storage on startup. */
     reloadLastItemOnStartup?: boolean,
+    /** When true, the active access and refresh tokens are included in the `onSelectCallback` payload. Defaults to `false`. */
     includeAuthTokensInSelectCallback?: boolean,
+    /** Redirect URL passed through to the OIDC login flow. */
     oidcRedirectUrl?: string,
+    /** How container contents are laid out: `'columns'` for the Miller-column layout, `'rows'` for a single indented list. Defaults to `'columns'`. */
+    displayMode?: 'columns' | 'rows',
 
 }
 export default function Tiled({
@@ -67,6 +95,7 @@ export default function Tiled({
     reloadLastItemOnStartup,
     includeAuthTokensInSelectCallback=false,
     oidcRedirectUrl,
+    displayMode='columns',
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -218,6 +247,7 @@ export default function Tiled({
                                             showPlanStartTime={showPlanStartTime}
                                             pageLimit={pageLimit}
                                             reloadLastItemOnStartup={reloadLastItemOnStartup}
+                                            displayMode={displayMode}
                                         />
                                     }
                                     {(isPopup || isButtonMode) && (
