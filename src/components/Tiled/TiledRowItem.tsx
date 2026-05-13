@@ -34,7 +34,7 @@ export function TiledRowItem({
     const paddingLeft = `${(depth ?? 0) * 1.25 + 0.5}rem`;
 
     return (
-        <div
+        <li
             id={id}
             className={cn(
                 "flex items-center space-x-2 px-2 rounded-sm hover:cursor-pointer hover:bg-sky-300",
@@ -74,6 +74,6 @@ export function TiledRowItem({
                     style={{ maxWidth: "500px", margin: "0", padding: "0.3rem", height: "fit-content", backgroundColor: "#e9e8eb", borderWidth: "1px", borderRadius: "1rem" }}
                 />
             )}
-        </div>
+        </li>
     );
 }

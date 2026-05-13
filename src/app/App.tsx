@@ -21,6 +21,12 @@ function App() {
       command: 'tiled serve config tiled/tiled_demo.yml'
     },
     Demo3: {
+      name: 'Single Column Mode',
+      element: <Tiled singleColumnMode={true} closeOnSelect={true}/>,
+      info: 'This is an alternative column mode where only a single column is rendered, and clicking items does not show the preview. Click an item to close the viewer.Use only when you want to have a user select a specific piece of data for a callback.  ',
+      command: 'tiled serve config tiled/tiled_demo.yml'
+    },
+    Demo4: {
       name: 'Button Mode',
       element: <Tiled  isButtonMode={true}/>,
       info: 'This renders a button that when clicked should open up the viewer. Clicking outside the viewer should close it.',

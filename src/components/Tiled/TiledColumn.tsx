@@ -39,7 +39,7 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                 <span onClick={nextResultsLink ? () => handleNewPageClick(nextResultsLink, index) : ()=>{}} className={`${nextResultsLink ? 'text-slate-600 hover:text-sky-500 hover:cursor-pointer' : 'text-slate-300'} text-base`}>&gt;</span>
                 </p>
             ) : null}
-            <div className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
+            <ul className="scrollbar-always-visible overflow-y-auto flex-grow peer-hover:text-slate-500 peer-hover:border peer-hover:border-blue-400 rounded-md">
                 {data.map((item: TiledSearchItem<TiledStructures>) => {
                     const id = `item-${item.id}${index}`;
                     const blueskyRunPlanName = item?.attributes?.metadata?.start?.plan_name || '';
@@ -61,7 +61,7 @@ export function TiledColumn ({data, meta, links, index, onItemClick, breadcrumbs
                         />
                     );
                 })}
-            </div>
+            </ul>
         </div>
     )
 }
