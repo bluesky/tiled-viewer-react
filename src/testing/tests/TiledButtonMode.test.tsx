@@ -276,6 +276,27 @@ describe('Tiled Component Button Mode Configuration', () => {
     expect(apiKeyInput).toHaveValue('new-test-api-key');
   });
 
+  it('should apply buttonClassName to the trigger button in button mode', async () => {
+    mockSuccessfulSearch();
+
+    render(
+      <Tiled
+        tiledBaseUrl="https://test-server.example.com/api/v1"
+        isButtonMode={true}
+        enableStartupScreen={false}
+        reverseSort={false}
+        buttonClassName="bg-red-500 custom-trigger"
+      />
+    );
+
+    const triggerButton = screen.getByRole('button', { name: 'Select Data' });
+    // Custom classes should be merged onto the trigger button.
+    expect(triggerButton).toHaveClass('custom-trigger');
+    // tailwind-merge / cn should let a later bg-* class override the default bg-blue-600.
+    expect(triggerButton).toHaveClass('bg-red-500');
+    expect(triggerButton).not.toHaveClass('bg-blue-600');
+  });
+
   it('should update reverse sort when checkbox is changed in button mode', async () => {
     mockSuccessfulSearch();
 
