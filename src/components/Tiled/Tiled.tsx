@@ -66,6 +66,8 @@ export type TiledProps = {
     oidcRedirectUrl?: string,
     /** How container contents are laid out: `'columns'` for the Miller-column layout, `'rows'` for a single indented list. Defaults to `'columns'`. */
     displayMode?: 'columns' | 'rows',
+    /**Applies additoinal CSS classes to the button when in button mode only */
+    buttonClassName?: string
 
 }
 export default function Tiled({
@@ -96,6 +98,7 @@ export default function Tiled({
     includeAuthTokensInSelectCallback=false,
     oidcRedirectUrl,
     displayMode='columns',
+    buttonClassName,
     ...props
 }: TiledProps) {
     const [ isClosed, setIsClosed ] = useState<boolean>(false);
@@ -195,6 +198,7 @@ export default function Tiled({
                         showApiKeyInput={inButtonModeShowApiKeyInput}
                         showReverseSortInput={inButtonModeShowReverseSortInput}
                         showSelectedData={inButtonModeShowSelectedData}
+                        className={buttonClassName}
                     />
                 )}
 
