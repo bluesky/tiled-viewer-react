@@ -160,7 +160,13 @@ axios.interceptors.response.use(
       try {
         const auth = getAuthFromLocalStorage();        
         if (auth) {
-          const refreshResponse = await axios.post(`${getDefaultTiledUrl()}/auth/refresh`, { 
+          // try to reuse the same url from the original request, otherwise use default
+          const requestUrl: string = originalRequest.url ?? '';
+          const apiV1Index = requestUrl.indexOf('/api/v1');
+          const refreshBase = apiV1Index !== -1
+            ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
+            : getDefaultTiledUrl();
+          const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
             refresh_token: auth.refreshToken
           });
           const newAccessToken = refreshResponse.data.access_token;
