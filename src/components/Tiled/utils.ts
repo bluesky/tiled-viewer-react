@@ -350,3 +350,49 @@ export const isItemBlueskyRun = (item:TiledSearchItem<TiledStructures>) => {
     }
     return false;
 }
+
+
+/**
+ * Normalizes and validates a URL
+ * @param url - Raw URL that might be malformed
+ * @param label - Human-readable name for error messages
+ * @returns Cleaned URL or undefined if invalid
+ */
+export function cleanUrl(url: string | undefined, label: string): string | null {
+    if (!url || url.trim() === '') {
+        return null;
+    }
+
+    try {
+        let cleanedUrl = url.trim();
+
+        // Remove trailing slashes
+        cleanedUrl = cleanedUrl.replace(/\/+$/, '');
+
+        // Add protocol if missing (assume http for local development)
+        if (!cleanedUrl.match(/^https?:\/\//)) {
+            // Check if it looks like a local address
+            if (cleanedUrl.match(/^(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)/)) {
+                cleanedUrl = `http://${cleanedUrl}`;
+            } else {
+                cleanedUrl = `https://${cleanedUrl}`;
+            }
+        }
+
+        // Validate by creating URL object
+        const urlObj = new URL(cleanedUrl);
+
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(urlObj.protocol)) {
+            console.warn(
+                `Invalid protocol for ${label}: ${urlObj.protocol}. Only http and https are allowed.`,
+            );
+            return null;
+        }
+
+        return urlObj.toString().replace(/\/$/, ''); // Remove trailing slash again
+    } catch (error) {
+        console.error(`Invalid URL format for ${label}: "${url}"`, error);
+        return null;
+    }
+}
