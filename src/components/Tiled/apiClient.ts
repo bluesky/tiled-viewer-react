@@ -5,7 +5,7 @@ import { sampleTiledSearchData } from "./sampleData";
 import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAuthProvider, TiledTableRow, TiledStructuredArrayData, TiledTableJSONResponse, TiledBlueskyPlanMetadataResponse, TiledSearchMetadataResult } from "./types";
 import { TiledSearchConfig, TiledSearchOptions } from './apiTypes';
 import { addBasicOptions, addSearchFilters } from './apiUtils';
-import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage } from "./utils";
+import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage, cleanUrl } from "./utils";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 let globalApiKey:string | null = null;
@@ -13,6 +13,18 @@ let globalApiKey:string | null = null;
 let globalReverseSort:boolean = false;
 
 let globalInitialPath:string | null = null;
+
+let globalUrl: string | null = null; // set this once if you want to use a specific Tiled server URL for all requests, otherwise it will default to the current origin or VITE_API_TILED_URL environment variable
+
+/**
+ *  Sets the global Tiled server URL that will be used for all subsequent API requests
+ * @param url - The Tiled server URL to set, or null to clear it
+ * @returns The Tiled server URL that was set
+ */
+export const setGlobalUrl = (url: string | null) => {
+    globalUrl = url ? cleanUrl(url, "Tiled Server URL") : null;
+    return globalUrl;
+};
 
 /**
  * Sets the global initial path that will be prepended to all search paths
@@ -148,7 +160,13 @@ axios.interceptors.response.use(
       try {
         const auth = getAuthFromLocalStorage();        
         if (auth) {
-          const refreshResponse = await axios.post(`${defaultTiledUrl}/auth/refresh`, {
+          // try to reuse the same url from the original request, otherwise use default
+          const requestUrl: string = originalRequest.url ?? '';
+          const apiV1Index = requestUrl.indexOf('/api/v1');
+          const refreshBase = apiV1Index !== -1
+            ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
+            : getDefaultTiledUrl();
+          const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
             refresh_token: auth.refreshToken
           });
           const newAccessToken = refreshResponse.data.access_token;
@@ -168,32 +186,17 @@ axios.interceptors.response.use(
 );
 
 /**
- * Determines the default Tiled server URL based on environment variables or current location
- * First checks for VITE_API_TILED_URL environment variable, otherwise constructs URL from current hostname
- * @returns The default Tiled server URL string
- * @example
- * ```typescript
- * const url = getDefaultTiledUrl();
- * // If VITE_API_TILED_URL is set: returns that value
- * // Otherwise: returns "http://localhost:8000/api/v1" (or current hostname)
- * ```
+ * Returns the active Tiled server URL: globalUrl if set, otherwise constructs one from current hostname
+ * @returns The Tiled server URL string
  */
 export const getDefaultTiledUrl = () => {
+    if (globalUrl) {
+        return globalUrl;
+    }
     const address = window.location.hostname;
     const httpProto = window.location.protocol;
-    try{
-        if (import.meta.env.VITE_API_TILED_URL) {
-            console.log('using env variable for tiled url: ', import.meta.env.VITE_API_TILED_URL);
-            return import.meta.env.VITE_API_TILED_URL;
-        } else {
-            return `${httpProto}//${address}:8000/api/v1`;
-        }
-    } catch(e) {
-        console.error('error parsing VITE_API_TILED_URL env: ', e)
-        return `${httpProto}//${address}:8000/api/v1`;
-    }
+    return `${httpProto}//${address}:8000/api/v1`;
 };
-const defaultTiledUrl = getDefaultTiledUrl();
 
 /**
  * Sets the Bearer token for authentication in axios requests
@@ -231,7 +234,7 @@ export const getSearchResultsOld = async (searchPath?:string, url?:string, cb?:(
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const params = new URLSearchParams();
         
         if (globalApiKey) {
@@ -292,9 +295,9 @@ export const getFirstSearchWithApiKey = async (apiKey:string, searchPath?:string
         return sampleTiledSearchData as TiledSearchResult;
     }
     try {
-        // const baseUrl = url ? url : defaultTiledUrl;
+        // const baseUrl = url ? url : getDefaultTiledUrl();
         // const response = await axios.get(baseUrl + '/search/' + (searchPath ? searchPath : '') + (globalReverseSort ? '&sort=-' : '') + '?api_key=' + apiKey);
-         const baseUrl = url ? url : defaultTiledUrl;
+         const baseUrl = url ? url : getDefaultTiledUrl();
         
         // Build URL with URLSearchParams
         const params = new URLSearchParams();
@@ -342,7 +345,7 @@ export const getSearchResultsBySpecs = async (
     cb?: (res: TiledSearchResult) => void
 ): Promise<TiledSearchResult | null> => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const params = new URLSearchParams();
         
         if (globalApiKey) {
@@ -387,7 +390,7 @@ export const getSearchResultsBySpecs = async (
  */
 export const getItemMetadata = async(searchPath: string, url?: string, cb?: (metadata: { [key: string]: unknown }) => void): Promise<TiledSearchMetadataResult | null> => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const apiPath = constructApiPath(searchPath);
         const fullUrl = `${baseUrl}/metadata/${apiPath}${globalApiKey ? '?api_key=' + globalApiKey : ''}`;
         
@@ -417,7 +420,7 @@ export const getItemMetadata = async(searchPath: string, url?: string, cb?: (met
  */
 export const getBlueskyPlanMetadata = async(searchPath: string, url?: string, cb?: (metadata: TiledBlueskyPlanMetadataResponse) => void): Promise<TiledBlueskyPlanMetadataResponse | null> => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const apiPath = constructApiPath(searchPath);
         const fullUrl = `${baseUrl}/metadata/${apiPath}${globalApiKey ? '?api_key=' + globalApiKey : ''}`;
         
@@ -446,7 +449,7 @@ export const getBlueskyPlanMetadata = async(searchPath: string, url?: string, cb
  */
 export const getTableDataAsSequence = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableRow[])=>void) => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const apiPath = constructApiPath(searchPath);
         const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json-seq' + (globalApiKey ? '&api_key=' + globalApiKey : ''));        
         //Single Row Table elements will return a single Object
@@ -491,7 +494,7 @@ export const getTableDataAsSequence = async(searchPath:string, partition:number,
  */
 export const getTableDataAsJson = async(searchPath:string, partition:number, url?:string, cb?:(parsedData:TiledTableJSONResponse)=>void) => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const apiPath = constructApiPath(searchPath);
         const response = await axios.get(baseUrl + '/table/partition/' + apiPath + '?partition=' + partition + '&format=application/json' + (globalApiKey ? '&api_key=' + globalApiKey : ''));
         const jsonData: TiledTableJSONResponse = response.data;
@@ -518,7 +521,7 @@ export const getTableDataAsJson = async(searchPath:string, partition:number, url
  */
 export const getStructuredArrayData = async(searchPath: string, block: number, url?: string, cb?: (parsedData: TiledStructuredArrayData) => void) => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const params = new URLSearchParams();
         params.append('block', block.toString());
         
@@ -565,7 +568,7 @@ export const generateFullImagePngPath = (searchPath?:string, stepY?:number, step
     }
     params.append('format', 'image/png');
     params.append('slice', fullSlice);
-    const baseUrl = url ? url : defaultTiledUrl;
+    const baseUrl = url ? url : getDefaultTiledUrl();
     const queryString = params.toString();
     const apiPath = constructApiPath(searchPath);
     const fullUrl = `${baseUrl}/array/full/${apiPath}?${queryString}`;
@@ -600,7 +603,7 @@ export const resetGlobalState = () => {
  */
 export const getXArrayData = async(searchPath: string, stack:number[], url?: string, cb?: (parsedData: number[][]) => void) => {
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const stackString = (stack && stack?.length > 0) ? (stack.join(',') + ',') : '';
         const params = new URLSearchParams();
         params.append('slice', stackString);
@@ -638,7 +641,7 @@ export const getXArrayData = async(searchPath: string, stack:number[], url?: str
 export const getServerInfo = async(url?:string):Promise<TiledInfoResponse | null> => {
     //this can fail if we have an apikey cookie that is old, if the key is invalid Tiled will reject it and return a 401 even if the base route is public
     try {
-        const baseUrl = url ? url : defaultTiledUrl;
+        const baseUrl = url ? url : getDefaultTiledUrl();
         const response = await axios.get(baseUrl + '/');
         if (isValidTiledInfoResponse(response.data)) {
             return response.data as TiledInfoResponse;
@@ -773,7 +776,7 @@ export const getAuthenticatedImage = async (imagePath: string): Promise<string> 
  * @returns Promise<TiledSearchResult[]>
  */
 export const getSearchResults = async (config: TiledSearchConfig, cb?:(res:TiledSearchResult)=>void): Promise<TiledSearchResult> => {
-    const { baseUrl = defaultTiledUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
+    const { baseUrl = getDefaultTiledUrl(), path = '', initialPath, filters, options = {}, apiKey } = config;
     
     try {
         const apiPath = constructApiPath(path, initialPath);
@@ -1030,7 +1033,7 @@ export const searchByStructureFamily = async (
  * ```
  */
 export const searchById = async (config: TiledSearchConfig, cb?:(res:TiledSearchResult)=>void): Promise<TiledSearchResult | null> => {
-    const { baseUrl = defaultTiledUrl, path = '', initialPath, filters, options = {}, apiKey } = config;
+    const { baseUrl = getDefaultTiledUrl(), path = '', initialPath, filters, options = {}, apiKey } = config;
     
     try {
         const apiPath = constructApiPath(path, initialPath);

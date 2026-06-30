@@ -26,6 +26,8 @@ export {
   getInitialPath,
   
   // Authentication and server configuration
+  setGlobalUrl,
+  setGlobalApiKey,
   setAuthErrorCallback,
   getDefaultTiledUrl,
   setBearerToken,
