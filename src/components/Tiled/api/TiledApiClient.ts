@@ -14,10 +14,11 @@ import type {
 import { buildTiledArraySlice, buildTiledArraySliceAsync } from './TiledArrayApi';
 import type { StructureFetcher } from './TiledArrayApi';
 import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableJSONResponse } from './TiledTableApi';
-import type { TiledSearchApi } from './TiledSearchApi';
+import type { TiledSearchConfig } from './TiledSearchApi';
+import { buildSearchParams } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import { parseJsonSequenceTableResponse } from './TiledTableApi';
-import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure } from '../types';
+import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult } from '../types';
 type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
 type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
 
@@ -309,6 +310,26 @@ async getTableAsJSONSequence(
   ): string {
     const encodedPath = this.resolveEncodedPath(arrayPath, options);
     return `/array/block/${encodedPath}`;
+  }
+
+  async getTiledSearch(
+    searchPath: string,
+    config: TiledSearchConfig = {},
+    requestOptions: TiledRequestOptions = {},
+  ): Promise<TiledSearchResult> {
+    const endpoint = this.resolveSearchEndpoint(searchPath, requestOptions);
+    return this.get<TiledSearchResult>(endpoint, requestOptions, {
+      params: buildSearchParams(config),
+      headers: { Accept: 'application/json' },
+    });
+  }
+
+  private resolveSearchEndpoint(
+    path: string,
+    options: TiledRequestOptions = {},
+  ): string {
+    const encodedPath = this.resolveEncodedPath(path, options);
+    return encodedPath ? `/search/${encodedPath}` : '/search/';
   }
 
   private makeStructureFetcher(options: TiledRequestOptions): StructureFetcher {

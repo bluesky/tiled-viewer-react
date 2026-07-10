@@ -8,10 +8,16 @@ import {
   getTableAs,
   getTableAsJSON,
   getTableAsJSONSequence,
+  getTiledSearch,
+  getTiledSearchBySpecs,
+  getTiledSearchByFullText,
+  getTiledSearchByMetadataEquals,
+  getTiledSearchByStructureFamily,
 } from './defaultTiledApiClient';
 import type { TiledArrayRequestOptions } from './TiledArrayApi';
 import type { TiledTableRequestOptions, TiledTableReturnType } from './TiledTableApi';
 import type { TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
+import type { TiledSearchOptions, TiledSearchConfig } from './TiledSearchApi';
 
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
@@ -153,6 +159,84 @@ function buildTableOptions(opts: TableOpts): TiledTableRequestOptions & { format
   if (opts.partition !== '') out.partition = Number(opts.partition);
   if (opts.format !== '') out.format = opts.format;
   return out;
+}
+
+// ─── Search options state ─────────────────────────────────────────────────────
+
+interface SearchOpts {
+  pageOffset: string;
+  pageLimit: string;
+  sort: string;
+  maxDepth: string;
+}
+
+const defaultSearchOpts = (): SearchOpts => ({
+  pageOffset: '',
+  pageLimit: '',
+  sort: '',
+  maxDepth: '',
+});
+
+function buildSearchOptions(opts: SearchOpts): TiledSearchOptions {
+  const out: TiledSearchOptions = {};
+  if (opts.pageOffset !== '') out.pageOffset = Number(opts.pageOffset);
+  if (opts.pageLimit !== '') out.pageLimit = Number(opts.pageLimit);
+  if (opts.sort !== '') out.sort = opts.sort;
+  if (opts.maxDepth !== '') out.maxDepth = Number(opts.maxDepth);
+  return out;
+}
+
+function SearchOptsInputs({
+  opts,
+  onChange,
+}: {
+  opts: SearchOpts;
+  onChange: (next: SearchOpts) => void;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>pageOffset</label>
+        <input
+          type="number"
+          className={inputCls}
+          placeholder="0"
+          value={opts.pageOffset}
+          onChange={(e) => onChange({ ...opts, pageOffset: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>pageLimit</label>
+        <input
+          type="number"
+          className={inputCls}
+          placeholder="e.g. 100"
+          value={opts.pageLimit}
+          onChange={(e) => onChange({ ...opts, pageLimit: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>sort</label>
+        <input
+          type="text"
+          className={inputCls}
+          placeholder="e.g. id or -id"
+          value={opts.sort}
+          onChange={(e) => onChange({ ...opts, sort: e.target.value })}
+        />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>maxDepth</label>
+        <input
+          type="number"
+          className={inputCls}
+          placeholder="e.g. 1"
+          value={opts.maxDepth}
+          onChange={(e) => onChange({ ...opts, maxDepth: e.target.value })}
+        />
+      </div>
+    </div>
+  );
 }
 
 // ─── Row state ────────────────────────────────────────────────────────────────
@@ -480,6 +564,172 @@ function TableFunctionRow({
   );
 }
 
+// ─── SearchFunctionRow ────────────────────────────────────────────────────────
+
+function SearchFunctionRow({
+  label,
+  children,
+  onExecute,
+}: {
+  label: string;
+  children?: React.ReactNode;
+  onExecute: (path: string, searchOpts: TiledSearchOptions) => Promise<unknown>;
+}) {
+  const [path, setPath] = useState('');
+  const [searchOpts, setSearchOpts] = useState<SearchOpts>(defaultSearchOpts);
+  const [result, setResult] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleExecute() {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const res = await onExecute(path, buildSearchOptions(searchOpts));
+      setResult(res);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="border border-slate-200 rounded-lg p-4 flex flex-col gap-3">
+      <h3 className="font-mono text-sm font-semibold text-slate-800">{label}</h3>
+
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>path</label>
+        <input
+          type="text"
+          className={inputCls}
+          placeholder="search path (empty = root)"
+          value={path}
+          onChange={(e) => setPath(e.target.value)}
+        />
+      </div>
+
+      {children}
+
+      <SearchOptsInputs opts={searchOpts} onChange={setSearchOpts} />
+
+      <div>
+        <Button
+          text={loading ? 'Loading…' : 'Execute'}
+          disabled={loading}
+          cb={() => { void handleExecute(); }}
+          size="small"
+        />
+      </div>
+
+      {error && <p className="text-xs text-red-600 font-mono">{error}</p>}
+      <ResultDisplay result={result} />
+    </div>
+  );
+}
+
+// ─── Specific search rows ─────────────────────────────────────────────────────
+
+function SearchBySpecsRow({
+  onExecute,
+}: {
+  onExecute: (path: string, include: string[], exclude: string[], opts: TiledSearchOptions) => Promise<unknown>;
+}) {
+  const [include, setInclude] = useState('');
+  const [exclude, setExclude] = useState('');
+  const splitCSV = (s: string) => s.split(',').map((v) => v.trim()).filter(Boolean);
+
+  return (
+    <SearchFunctionRow
+      label="getTiledSearchBySpecs"
+      onExecute={(path, opts) => onExecute(path, splitCSV(include), splitCSV(exclude), opts)}
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>include (comma-separated)</label>
+          <input type="text" className={inputCls} placeholder="e.g. BlueskyRun" value={include} onChange={(e) => setInclude(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>exclude (comma-separated)</label>
+          <input type="text" className={inputCls} placeholder="optional" value={exclude} onChange={(e) => setExclude(e.target.value)} />
+        </div>
+      </div>
+    </SearchFunctionRow>
+  );
+}
+
+function SearchByFullTextRow({
+  onExecute,
+}: {
+  onExecute: (path: string, text: string, opts: TiledSearchOptions) => Promise<unknown>;
+}) {
+  const [text, setText] = useState('');
+  return (
+    <SearchFunctionRow
+      label="getTiledSearchByFullText"
+      onExecute={(path, opts) => onExecute(path, text, opts)}
+    >
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>text</label>
+        <input type="text" className={inputCls} placeholder="search text" value={text} onChange={(e) => setText(e.target.value)} />
+      </div>
+    </SearchFunctionRow>
+  );
+}
+
+function SearchByMetadataEqualsRow({
+  onExecute,
+}: {
+  onExecute: (path: string, key: string, value: string, opts: TiledSearchOptions) => Promise<unknown>;
+}) {
+  const [key, setKey] = useState('');
+  const [value, setValue] = useState('');
+  return (
+    <SearchFunctionRow
+      label="getTiledSearchByMetadataEquals"
+      onExecute={(path, opts) => onExecute(path, key, value, opts)}
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>key</label>
+          <input type="text" className={inputCls} placeholder="metadata key" value={key} onChange={(e) => setKey(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>value</label>
+          <input type="text" className={inputCls} placeholder="expected value" value={value} onChange={(e) => setValue(e.target.value)} />
+        </div>
+      </div>
+    </SearchFunctionRow>
+  );
+}
+
+function SearchByStructureFamilyRow({
+  onExecute,
+}: {
+  onExecute: (path: string, family: 'container' | 'array' | 'table' | 'awkward' | 'sparse', opts: TiledSearchOptions) => Promise<unknown>;
+}) {
+  type Family = 'container' | 'array' | 'table' | 'awkward' | 'sparse';
+  const [family, setFamily] = useState<Family>('array');
+  return (
+    <SearchFunctionRow
+      label="getTiledSearchByStructureFamily"
+      onExecute={(path, opts) => onExecute(path, family, opts)}
+    >
+      <div className="flex flex-col gap-1">
+        <label className={labelCls}>structure family</label>
+        <select className={inputCls} value={family} onChange={(e) => setFamily(e.target.value as Family)}>
+          <option value="array">array</option>
+          <option value="table">table</option>
+          <option value="container">container</option>
+          <option value="awkward">awkward</option>
+          <option value="sparse">sparse</option>
+        </select>
+      </div>
+    </SearchFunctionRow>
+  );
+}
+
 // ─── TiledClientTest ──────────────────────────────────────────────────────────
 
 export default function TiledClientTest() {
@@ -546,6 +796,43 @@ export default function TiledClientTest() {
         <TableFunctionRow
           label="getTableAsJSONSequence"
           onExecute={(path, opts) => getTableAsJSONSequence(path, mergeStatic(opts) as never)}
+        />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
+          Search Functions
+        </h3>
+
+        <SearchFunctionRow
+          label="getTiledSearch"
+          onExecute={(path, searchOpts) =>
+            getTiledSearch(path, { searchOptions: searchOpts }, buildStaticOptions(staticOpts))
+          }
+        />
+
+        <SearchBySpecsRow
+          onExecute={(path, include, exclude, searchOpts) =>
+            getTiledSearchBySpecs(path, include, exclude, searchOpts, buildStaticOptions(staticOpts))
+          }
+        />
+
+        <SearchByFullTextRow
+          onExecute={(path, text, searchOpts) =>
+            getTiledSearchByFullText(path, text, searchOpts, buildStaticOptions(staticOpts))
+          }
+        />
+
+        <SearchByMetadataEqualsRow
+          onExecute={(path, key, value, searchOpts) =>
+            getTiledSearchByMetadataEquals(path, key, value, searchOpts, buildStaticOptions(staticOpts))
+          }
+        />
+
+        <SearchByStructureFamilyRow
+          onExecute={(path, family, searchOpts) =>
+            getTiledSearchByStructureFamily(path, family, searchOpts, buildStaticOptions(staticOpts))
+          }
         />
       </section>
     </div>

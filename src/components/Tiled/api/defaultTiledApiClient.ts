@@ -16,7 +16,8 @@ import type {
 } from './TiledTableApi';
 
 import type { TiledRequestOptions } from './TiledConfigApi';
-import type { TiledSearchItem, TiledStructures } from '../types';
+import type { TiledSearchItem, TiledStructures, TiledSearchResult } from '../types';
+import type { TiledSearchConfig, TiledSearchOptions } from './TiledSearchApi';
 
 let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
 
@@ -112,4 +113,68 @@ export function getMetadata<S extends TiledStructures = TiledStructures>(
   options: TiledRequestOptions = {},
 ): Promise<TiledSearchItem<S>> {
   return getDefaultTiledApiClient().getMetadata<S>(path, options);
+}
+
+// ─── Search ───────────────────────────────────────────────────────────────────
+
+export function getTiledSearch(
+  searchPath: string,
+  config: TiledSearchConfig = {},
+  requestOptions: TiledRequestOptions = {},
+): Promise<TiledSearchResult> {
+  return getDefaultTiledApiClient().getTiledSearch(searchPath, config, requestOptions);
+}
+
+export function getTiledSearchBySpecs(
+  searchPath: string,
+  include: string[],
+  exclude: string[] = [],
+  searchOptions: TiledSearchOptions = {},
+  requestOptions: TiledRequestOptions = {},
+): Promise<TiledSearchResult> {
+  return getTiledSearch(
+    searchPath,
+    { searchFilters: { specs: { include, exclude } }, searchOptions },
+    requestOptions,
+  );
+}
+
+export function getTiledSearchByFullText(
+  searchPath: string,
+  text: string,
+  searchOptions: TiledSearchOptions = {},
+  requestOptions: TiledRequestOptions = {},
+): Promise<TiledSearchResult> {
+  return getTiledSearch(
+    searchPath,
+    { searchFilters: { fulltext: { text } }, searchOptions },
+    requestOptions,
+  );
+}
+
+export function getTiledSearchByMetadataEquals(
+  searchPath: string,
+  key: string,
+  value: string,
+  searchOptions: TiledSearchOptions = {},
+  requestOptions: TiledRequestOptions = {},
+): Promise<TiledSearchResult> {
+  return getTiledSearch(
+    searchPath,
+    { searchFilters: { eq: { key, value } }, searchOptions },
+    requestOptions,
+  );
+}
+
+export function getTiledSearchByStructureFamily(
+  searchPath: string,
+  family: 'container' | 'array' | 'table' | 'awkward' | 'sparse',
+  searchOptions: TiledSearchOptions = {},
+  requestOptions: TiledRequestOptions = {},
+): Promise<TiledSearchResult> {
+  return getTiledSearch(
+    searchPath,
+    { searchFilters: { structureFamily: { value: family } }, searchOptions },
+    requestOptions,
+  );
 }
