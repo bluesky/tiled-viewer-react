@@ -1,13 +1,16 @@
 import { useState, useRef } from 'react';
 import Button from '../../Button';
 import {
-  getArrayAsJSON,
-  getArrayAsPng,
-  getArrayAsImagePath,
-  getArrayAsBuffer,
-  getTableAs,
-  getTableAsJSON,
-  getTableAsJSONSequence,
+  getTiledServerInfo,
+  getTiledArrayAsJSON,
+  getTiledArrayAsPng,
+  getTiledArrayAsImagePath,
+  getTiledArrayAsBuffer,
+  getTiledTableAs,
+  getTiledTablePartitionAsJSON,
+  getTiledTablePartitionAsJSONSequence,
+  getTiledTableFullAsJSON,
+  getTiledTableFullAsJSONSequence,
   getTiledSearch,
   getTiledSearchBySpecs,
   getTiledSearchByFullText,
@@ -15,7 +18,7 @@ import {
   getTiledSearchByStructureFamily,
 } from './defaultTiledApiClient';
 import type { TiledArrayRequestOptions } from './TiledArrayApi';
-import type { TiledTableRequestOptions, TiledTableReturnType } from './TiledTableApi';
+import type { TiledTableRequestOptions, TiledTableReturnType, TiledTableEndpoint } from './TiledTableApi';
 import type { TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import type { TiledSearchOptions, TiledSearchConfig } from './TiledSearchApi';
 
@@ -475,14 +478,17 @@ function ArrayFunctionRow({
 function TableFunctionRow({
   label,
   showTypeSelector,
+  showEndpointSelector,
   onExecute,
 }: {
   label: string;
   showTypeSelector?: boolean;
+  showEndpointSelector?: boolean;
   onExecute: (
     path: string,
     opts: TiledTableRequestOptions & { format?: string },
     type?: TiledTableReturnType,
+    endpoint?: TiledTableEndpoint,
   ) => Promise<unknown>;
 }) {
   const [state, setState] = useState<RowState<TableOpts>>({
@@ -493,6 +499,7 @@ function TableFunctionRow({
     loading: false,
   });
   const [tableType, setTableType] = useState<TiledTableReturnType>('JSON');
+  const [endpoint, setEndpoint] = useState<TiledTableEndpoint>('partition');
 
   async function handleExecute() {
     setState((s) => ({ ...s, loading: true, error: null, result: null }));
@@ -501,6 +508,7 @@ function TableFunctionRow({
         state.path,
         buildTableOptions(state.opts),
         showTypeSelector ? tableType : undefined,
+        showEndpointSelector ? endpoint : undefined,
       );
       setState((s) => ({ ...s, loading: false, result }));
     } catch (err) {
@@ -542,6 +550,20 @@ function TableFunctionRow({
           >
             <option value="JSON">JSON</option>
             <option value="JSON_SEQ">JSON_SEQ</option>
+          </select>
+        </div>
+      )}
+
+      {showEndpointSelector && (
+        <div className="flex flex-col gap-1">
+          <label className={labelCls}>endpoint</label>
+          <select
+            className={inputCls}
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value as TiledTableEndpoint)}
+          >
+            <option value="partition">partition</option>
+            <option value="full">full</option>
           </select>
         </div>
       )}
@@ -730,6 +752,43 @@ function SearchByStructureFamilyRow({
   );
 }
 
+// ─── ServerInfoRow ────────────────────────────────────────────────────────────
+
+function ServerInfoRow({ onExecute }: { onExecute: () => Promise<unknown> }) {
+  const [result, setResult] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleExecute() {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      setResult(await onExecute());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="border border-slate-200 rounded-lg p-4 flex flex-col gap-3">
+      <h3 className="font-mono text-sm font-semibold text-slate-800">getTiledServerInfo</h3>
+      <div>
+        <Button
+          text={loading ? 'Loading…' : 'Execute'}
+          disabled={loading}
+          cb={() => { void handleExecute(); }}
+          size="small"
+        />
+      </div>
+      {error && <p className="text-xs text-red-600 font-mono">{error}</p>}
+      <ResultDisplay result={result} />
+    </div>
+  );
+}
+
 // ─── TiledClientTest ──────────────────────────────────────────────────────────
 
 export default function TiledClientTest() {
@@ -745,33 +804,35 @@ export default function TiledClientTest() {
 
       <StaticOptsPanel opts={staticOpts} onChange={setStaticOpts} />
 
+      <ServerInfoRow onExecute={() => getTiledServerInfo(buildStaticOptions(staticOpts))} />
+
       <section className="flex flex-col gap-3">
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
           Array Functions
         </h3>
 
         <ArrayFunctionRow
-          label="getArrayAsJSON"
+          label="getTiledArrayAsJSON"
           formatPlaceholder="application/json"
-          onExecute={(path, opts) => getArrayAsJSON(path, mergeStatic(opts) as never)}
+          onExecute={(path, opts) => getTiledArrayAsJSON(path, mergeStatic(opts) as never)}
         />
 
         <ArrayFunctionRow
-          label="getArrayAsPng"
+          label="getTiledArrayAsPng"
           formatPlaceholder="image/png"
-          onExecute={(path, opts) => getArrayAsPng(path, mergeStatic(opts) as never)}
+          onExecute={(path, opts) => getTiledArrayAsPng(path, mergeStatic(opts) as never)}
         />
 
         <ArrayFunctionRow
-          label="getArrayAsBuffer"
+          label="getTiledArrayAsBuffer"
           formatPlaceholder="application/octet-stream"
-          onExecute={(path, opts) => getArrayAsBuffer(path, mergeStatic(opts) as never)}
+          onExecute={(path, opts) => getTiledArrayAsBuffer(path, mergeStatic(opts) as never)}
         />
 
         <ArrayFunctionRow
-          label="getArrayAsImagePath"
+          label="getTiledArrayAsImagePath"
           formatPlaceholder="image/png or image/tiff"
-          onExecute={(path, opts) => Promise.resolve(getArrayAsImagePath(path, mergeStatic(opts) as never))}
+          onExecute={(path, opts) => Promise.resolve(getTiledArrayAsImagePath(path, mergeStatic(opts) as never))}
         />
       </section>
 
@@ -781,21 +842,32 @@ export default function TiledClientTest() {
         </h3>
 
         <TableFunctionRow
-          label="getTableAs"
+          label="getTiledTableAs"
           showTypeSelector
-          onExecute={(path, opts, type) =>
-            getTableAs(path, (type ?? 'JSON') as TiledTableReturnType, mergeStatic(opts) as never)
+          showEndpointSelector
+          onExecute={(path, opts, type, endpoint) =>
+            getTiledTableAs(path, (type ?? 'JSON') as TiledTableReturnType, endpoint ?? 'partition', mergeStatic(opts) as never)
           }
         />
 
         <TableFunctionRow
-          label="getTableAsJSON"
-          onExecute={(path, opts) => getTableAsJSON(path, mergeStatic(opts) as never)}
+          label="getTiledTablePartitionAsJSON"
+          onExecute={(path, opts) => getTiledTablePartitionAsJSON(path, mergeStatic(opts) as never)}
         />
 
         <TableFunctionRow
-          label="getTableAsJSONSequence"
-          onExecute={(path, opts) => getTableAsJSONSequence(path, mergeStatic(opts) as never)}
+          label="getTiledTablePartitionAsJSONSequence"
+          onExecute={(path, opts) => getTiledTablePartitionAsJSONSequence(path, mergeStatic(opts) as never)}
+        />
+
+        <TableFunctionRow
+          label="getTiledTableFullAsJSON"
+          onExecute={(path, opts) => getTiledTableFullAsJSON(path, mergeStatic(opts) as never)}
+        />
+
+        <TableFunctionRow
+          label="getTiledTableFullAsJSONSequence"
+          onExecute={(path, opts) => getTiledTableFullAsJSONSequence(path, mergeStatic(opts) as never)}
         />
       </section>
 

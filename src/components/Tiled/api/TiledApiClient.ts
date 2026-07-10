@@ -13,12 +13,13 @@ import type {
 } from './TiledArrayApi';
 import { buildTiledArraySlice, buildTiledArraySliceAsync } from './TiledArrayApi';
 import type { StructureFetcher } from './TiledArrayApi';
-import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableJSONResponse } from './TiledTableApi';
+import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableEndpoint, TiledTableJSONResponse } from './TiledTableApi';
 import type { TiledSearchConfig } from './TiledSearchApi';
 import { buildSearchParams } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import { parseJsonSequenceTableResponse } from './TiledTableApi';
-import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult } from '../types';
+import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult, TiledInfoResponse } from '../types';
+import { isValidTiledInfoResponse } from '../types';
 type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
 type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
 
@@ -206,62 +207,78 @@ async getMetadata<S extends TiledStructures = TiledStructures>(
 async getTableAs<T extends TiledTableReturnType>(
   tablePath: string,
   type: T = 'JSON' as T,
+  endpoint: TiledTableEndpoint = 'partition',
   options: GetTableAsOptionsMap[T] = {} as GetTableAsOptionsMap[T],
 ): Promise<TiledTableReturnMap[T]> {
+  if (endpoint === 'full') {
+    switch (type) {
+      case 'JSON':
+        return this.getTableFullAsJSON(tablePath, options as GetTableAsJSONOptions) as Promise<TiledTableReturnMap[T]>;
+      case 'JSON_SEQ':
+        return this.getTableFullAsJSONSequence(tablePath, options as GetTableAsJSONSequenceOptions) as Promise<TiledTableReturnMap[T]>;
+      default:
+        throw new Error(`Unsupported table return type: ${String(type)}`);
+    }
+  }
   switch (type) {
     case 'JSON':
-      return this.getTableAsJSON(
-        tablePath,
-        options as GetTableAsJSONOptions,
-      ) as Promise<TiledTableReturnMap[T]>;
-
+      return this.getTablePartitionAsJSON(tablePath, options as GetTableAsJSONOptions) as Promise<TiledTableReturnMap[T]>;
     case 'JSON_SEQ':
-      return this.getTableAsJSONSequence(
-        tablePath,
-        options as GetTableAsJSONSequenceOptions,
-      ) as Promise<TiledTableReturnMap[T]>;
-
+      return this.getTablePartitionAsJSONSequence(tablePath, options as GetTableAsJSONSequenceOptions) as Promise<TiledTableReturnMap[T]>;
     default:
       throw new Error(`Unsupported table return type: ${String(type)}`);
   }
 }
 
-async getTableAsJSON(
+async getTablePartitionAsJSON(
   tablePath: string,
   options: GetTableAsJSONOptions = {},
 ): Promise<TiledTableJSONResponse> {
   const endpoint = this.resolveTablePartitionEndpoint(tablePath, options);
   const format = options.format ?? 'application/json';
-
   return this.get<TiledTableJSONResponse>(endpoint, options, {
-    params: {
-      partition: options.partition ?? 0,
-      format,
-    },
-    headers: {
-      Accept: format,
-    },
+    params: { partition: options.partition ?? 0, format },
+    headers: { Accept: format },
   });
 }
 
-async getTableAsJSONSequence(
+async getTablePartitionAsJSONSequence(
   tablePath: string,
   options: GetTableAsJSONSequenceOptions = {},
 ): Promise<TiledTableRow[]> {
   const endpoint = this.resolveTablePartitionEndpoint(tablePath, options);
   const format = options.format ?? 'application/json-seq';
-
   const response = await this.get<unknown>(endpoint, options, {
     responseType: 'text',
-    params: {
-      partition: options.partition ?? 0,
-      format,
-    },
-    headers: {
-      Accept: format,
-    },
+    params: { partition: options.partition ?? 0, format },
+    headers: { Accept: format },
   });
+  return parseJsonSequenceTableResponse(response);
+}
 
+async getTableFullAsJSON(
+  tablePath: string,
+  options: GetTableAsJSONOptions = {},
+): Promise<TiledTableJSONResponse> {
+  const endpoint = this.resolveTableFullEndpoint(tablePath, options);
+  const format = options.format ?? 'application/json';
+  return this.get<TiledTableJSONResponse>(endpoint, options, {
+    params: { format },
+    headers: { Accept: format },
+  });
+}
+
+async getTableFullAsJSONSequence(
+  tablePath: string,
+  options: GetTableAsJSONSequenceOptions = {},
+): Promise<TiledTableRow[]> {
+  const endpoint = this.resolveTableFullEndpoint(tablePath, options);
+  const format = options.format ?? 'application/json-seq';
+  const response = await this.get<unknown>(endpoint, options, {
+    responseType: 'text',
+    params: { format },
+    headers: { Accept: format },
+  });
   return parseJsonSequenceTableResponse(response);
 }
 
@@ -312,7 +329,18 @@ async getTableAsJSONSequence(
     return `/array/block/${encodedPath}`;
   }
 
-  async getTiledSearch(
+  async getServerInfo(options: TiledRequestOptions = {}): Promise<TiledInfoResponse | null> {
+    try {
+      const result = await this.get<TiledInfoResponse>('/', options, {
+        headers: { Accept: 'application/json' },
+      });
+      return isValidTiledInfoResponse(result) ? result : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async getSearch(
     searchPath: string,
     config: TiledSearchConfig = {},
     requestOptions: TiledRequestOptions = {},
@@ -345,6 +373,14 @@ async getTableAsJSONSequence(
   ): string {
     const encodedPath = this.resolveEncodedPath(path, options);
     return `/metadata/${encodedPath}`;
+  }
+
+  private resolveTableFullEndpoint(
+    tablePath: string,
+    options: TiledRequestOptions = {},
+  ): string {
+    const encodedPath = this.resolveEncodedPath(tablePath, options);
+    return `/table/full/${encodedPath}`;
   }
 
   private resolveTablePartitionEndpoint(

@@ -2,7 +2,7 @@ import type { TiledRequestOptions } from './TiledConfigApi';
 import type { TiledSearchResult } from '../types';
 
 export interface TiledSearchApi {
-  getTiledSearch(
+  getSearch(
     searchPath: string,
     config?: TiledSearchConfig,
     requestOptions?: TiledRequestOptions,

@@ -13,10 +13,11 @@ import type {
   TiledTableJSONResponse,
   TiledTableReturnMap,
   TiledTableReturnType,
+  TiledTableEndpoint,
 } from './TiledTableApi';
 
 import type { TiledRequestOptions } from './TiledConfigApi';
-import type { TiledSearchItem, TiledStructures, TiledSearchResult } from '../types';
+import type { TiledSearchItem, TiledStructures, TiledSearchResult, TiledInfoResponse } from '../types';
 import type { TiledSearchConfig, TiledSearchOptions } from './TiledSearchApi';
 
 let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
@@ -45,70 +46,78 @@ export function setGlobalApiKey(apiKey: string | null): void {
   activeTiledApiClient.setApiKey(apiKey);
 }
 
-export function getArrayAsJSON<T = number[][]>(
+export function getTiledArrayAsJSON<T = number[][]>(
   arrayPath: string,
   options: GetArrayAsOptionsMap['JSON'] = {},
 ): Promise<T> {
   return activeTiledApiClient.getArrayAsJSON<T>(arrayPath, options);
 }
 
-export function getArrayAsPng(
+export function getTiledArrayAsPng(
   arrayPath: string,
   options: GetArrayAsOptionsMap['PNG'] = {},
 ): Promise<Blob> {
   return activeTiledApiClient.getArrayAsPng(arrayPath, options);
 }
 
-export function getArrayAsImagePath(
+export function getTiledArrayAsImagePath(
   arrayPath: string,
   options: GetArrayAsOptionsMap['IMAGE_PATH'] = {},
 ): string {
   return activeTiledApiClient.getArrayAsImagePath(arrayPath, options);
 }
 
-export function getArrayAsBuffer(
+export function getTiledArrayAsBuffer(
   arrayPath: string,
   options: GetArrayAsOptionsMap['BUFFER'] = {},
 ): Promise<ArrayBuffer> {
-  return activeTiledApiClient.getArrayAsBuffer(
-    arrayPath,
-    options,
-  );
+  return activeTiledApiClient.getArrayAsBuffer(arrayPath, options);
 }
 
-export function getTableAs<T extends TiledTableReturnType>(
+export function getTiledTableAs<T extends TiledTableReturnType>(
   tablePath: string,
   type: T = 'JSON' as T,
+  endpoint: TiledTableEndpoint = 'partition',
   options: GetTableAsOptionsMap[T] = {} as GetTableAsOptionsMap[T],
 ): Promise<TiledTableReturnMap[T]> {
-  return getDefaultTiledApiClient().getTableAs(
-    tablePath,
-    type,
-    options,
-  );
+  return getDefaultTiledApiClient().getTableAs(tablePath, type, endpoint, options);
 }
 
-export function getTableAsJSON(
+export function getTiledTablePartitionAsJSON(
   tablePath: string,
   options: GetTableAsOptionsMap['JSON'] = {},
 ): Promise<TiledTableJSONResponse> {
-  return getDefaultTiledApiClient().getTableAsJSON(
-    tablePath,
-    options,
-  );
+  return getDefaultTiledApiClient().getTablePartitionAsJSON(tablePath, options);
 }
 
-export function getTableAsJSONSequence(
+export function getTiledTablePartitionAsJSONSequence(
   tablePath: string,
   options: GetTableAsOptionsMap['JSON_SEQ'] = {},
 ): Promise<TiledTableRow[]> {
-  return getDefaultTiledApiClient().getTableAsJSONSequence(
-    tablePath,
-    options,
-  );
+  return getDefaultTiledApiClient().getTablePartitionAsJSONSequence(tablePath, options);
 }
 
-export function getMetadata<S extends TiledStructures = TiledStructures>(
+export function getTiledTableFullAsJSON(
+  tablePath: string,
+  options: GetTableAsOptionsMap['JSON'] = {},
+): Promise<TiledTableJSONResponse> {
+  return getDefaultTiledApiClient().getTableFullAsJSON(tablePath, options);
+}
+
+export function getTiledTableFullAsJSONSequence(
+  tablePath: string,
+  options: GetTableAsOptionsMap['JSON_SEQ'] = {},
+): Promise<TiledTableRow[]> {
+  return getDefaultTiledApiClient().getTableFullAsJSONSequence(tablePath, options);
+}
+
+export function getTiledServerInfo(
+  options: TiledRequestOptions = {},
+): Promise<TiledInfoResponse | null> {
+  return getDefaultTiledApiClient().getServerInfo(options);
+}
+
+export function getTiledMetadata<S extends TiledStructures = TiledStructures>(
   path: string,
   options: TiledRequestOptions = {},
 ): Promise<TiledSearchItem<S>> {
@@ -122,7 +131,7 @@ export function getTiledSearch(
   config: TiledSearchConfig = {},
   requestOptions: TiledRequestOptions = {},
 ): Promise<TiledSearchResult> {
-  return getDefaultTiledApiClient().getTiledSearch(searchPath, config, requestOptions);
+  return getDefaultTiledApiClient().getSearch(searchPath, config, requestOptions);
 }
 
 export function getTiledSearchBySpecs(

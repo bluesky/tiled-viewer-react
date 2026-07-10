@@ -24,6 +24,8 @@ export type TiledTableItem = TiledSearchItem<TableStructure>;
 
 export type TiledTableReturnType = 'JSON' | 'JSON_SEQ';
 
+export type TiledTableEndpoint = 'partition' | 'full';
+
 export type TiledTableReturnMap = {
   /**
    * Column-oriented JSON response.
@@ -71,15 +73,26 @@ export interface TiledTableApi {
   getTableAs<T extends TiledTableReturnType>(
     tablePath: string,
     type: T,
+    endpoint: TiledTableEndpoint,
     options?: GetTableAsOptionsMap[T],
   ): Promise<TiledTableReturnMap[T]>;
 
-  getTableAsJSON(
+  getTablePartitionAsJSON(
     tablePath: string,
     options?: GetTableAsOptionsMap['JSON'],
   ): Promise<TiledTableJSONResponse>;
 
-  getTableAsJSONSequence(
+  getTablePartitionAsJSONSequence(
+    tablePath: string,
+    options?: GetTableAsOptionsMap['JSON_SEQ'],
+  ): Promise<TiledTableRow[]>;
+
+  getTableFullAsJSON(
+    tablePath: string,
+    options?: GetTableAsOptionsMap['JSON'],
+  ): Promise<TiledTableJSONResponse>;
+
+  getTableFullAsJSONSequence(
     tablePath: string,
     options?: GetTableAsOptionsMap['JSON_SEQ'],
   ): Promise<TiledTableRow[]>;
