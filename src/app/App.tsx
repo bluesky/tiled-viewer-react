@@ -3,6 +3,7 @@ import Tiled from '../components/Tiled/Tiled';
 import bluesky_logo from '../assets/bluesky_tiled_logo_WithBskyLogo.svg';
 import ManualTest from '@/components/ManualTest/ManualTest';
 import { TestItemCollection } from '@/components/ManualTest/types';
+import TiledClientTest from '@/components/Tiled/api/TiledClientTest';
 
 
 function App() {
@@ -61,7 +62,7 @@ function App() {
 
   return (
     <>
-      <section className="flex flex-col items-center justify-start h-screen w-screen relative">
+      <section className="flex flex-col items-center justify-start min-h-screen w-screen relative h-fit">
         <div className="absolute top-0 left-0 w-fit">
           <img 
             src={bluesky_logo} 
@@ -71,6 +72,7 @@ function App() {
         </div>
         <ManualTest testItems={testItems} />
       </section>
+      <TiledClientTest />
     </>
   )
 

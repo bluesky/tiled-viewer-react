@@ -1,11 +1,19 @@
 // defaultTiledApiClient.ts
 import { TiledApiClient } from './TiledApiClient';
+import type { TiledTableRow } from '../types';
 
 import type {
   TiledArrayReturnType,
   TiledArrayReturnMap,
   GetArrayAsOptionsMap,
 } from './TiledArrayApi';
+
+import type {
+  GetTableAsOptionsMap,
+  TiledTableJSONResponse,
+  TiledTableReturnMap,
+  TiledTableReturnType,
+} from './TiledTableApi';
 
 let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
 
@@ -60,6 +68,38 @@ export function getArrayAsBuffer(
 ): Promise<ArrayBuffer> {
   return activeTiledApiClient.getArrayAsBuffer(
     arrayPath,
+    options,
+  );
+}
+
+export function getTableAs<T extends TiledTableReturnType>(
+  tablePath: string,
+  type: T = 'JSON' as T,
+  options: GetTableAsOptionsMap[T] = {} as GetTableAsOptionsMap[T],
+): Promise<TiledTableReturnMap[T]> {
+  return getDefaultTiledApiClient().getTableAs(
+    tablePath,
+    type,
+    options,
+  );
+}
+
+export function getTableAsJSON(
+  tablePath: string,
+  options: GetTableAsOptionsMap['JSON'] = {},
+): Promise<TiledTableJSONResponse> {
+  return getDefaultTiledApiClient().getTableAsJSON(
+    tablePath,
+    options,
+  );
+}
+
+export function getTableAsJSONSequence(
+  tablePath: string,
+  options: GetTableAsOptionsMap['JSON_SEQ'] = {},
+): Promise<TiledTableRow[]> {
+  return getDefaultTiledApiClient().getTableAsJSONSequence(
+    tablePath,
     options,
   );
 }
