@@ -12,10 +12,13 @@ import type {
   GetArrayAsOptionsMap,
 } from './TiledArrayApi';
 import { buildTiledArraySlice } from './TiledArrayApi';
-import type { TiledTableApi } from './TiledTableApi';
+import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableJSONResponse } from './TiledTableApi';
 import type { TiledSearchApi } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
-
+import { parseJsonSequenceTableResponse } from './TiledTableApi';
+import { TiledTableRow } from '../types';
+type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
+type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
 
 
 export type TiledApiClientConfig = {
@@ -194,6 +197,68 @@ getArrayAsImagePath(
   return url.toString();
 }
 
+async getTableAs<T extends TiledTableReturnType>(
+  tablePath: string,
+  type: T = 'JSON' as T,
+  options: GetTableAsOptionsMap[T] = {} as GetTableAsOptionsMap[T],
+): Promise<TiledTableReturnMap[T]> {
+  switch (type) {
+    case 'JSON':
+      return this.getTableAsJSON(
+        tablePath,
+        options as GetTableAsJSONOptions,
+      ) as Promise<TiledTableReturnMap[T]>;
+
+    case 'JSON_SEQ':
+      return this.getTableAsJSONSequence(
+        tablePath,
+        options as GetTableAsJSONSequenceOptions,
+      ) as Promise<TiledTableReturnMap[T]>;
+
+    default:
+      throw new Error(`Unsupported table return type: ${String(type)}`);
+  }
+}
+
+async getTableAsJSON(
+  tablePath: string,
+  options: GetTableAsJSONOptions = {},
+): Promise<TiledTableJSONResponse> {
+  const endpoint = this.resolveTablePartitionEndpoint(tablePath, options);
+  const format = options.format ?? 'application/json';
+
+  return this.get<TiledTableJSONResponse>(endpoint, options, {
+    params: {
+      partition: options.partition ?? 0,
+      format,
+    },
+    headers: {
+      Accept: format,
+    },
+  });
+}
+
+async getTableAsJSONSequence(
+  tablePath: string,
+  options: GetTableAsJSONSequenceOptions = {},
+): Promise<TiledTableRow[]> {
+  const endpoint = this.resolveTablePartitionEndpoint(tablePath, options);
+  const format = options.format ?? 'application/json-seq';
+
+  const response = await this.get<unknown>(endpoint, options, {
+    responseType: 'text',
+    params: {
+      partition: options.partition ?? 0,
+      format,
+    },
+    headers: {
+      Accept: format,
+    },
+  });
+
+  return parseJsonSequenceTableResponse(response);
+}
+
   private async get<T>(
     endpoint: string,
     options: TiledRequestOptions = {},
@@ -239,6 +304,15 @@ getArrayAsImagePath(
   ): string {
     const encodedPath = this.resolveEncodedPath(arrayPath, options);
     return `/array/block/${encodedPath}`;
+  }
+
+  private resolveTablePartitionEndpoint(
+    tablePath: string,
+    options: TiledRequestOptions = {},
+  ): string {
+    const encodedPath = this.resolveEncodedPath(tablePath, options);
+
+    return `/table/partition/${encodedPath}`;
   }
 
   private resolveEncodedPath(

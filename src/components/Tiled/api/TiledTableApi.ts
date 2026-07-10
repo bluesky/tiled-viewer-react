@@ -2,14 +2,8 @@
 
 import type { TiledRequestOptions } from './TiledConfigApi';
 import type { TiledSearchItem } from '../types';
+import type { TiledTableRow, TableStructure } from '../types';
 
-/**
- * A single row returned from a Tiled table.
- *
- * Example:
- * { A: 0.5699, B: 1.1398, C: 1.7098 }
- */
-export type TiledTableRow = Record<string, unknown>;
 
 /**
  * Tiled's application/json table format is usually column-oriented.
@@ -22,17 +16,6 @@ export type TiledTableRow = Record<string, unknown>;
  * }
  */
 export type TiledTableJSONResponse = Record<string, unknown[]>;
-
-/**
- * If you already have a TableStructure type elsewhere, import it and replace
- * this interface with that imported type.
- */
-export interface TableStructure {
-  npartitions?: number;
-  columns?: string[];
-  resizable?: boolean;
-  [key: string]: unknown;
-}
 
 /**
  * A Tiled search item whose structure is specifically a TableStructure.
