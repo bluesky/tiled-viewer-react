@@ -1,11 +1,11 @@
 // defaultTiledApiClient.ts
 import { TiledApiClient } from './TiledApiClient';
+
 import type {
-  GetArrayAsBlockOptions,
-  GetArrayAsImagePathOptions,
-  GetArrayAsJSONOptions,
-  GetArrayAsPngOptions,
-} from './TiledApiClient';
+  TiledArrayReturnType,
+  TiledArrayReturnMap,
+  GetArrayAsOptionsMap,
+} from './TiledArrayApi';
 
 let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
 
@@ -35,33 +35,31 @@ export function setGlobalApiKey(apiKey: string | null): void {
 
 export function getArrayAsJSON<T = number[][]>(
   arrayPath: string,
-  options: GetArrayAsJSONOptions = {},
+  options: GetArrayAsOptionsMap['JSON'] = {},
 ): Promise<T> {
   return activeTiledApiClient.getArrayAsJSON<T>(arrayPath, options);
 }
 
 export function getArrayAsPng(
   arrayPath: string,
-  options: GetArrayAsPngOptions = {},
+  options: GetArrayAsOptionsMap['PNG'] = {},
 ): Promise<Blob> {
   return activeTiledApiClient.getArrayAsPng(arrayPath, options);
 }
 
 export function getArrayAsImagePath(
   arrayPath: string,
-  options: GetArrayAsImagePathOptions = {},
+  options: GetArrayAsOptionsMap['IMAGE_PATH'] = {},
 ): string {
   return activeTiledApiClient.getArrayAsImagePath(arrayPath, options);
 }
 
-export function getArrayAsBlock<T = ArrayBuffer>(
+export function getArrayAsBuffer(
   arrayPath: string,
-  block: number[],
-  options: GetArrayAsBlockOptions = {},
-): Promise<T> {
-  return activeTiledApiClient.getArrayAsBlock<T>(
+  options: GetArrayAsOptionsMap['BUFFER'] = {},
+): Promise<ArrayBuffer> {
+  return activeTiledApiClient.getArrayAsBuffer(
     arrayPath,
-    block,
     options,
   );
 }

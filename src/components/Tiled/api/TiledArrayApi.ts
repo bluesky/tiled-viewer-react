@@ -162,3 +162,141 @@ export function hasArrayStructure(
 ): boolean {
   return Boolean(resolveArrayStructure(options));
 }
+
+export function getDisplayShape(
+  structure: ArrayStructure,
+  options: TiledArrayRequestOptions = {},
+): {
+  height: number;
+  width: number;
+  channels: number;
+} {
+  const shape = structure.shape;
+
+  if (shape.length < 2) {
+    return {
+      height: 1,
+      width: shape[0] ?? 1,
+      channels: 1,
+    };
+  }
+
+  if (options.isRGB && shape.length >= 3 && shape[shape.length - 1] === 3) {
+    return {
+      height: shape[shape.length - 3],
+      width: shape[shape.length - 2],
+      channels: 3,
+    };
+  }
+
+  return {
+    height: shape[shape.length - 2],
+    width: shape[shape.length - 1],
+    channels: 1,
+  };
+}
+
+export function generateStepsForArray(
+  options: TiledArrayRequestOptions = {},
+): { stepX: number; stepY: number } {
+  if (options.downSampleRatio && options.downSampleRatio > 1) {
+    const step = Math.ceil(options.downSampleRatio);
+
+    return {
+      stepX: step,
+      stepY: step,
+    };
+  }
+
+  const structure = resolveArrayStructure(options);
+
+  if (!structure) {
+    return {
+      stepX: 1,
+      stepY: 1,
+    };
+  }
+
+  const { width, height, channels } = getDisplayShape(structure, options);
+  const DEFAULT_MAX_BYTES_ALLOWED = 1_000_000;
+
+  const numpyKindSizeBytes: Record<string, number> = {
+  b: 1, // boolean
+  i: 4, // signed integer fallback
+  u: 4, // unsigned integer fallback
+  f: 8, // float fallback
+  c: 16, // complex fallback
+  m: 8, // timedelta
+  M: 8, // datetime
+};
+
+function getBytesPerElement(structure: ArrayStructure): number {
+  const itemsize = structure.data_type?.itemsize;
+
+  if (typeof itemsize === 'number' && itemsize > 0) {
+    return itemsize;
+  }
+
+  const kind = structure.data_type?.kind?.[0];
+
+  if (kind && numpyKindSizeBytes[kind]) {
+    return numpyKindSizeBytes[kind];
+  }
+
+  return 1;
+}
+
+  const bytesPerElement = getBytesPerElement(structure);
+  const maxBytes = options.maxBytesAllowed ?? DEFAULT_MAX_BYTES_ALLOWED;
+
+  const totalImageSizeBytes = width * height * channels * bytesPerElement;
+
+  if (totalImageSizeBytes <= maxBytes) {
+    return {
+      stepX: 1,
+      stepY: 1,
+    };
+  }
+
+  const ratio = totalImageSizeBytes / maxBytes;
+  const squareStep = Math.ceil(Math.sqrt(ratio));
+
+  return {
+    stepX: squareStep,
+    stepY: squareStep,
+  };
+}
+
+export function buildTiledArraySlice(
+  options: TiledArrayRequestOptions = {},
+): string | undefined {
+  const stack = options.stack ?? [];
+  const { stepX, stepY } = generateStepsForArray(options);
+
+  const stackPrefix = stack.length > 0 ? `${stack.join(',')},` : '';
+
+  /**
+   * Normal 2D image / frame:
+   *
+   * [height, width]
+   * [frame, height, width]
+   *
+   * slice:
+   * ::stepY,::stepX
+   * frame,::stepY,::stepX
+   */
+  if (!options.isRGB) {
+    return `${stackPrefix}::${stepY},::${stepX}`;
+  }
+
+  /**
+   * RGB stored as [height, width, 3] or [frame, height, width, 3].
+   *
+   * We downsample Y and X, but keep all channels.
+   *
+   * slice:
+   * ::stepY,::stepX,:
+   * frame,::stepY,::stepX,:
+   */
+  return `${stackPrefix}::${stepY},::${stepX},:`;
+}

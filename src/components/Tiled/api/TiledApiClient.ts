@@ -10,11 +10,8 @@ import type {
   TiledArrayReturnType,
   TiledArrayReturnMap,
   GetArrayAsOptionsMap,
-  GetArrayAsJSONOptions,
-  GetArrayAsPngOptions,
-  GetArrayAsBufferOptions,
-  GetArrayAsImagePathOptions,
 } from './TiledArrayApi';
+import { buildTiledArraySlice } from './TiledArrayApi';
 import type { TiledTableApi } from './TiledTableApi';
 import type { TiledSearchApi } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
@@ -95,26 +92,26 @@ async getArrayAs<T extends TiledArrayReturnType>(
     case 'JSON':
       return this.getArrayAsJSON(
         arrayPath,
-        options as GetArrayAsJSONOptions,
+        options as GetArrayAsOptionsMap['JSON'],
       ) as Promise<TiledArrayReturnMap[T]>;
 
     case 'PNG':
       return this.getArrayAsPng(
         arrayPath,
-        options as GetArrayAsPngOptions,
+        options as GetArrayAsOptionsMap['PNG'],
       ) as Promise<TiledArrayReturnMap[T]>;
 
     case 'BUFFER':
       return this.getArrayAsBuffer(
         arrayPath,
-        options as GetArrayAsBufferOptions,
+        options as GetArrayAsOptionsMap['BUFFER'],
       ) as Promise<TiledArrayReturnMap[T]>;
 
     case 'IMAGE_PATH':
       return Promise.resolve(
         this.getArrayAsImagePath(
           arrayPath,
-          options as GetArrayAsImagePathOptions,
+          options as GetArrayAsOptionsMap['IMAGE_PATH'],
         ),
       ) as Promise<TiledArrayReturnMap[T]>;
 
@@ -125,14 +122,14 @@ async getArrayAs<T extends TiledArrayReturnType>(
 
 async getArrayAsJSON<T = number[][]>(
   arrayPath: string,
-  options: GetArrayAsJSONOptions = {},
+  options: GetArrayAsOptionsMap['JSON'] = {},
 ): Promise<T> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
 
   return this.get<T>(endpoint, options, {
     params: {
       format: options.format ?? 'application/json',
-      slice: formatTiledSlice(options.stack),
+      slice: buildTiledArraySlice(options),
     },
     headers: {
       Accept: options.format ?? 'application/json',
@@ -142,7 +139,7 @@ async getArrayAsJSON<T = number[][]>(
 
 async getArrayAsPng(
   arrayPath: string,
-  options: GetArrayAsPngOptions = {},
+  options: GetArrayAsOptionsMap['PNG'] = {},
 ): Promise<Blob> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'image/png';
@@ -151,7 +148,7 @@ async getArrayAsPng(
     responseType: 'blob',
     params: {
       format,
-      slice: formatTiledSlice(options.stack),
+      slice: buildTiledArraySlice(options),
     },
     headers: {
       Accept: format,
@@ -161,7 +158,7 @@ async getArrayAsPng(
 
 async getArrayAsBuffer(
   arrayPath: string,
-  options: GetArrayAsBufferOptions = {},
+  options: GetArrayAsOptionsMap['BUFFER'] = {},
 ): Promise<ArrayBuffer> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'application/octet-stream';
@@ -170,7 +167,7 @@ async getArrayAsBuffer(
     responseType: 'arraybuffer',
     params: {
       format,
-      slice: formatTiledSlice(options.stack),
+      slice: buildTiledArraySlice(options),
     },
     headers: {
       Accept: format,
@@ -180,7 +177,7 @@ async getArrayAsBuffer(
 
 getArrayAsImagePath(
   arrayPath: string,
-  options: GetArrayAsImagePathOptions = {},
+  options: GetArrayAsOptionsMap['IMAGE_PATH'] = {},
 ): string {
   const baseUrl = this.resolveBaseUrl(options);
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
@@ -189,7 +186,7 @@ getArrayAsImagePath(
   const format = options.format ?? 'image/png';
   url.searchParams.set('format', format);
 
-  const slice = formatTiledSlice(options.stack);
+  const slice = buildTiledArraySlice(options);
   if (slice) {
     url.searchParams.set('slice', slice);
   }
@@ -278,7 +275,7 @@ getArrayAsImagePath(
     return `${initialPath}/${normalizedPath}`;
   }
 }
-//move these out into some utility file
+
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '');
 }

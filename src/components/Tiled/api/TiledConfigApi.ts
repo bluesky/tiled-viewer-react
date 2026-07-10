@@ -16,7 +16,7 @@ export interface TiledClientConfigApi {
   getAxiosClient(): AxiosInstance;
 }
 
-export interface TiledClientLike extends TiledClientConfigApi {}
+export interface TiledClientLike extends TiledClientConfigApi, AxiosInstance {}
 
 export interface TiledRequestOptions {
   /**
