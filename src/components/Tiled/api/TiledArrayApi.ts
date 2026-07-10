@@ -196,107 +196,110 @@ export function getDisplayShape(
   };
 }
 
-export function generateStepsForArray(
-  options: TiledArrayRequestOptions = {},
-): { stepX: number; stepY: number } {
-  if (options.downSampleRatio && options.downSampleRatio > 1) {
-    const step = Math.ceil(options.downSampleRatio);
+/**
+ * Callback used to fetch an ArrayStructure for a given path when none is
+ * available in options. Passed by TiledApiClient so TiledArrayApi stays
+ * free of import cycles.
+ */
+export type StructureFetcher = (path: string) => Promise<ArrayStructure | undefined>;
 
-    return {
-      stepX: step,
-      stepY: step,
-    };
-  }
-
-  const structure = resolveArrayStructure(options);
-
-  if (!structure) {
-    return {
-      stepX: 1,
-      stepY: 1,
-    };
-  }
-
-  const { width, height, channels } = getDisplayShape(structure, options);
-  const DEFAULT_MAX_BYTES_ALLOWED = 1_000_000;
-
-  const numpyKindSizeBytes: Record<string, number> = {
-  b: 1, // boolean
-  i: 4, // signed integer fallback
-  u: 4, // unsigned integer fallback
-  f: 8, // float fallback
-  c: 16, // complex fallback
-  m: 8, // timedelta
-  M: 8, // datetime
+const numpyKindSizeBytes: Record<string, number> = {
+  b: 1,
+  i: 4,
+  u: 4,
+  f: 8,
+  c: 16,
+  m: 8,
+  M: 8,
 };
 
 function getBytesPerElement(structure: ArrayStructure): number {
   const itemsize = structure.data_type?.itemsize;
-
-  if (typeof itemsize === 'number' && itemsize > 0) {
-    return itemsize;
-  }
-
+  if (typeof itemsize === 'number' && itemsize > 0) return itemsize;
   const kind = structure.data_type?.kind?.[0];
-
-  if (kind && numpyKindSizeBytes[kind]) {
-    return numpyKindSizeBytes[kind];
-  }
-
+  if (kind && numpyKindSizeBytes[kind]) return numpyKindSizeBytes[kind];
   return 1;
 }
 
+function computeSteps(
+  structure: ArrayStructure | undefined,
+  options: TiledArrayRequestOptions,
+): { stepX: number; stepY: number } {
+  if (options.downSampleRatio && options.downSampleRatio > 1) {
+    const step = Math.ceil(options.downSampleRatio);
+    return { stepX: step, stepY: step };
+  }
+
+  if (!structure) {
+    return { stepX: 1, stepY: 1 };
+  }
+
+  const { width, height, channels } = getDisplayShape(structure, options);
+  const DEFAULT_MAX_BYTES_ALLOWED = 1_000_000;
   const bytesPerElement = getBytesPerElement(structure);
   const maxBytes = options.maxBytesAllowed ?? DEFAULT_MAX_BYTES_ALLOWED;
-
   const totalImageSizeBytes = width * height * channels * bytesPerElement;
 
   if (totalImageSizeBytes <= maxBytes) {
-    return {
-      stepX: 1,
-      stepY: 1,
-    };
+    return { stepX: 1, stepY: 1 };
   }
 
   const ratio = totalImageSizeBytes / maxBytes;
   const squareStep = Math.ceil(Math.sqrt(ratio));
-
-  return {
-    stepX: squareStep,
-    stepY: squareStep,
-  };
+  return { stepX: squareStep, stepY: squareStep };
 }
 
-export function buildTiledArraySlice(
-  options: TiledArrayRequestOptions = {},
-): string | undefined {
+function formatSlice(
+  options: TiledArrayRequestOptions,
+  steps: { stepX: number; stepY: number },
+): string {
+  const { stepX, stepY } = steps;
   const stack = options.stack ?? [];
-  const { stepX, stepY } = generateStepsForArray(options);
-
   const stackPrefix = stack.length > 0 ? `${stack.join(',')},` : '';
+  return options.isRGB
+    ? `${stackPrefix}::${stepY},::${stepX},:`
+    : `${stackPrefix}::${stepY},::${stepX}`;
+}
 
-  /**
-   * Normal 2D image / frame:
-   *
-   * [height, width]
-   * [frame, height, width]
-   *
-   * slice:
-   * ::stepY,::stepX
-   * frame,::stepY,::stepX
-   */
-  if (!options.isRGB) {
-    return `${stackPrefix}::${stepY},::${stepX}`;
+// Sync version — used by getArrayAsImagePath (cannot be async).
+export function generateStepsForArray(
+  options: TiledArrayRequestOptions = {},
+): { stepX: number; stepY: number } {
+  return computeSteps(resolveArrayStructure(options), options);
+}
+
+// Async version — auto-fetches structure when not provided in options.
+export async function generateStepsForArrayAsync(
+  arrayPath: string,
+  options: TiledArrayRequestOptions = {},
+  fetchStructure?: StructureFetcher,
+): Promise<{ stepX: number; stepY: number }> {
+  let structure = resolveArrayStructure(options);
+
+  if (!structure && fetchStructure) {
+    try {
+      structure = await fetchStructure(arrayPath);
+    } catch {
+      // fall back to 1,1 if fetch fails
+    }
   }
 
-  /**
-   * RGB stored as [height, width, 3] or [frame, height, width, 3].
-   *
-   * We downsample Y and X, but keep all channels.
-   *
-   * slice:
-   * ::stepY,::stepX,:
-   * frame,::stepY,::stepX,:
-   */
-  return `${stackPrefix}::${stepY},::${stepX},:`;
+  return computeSteps(structure, options);
+}
+
+// Sync slice builder — kept for getArrayAsImagePath.
+export function buildTiledArraySlice(
+  options: TiledArrayRequestOptions = {},
+): string {
+  return formatSlice(options, generateStepsForArray(options));
+}
+
+// Async slice builder — used by getArrayAsJSON/PNG/Buffer in TiledApiClient.
+export async function buildTiledArraySliceAsync(
+  arrayPath: string,
+  options: TiledArrayRequestOptions = {},
+  fetchStructure?: StructureFetcher,
+): Promise<string> {
+  const steps = await generateStepsForArrayAsync(arrayPath, options, fetchStructure);
+  return formatSlice(options, steps);
 }

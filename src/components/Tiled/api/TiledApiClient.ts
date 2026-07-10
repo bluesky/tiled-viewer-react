@@ -11,12 +11,13 @@ import type {
   TiledArrayReturnMap,
   GetArrayAsOptionsMap,
 } from './TiledArrayApi';
-import { buildTiledArraySlice } from './TiledArrayApi';
+import { buildTiledArraySlice, buildTiledArraySliceAsync } from './TiledArrayApi';
+import type { StructureFetcher } from './TiledArrayApi';
 import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableJSONResponse } from './TiledTableApi';
 import type { TiledSearchApi } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import { parseJsonSequenceTableResponse } from './TiledTableApi';
-import { TiledTableRow } from '../types';
+import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure } from '../types';
 type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
 type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
 
@@ -128,11 +129,12 @@ async getArrayAsJSON<T = number[][]>(
   options: GetArrayAsOptionsMap['JSON'] = {},
 ): Promise<T> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
+  const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
 
   return this.get<T>(endpoint, options, {
     params: {
       format: options.format ?? 'application/json',
-      slice: buildTiledArraySlice(options),
+      slice,
     },
     headers: {
       Accept: options.format ?? 'application/json',
@@ -146,16 +148,12 @@ async getArrayAsPng(
 ): Promise<Blob> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'image/png';
+  const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
 
   return this.get<Blob>(endpoint, options, {
     responseType: 'blob',
-    params: {
-      format,
-      slice: buildTiledArraySlice(options),
-    },
-    headers: {
-      Accept: format,
-    },
+    params: { format, slice },
+    headers: { Accept: format },
   });
 }
 
@@ -165,16 +163,12 @@ async getArrayAsBuffer(
 ): Promise<ArrayBuffer> {
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'application/octet-stream';
+  const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
 
   return this.get<ArrayBuffer>(endpoint, options, {
     responseType: 'arraybuffer',
-    params: {
-      format,
-      slice: buildTiledArraySlice(options),
-    },
-    headers: {
-      Accept: format,
-    },
+    params: { format, slice },
+    headers: { Accept: format },
   });
 }
 
@@ -195,6 +189,17 @@ getArrayAsImagePath(
   }
 
   return url.toString();
+}
+
+async getMetadata<S extends TiledStructures = TiledStructures>(
+  path: string,
+  options: TiledRequestOptions = {},
+): Promise<TiledSearchItem<S>> {
+  const endpoint = this.resolveMetadataEndpoint(path, options);
+  const response = await this.get<TiledSearchMetadataResult>(endpoint, options, {
+    headers: { Accept: 'application/json' },
+  });
+  return response.data as TiledSearchItem<S>;
 }
 
 async getTableAs<T extends TiledTableReturnType>(
@@ -304,6 +309,21 @@ async getTableAsJSONSequence(
   ): string {
     const encodedPath = this.resolveEncodedPath(arrayPath, options);
     return `/array/block/${encodedPath}`;
+  }
+
+  private makeStructureFetcher(options: TiledRequestOptions): StructureFetcher {
+    return (path: string) =>
+      this.getMetadata<ArrayStructure>(path, options)
+        .then((item) => item.attributes.structure)
+        .catch(() => undefined);
+  }
+
+  private resolveMetadataEndpoint(
+    path: string,
+    options: TiledRequestOptions = {},
+  ): string {
+    const encodedPath = this.resolveEncodedPath(path, options);
+    return `/metadata/${encodedPath}`;
   }
 
   private resolveTablePartitionEndpoint(

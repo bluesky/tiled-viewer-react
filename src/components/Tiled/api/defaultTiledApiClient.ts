@@ -15,6 +15,9 @@ import type {
   TiledTableReturnType,
 } from './TiledTableApi';
 
+import type { TiledRequestOptions } from './TiledConfigApi';
+import type { TiledSearchItem, TiledStructures } from '../types';
+
 let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
 
 export function getDefaultTiledApiClient(): TiledApiClient {
@@ -102,4 +105,11 @@ export function getTableAsJSONSequence(
     tablePath,
     options,
   );
+}
+
+export function getMetadata<S extends TiledStructures = TiledStructures>(
+  path: string,
+  options: TiledRequestOptions = {},
+): Promise<TiledSearchItem<S>> {
+  return getDefaultTiledApiClient().getMetadata<S>(path, options);
 }
