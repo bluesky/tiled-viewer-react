@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 
-import { getSearchResults, setBearerToken, setReverseSort, setGlobalApiKey, getInitialPath, getItemMetadata } from "./apiClient";
+import { getTiledSearch, setDefaultBearerToken, setGlobalApiKey, getDefaultTiledInitialPath, getTiledMetadata } from "./api/defaultTiledApiClient";
 import { getAuthFromLocalStorage } from "./utils";
 import {
     TiledSearchResult,
     TiledSearchItem,
-    TiledSearchMetadataResult,
     Breadcrumb,
     ArrayStructure,
     AwkwardStructure,
@@ -40,7 +39,7 @@ type Url = string;
  * @returns The effective ancestor length after accounting for global initial path segments
  */
 const getEffectiveAncestorLength = (ancestors: string[]): number => {
-    const globalInitialPath = getInitialPath();
+    const globalInitialPath = getDefaultTiledInitialPath();
     let effectiveAncestorLength = ancestors.length;
     
     if (globalInitialPath) {
@@ -89,7 +88,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
             currentAncestorId.current = currentAncestorId.current - 1;
             if (currentAncestorId.current < 0) {
                 //uesr has clicked back onto the root directory
-                getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
+                void getTiledSearch(searchPath || '', { searchOptions: { sort: reverseSort ? '-' : '', pageLimit } }, { baseUrl: url, initialPath: initialSearchPath }).then((res: TiledSearchResult) => setColumns([res]));
                 setBreadcrumbs([]);
                 setImageUrl('');
                 setPopoutUrl('');
@@ -194,9 +193,11 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
                 // otherwise expand: fire network request
                 const searchPath = generateSearchPath(item);
                 const firstSortKey = item.attributes.sorting ? item.attributes.sorting[0].key : undefined;
-                getSearchResults(
-                    { path: searchPath, baseUrl: url, initialPath: initialSearchPath, options: { sort: firstSortKey, pageLimit: pageLimit } },
-                    (res: TiledSearchResult) => {
+                void getTiledSearch(
+                    searchPath,
+                    { searchOptions: { sort: firstSortKey, pageLimit } },
+                    { baseUrl: url, initialPath: initialSearchPath },
+                ).then((res: TiledSearchResult) => {
                         updateColumns(item, res);
                     }
                 );
@@ -262,7 +263,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         setPreviewItem(null)
         const searchPath = generateSearchPath(item);
         const firstSortKey = item.attributes.sorting ? item.attributes.sorting[0].key : undefined; //sort key may be 'time' for RE data or defaults to '_'
-        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: firstSortKey, pageLimit:pageLimit}}, (res:TiledSearchResult) => handleSearchResponse(item, res));
+        void getTiledSearch(searchPath, { searchOptions: { sort: firstSortKey, pageLimit } }, { baseUrl: url, initialPath: initialSearchPath }).then((res: TiledSearchResult) => handleSearchResponse(item, res));
         closePreview();
     };
 
@@ -295,7 +296,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         setSelectedContainerForPreview(null);
         setPreviewSize('hidden');
         setColumns([]); //api call can take some time for larger dbs, so clear out existing columns first
-        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}}, (res:TiledSearchResult) => setColumns([res]));
+        void getTiledSearch(searchPath || '', { searchOptions: { sort: reverseSort ? '-' : '', pageLimit } }, { baseUrl: url, initialPath: initialSearchPath }).then((res: TiledSearchResult) => setColumns([res]));
     };
 
     const handleSearchId = useCallback(async (id:string) => {
@@ -308,11 +309,11 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         const searchPathWithId = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1], id) : id;
         try{
             //check if the items metadata exists and append to the last column if it does
-            const metadataResult: TiledSearchMetadataResult | null = await getItemMetadata(searchPathWithId, url || '');
+            const metadataResult = await getTiledMetadata(searchPathWithId, { baseUrl: url || '' }).catch(() => null);
             if (metadataResult) {           
                 //construct new column array because metadata searches are missing the links field
                 //wipe out the current column and place only the specified item
-                const newColumn: TiledSearchResult = {data: [metadataResult.data], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 1}, error: metadataResult.error};
+                const newColumn: TiledSearchResult = {data: [metadataResult], links: {self : "?page[offset]=0&page[limit]=1", first: "?page[offset]=0&page[limit]=1", last: "?page[offset]=0&page[limit]=1", next: null, prev: null}, meta: {count: 1}, error: null};
                 replaceLastColumnWithSingleSearchResult(newColumn);
             } else {
                 //TODO display something to say no results found
@@ -329,7 +330,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //perform a metadata search on the current path
         const currentPath = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1]) : '';
         try{
-            const results:TiledSearchResult | null = await getSearchResults({path:currentPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}, filters:{fulltext: {text:metadata}}} );
+            const results: TiledSearchResult = await getTiledSearch(currentPath, { searchFilters: { fulltext: { text: metadata } }, searchOptions: { sort: reverseSort ? '-' : '', pageLimit } }, { baseUrl: url, initialPath: initialSearchPath });
             if (results) {
                 //update the last column with the new search results
                 console.log("handleSearchMetadata results")
@@ -345,7 +346,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         //perform a spec search on the current path
         const currentPath = ancestorStack.current.length > 0 ? generateSearchPath(ancestorStack.current[ancestorStack.current.length -1]) : '';
         try{
-            const results:TiledSearchResult | null = await getSearchResults({path:currentPath, baseUrl:url, initialPath:initialSearchPath, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit}, filters:{specs: {include:[spec], exclude:[]}}} );
+            const results: TiledSearchResult = await getTiledSearch(currentPath, { searchFilters: { specs: { include: [spec], exclude: [] } }, searchOptions: { sort: reverseSort ? '-' : '', pageLimit } }, { baseUrl: url, initialPath: initialSearchPath });
             if (results) {
                 //update the last column with the new search results
                 replaceLastColumnWithSingleSearchResult(results);
@@ -361,15 +362,14 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
         let response = null;
         const auth = getAuthFromLocalStorage();
         if (auth) {
-            setBearerToken(auth.accessToken);
+            setDefaultBearerToken(auth.accessToken);
         }
-        if (bearerToken) setBearerToken(bearerToken); //if there is both accessToken in localStorage and a bearerToken prop, the bearerToken prop takes precedence
-        setReverseSort(reverseSort); //set the reverse sort for all future requests
+        if (bearerToken) setDefaultBearerToken(bearerToken); //if there is both accessToken in localStorage and a bearerToken prop, the bearerToken prop takes precedence
         if (apiKey) {
             setGlobalApiKey(apiKey); //will add apiKey to ALL future requests, in testing there were issues with the cookies being sent after the intial apiKey call so this is done on each req
         }
         try{
-            response = await getSearchResults({path:searchPath || '', baseUrl:url, initialPath:initialSearchPath, apiKey:apiKey, options:{sort: reverseSort ? '-' : '', pageLimit:pageLimit} });
+            response = await getTiledSearch(searchPath || '', { searchOptions: { sort: reverseSort ? '-' : '', pageLimit } }, { baseUrl: url, initialPath: initialSearchPath });
         } catch (error) {
             console.error('Error fetching search results:', error);
             setWarning('There was an error connecting to the Tiled server. Please check the console for more details.');
@@ -406,7 +406,7 @@ export const useTiled = ({url, apiKey, searchPath, bearerToken, initialSearchPat
 
         //grab the search path after /search and before the query params
         const searchPath = newPageUrl.pathname.split('/search/')[1].split('?')[0];
-        getSearchResults({path:searchPath, baseUrl:url, initialPath:initialSearchPath, options: {pageOffset: pageOffset, pageLimit: pageLimit, sort: reverseSort ? '-' : ''}}, (res: TiledSearchResult) => updateColumnWithNewPage(res, columnIndex));
+        void getTiledSearch(searchPath, { searchOptions: { pageOffset, pageLimit, sort: reverseSort ? '-' : '' } }, { baseUrl: url, initialPath: initialSearchPath }).then((res: TiledSearchResult) => updateColumnWithNewPage(res, columnIndex));
     };
 
     const updateColumnWithNewPage = (newColumn:TiledSearchResult, columnIndex:number) => {

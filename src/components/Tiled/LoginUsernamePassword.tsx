@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 
 import Button from "../Button";
-import { loginUserWithNamePassword } from "./apiClient";
+import { loginWithDefaultTiledClient } from "./api/defaultTiledApiClient";
 import { TiledAuthProvider } from "./types";
 export type LoginUsernamePasswordProps = {
     onSuccess: () => void;
@@ -17,7 +17,7 @@ export default function LoginUsernamePassword({ onSuccess, url, setWarning, hand
 
     const attemptLogin = useCallback(async () => {
         setWarning(null);
-        const result = await loginUserWithNamePassword(username, password, url, provider);
+        const result = await loginWithDefaultTiledClient(username, password, url, provider);
         if (result) {
             onSuccess();
         } else {

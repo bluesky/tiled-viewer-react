@@ -20,7 +20,7 @@ import type { TiledSearchConfig } from './TiledSearchApi';
 import { buildSearchParams } from './TiledSearchApi';
 import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import { parseJsonSequenceTableResponse } from './TiledTableApi';
-import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult, TiledInfoResponse } from '../types';
+import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult, TiledInfoResponse, TiledAuthProvider } from '../types';
 import { isValidTiledInfoResponse } from '../types';
 type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
 type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
@@ -501,6 +501,60 @@ async getTableFullAsJSONSequence(
     const encodedPath = this.resolveEncodedPath(tablePath, options);
 
     return `/table/partition/${encodedPath}`;
+  }
+
+  async loginWithUsernamePassword(
+    username: string,
+    password: string,
+    url?: string,
+    provider?: TiledAuthProvider,
+  ): Promise<{ access_token: string; refresh_token: string } | null> {
+    try {
+      let authEndpoint = '';
+      if (provider && (provider.mode === 'password' || provider.mode === 'internal')) {
+        if (!provider.links?.auth_endpoint) {
+          console.error('Provided authentication provider is missing auth_endpoint');
+          return null;
+        }
+        authEndpoint = provider.links.auth_endpoint;
+      } else {
+        const serverInfo = await this.getServerInfo(url ? { baseUrl: url } : {});
+        if (!serverInfo?.authentication?.providers) {
+          console.error('No authentication providers found in server info');
+          return null;
+        }
+        const passwordProvider = serverInfo.authentication.providers.find(
+          (p: TiledAuthProvider) => p.mode === 'password' || p.mode === 'internal',
+        );
+        if (!passwordProvider?.links?.auth_endpoint) {
+          console.error('No password authentication provider found');
+          return null;
+        }
+        authEndpoint = passwordProvider.links.auth_endpoint;
+      }
+
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+
+      const response = await this.client.post<{ access_token: string; refresh_token: string }>(
+        authEndpoint,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+
+      const { access_token, refresh_token } = response.data;
+      if (access_token && refresh_token) {
+        saveAuthToLocalStorage(refresh_token, access_token);
+        this.setBearerToken(access_token);
+        return { access_token, refresh_token };
+      }
+      console.error('Login response missing required tokens');
+      return null;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return null;
+    }
   }
 
   private resolveEncodedPath(

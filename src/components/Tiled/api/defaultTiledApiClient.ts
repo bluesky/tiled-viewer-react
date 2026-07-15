@@ -17,10 +17,19 @@ import type {
 } from './TiledTableApi';
 
 import type { TiledRequestOptions } from './TiledConfigApi';
-import type { TiledSearchItem, TiledStructures, TiledSearchResult, TiledInfoResponse } from '../types';
+import type { TiledSearchItem, TiledStructures, TiledSearchResult, TiledInfoResponse, TiledAuthProvider } from '../types';
 import type { TiledSearchConfig, TiledSearchOptions } from './TiledSearchApi';
 
-let activeTiledApiClient = new TiledApiClient(); //contains all the good stuff
+export type { TiledAuthProvider };
+
+function getDefaultBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+  }
+  return '';
+}
+
+let activeTiledApiClient = new TiledApiClient({ baseUrl: getDefaultBaseUrl() });
 
 export function getDefaultTiledApiClient(): TiledApiClient {
   return activeTiledApiClient;
@@ -31,7 +40,7 @@ export function setDefaultTiledApiClient(client: TiledApiClient): void {
 }
 
 export function resetDefaultTiledApiClient(): void {
-  activeTiledApiClient = new TiledApiClient();
+  activeTiledApiClient = new TiledApiClient({ baseUrl: getDefaultBaseUrl() });
 }
 
 export function setDefaultTiledUrl(baseUrl: string): void {
@@ -190,4 +199,29 @@ export function getTiledSearchByStructureFamily(
     { searchFilters: { structureFamily: { value: family } }, searchOptions },
     requestOptions,
   );
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+export type AuthErrorCallback = (error: unknown) => void;
+
+export function setDefaultBearerToken(token: string | null): void {
+  activeTiledApiClient.setBearerToken(token);
+}
+
+export function setDefaultAuthErrorCallback(callback: AuthErrorCallback | undefined): void {
+  activeTiledApiClient.setAuthErrorCallback(callback);
+}
+
+export function loginWithDefaultTiledClient(
+  username: string,
+  password: string,
+  url?: string,
+  provider?: TiledAuthProvider,
+): Promise<{ access_token: string; refresh_token: string } | null> {
+  return activeTiledApiClient.loginWithUsernamePassword(username, password, url, provider);
+}
+
+export function getDefaultTiledInitialPath(): string {
+  return activeTiledApiClient.getInitialPath();
 }
