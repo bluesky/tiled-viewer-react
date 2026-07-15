@@ -29,6 +29,7 @@ export type TiledApiClientConfig = {
   baseUrl?: string;
   initialPath?: string;
   apiKey?: string | null;
+  signal?: AbortSignal;
 };
 
 
@@ -37,6 +38,7 @@ export class TiledApiClient implements FinchTiledApi {
   private baseUrl: string;
   private initialPath: string;
   private apiKey: string | null;
+  private signal: AbortSignal | undefined;
 
   constructor(config: TiledApiClientConfig = {}) {
     this.client =
@@ -48,12 +50,12 @@ export class TiledApiClient implements FinchTiledApi {
     this.baseUrl = normalizeBaseUrl(config.baseUrl ?? '');
     this.initialPath = normalizeTiledPath(config.initialPath ?? '');
     this.apiKey = config.apiKey ?? null;
+    this.signal = config.signal;
 
     this.client.interceptors.request.use((requestConfig) => {
-      if (this.apiKey) {
+      if (this.apiKey && !requestConfig.headers.Authorization) {
+        //only set the apiKey from config if we didn't have auth headers set via tiledRequestOptions
         requestConfig.headers.Authorization = `ApiKey ${this.apiKey}`;
-      } else {
-        delete requestConfig.headers.Authorization;
       }
 
       return requestConfig;
@@ -87,6 +89,14 @@ export class TiledApiClient implements FinchTiledApi {
 
   getAxiosClient(): AxiosInstance {
     return this.client;
+  }
+
+  setSignal(signal: AbortSignal | undefined): void {
+    this.signal = signal;
+  }
+
+  getSignal(): AbortSignal | undefined {
+    return this.signal;
   }
 
 async getArrayAs<T extends TiledArrayReturnType>(
@@ -289,15 +299,21 @@ async getTableFullAsJSONSequence(
   ): Promise<T> {
     const client = this.resolveClient(options);
     const baseURL = this.resolveBaseUrl(options);
+    console.log({options})
+
+    const apiKey = options.apiKey !== undefined ? options.apiKey : this.apiKey;
+    const authHeader = apiKey ? { Authorization: `Apikey ${apiKey}` } : {};
+    console.log({authHeader})
 
     const response = await client.get<T>(endpoint, {
       ...config,
       baseURL,
-      signal: options.signal,
+      signal: options.signal ?? this.signal,
       params: removeUndefinedValues({
         ...config.params,
       }),
       headers: {
+        ...authHeader,
         ...config.headers,
       },
     });
