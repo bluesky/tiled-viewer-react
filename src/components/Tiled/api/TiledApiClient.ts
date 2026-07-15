@@ -47,6 +47,7 @@ export class TiledApiClient implements FinchTiledApi {
   private signal: AbortSignal | undefined;
   private maxArrayBytes: number | undefined;
   private authErrorCallback: AuthErrorCallback | undefined;
+  private refreshPromise: Promise<string> | null = null;
 
   constructor(config: TiledApiClientConfig = {}) {
     this.client =
@@ -75,33 +76,25 @@ export class TiledApiClient implements FinchTiledApi {
         const axiosError = error as { config?: AxiosRequestConfig & { _retry?: boolean }; response?: { status?: number } };
         const originalRequest = axiosError.config;
 
-        if (axiosError.response?.status === 401 && originalRequest && !originalRequest._retry) {
-          originalRequest._retry = true;
-          try {
-            const auth = getAuthFromLocalStorage();
-            if (auth) {
-              const requestUrl: string = (originalRequest.url as string) ?? '';
-              const apiV1Index = requestUrl.indexOf('/api/v1'); //Assume all tiled server urls include this, otherwise will break
-              const refreshBase = apiV1Index !== -1
-                ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
-                : this.baseUrl;
-
-              const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
-                refresh_token: auth.refreshToken,
-              });
-              const newAccessToken = refreshResponse.data.access_token as string;
-              saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
-              this.setBearerToken(newAccessToken);
-              return this.client(originalRequest);
-            } else {
-              this.authErrorCallback?.(null);
-            }
-          } catch (refreshError) {
-            clearAuthFromLocalStorage();
-            this.authErrorCallback?.(refreshError);
-          }
+        if (axiosError.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+          return Promise.reject(error);
         }
-        return Promise.reject(error);
+
+        originalRequest._retry = true;
+        //prevent concurrent 401s from attempting to refresh the token
+        if (!this.refreshPromise) {
+          this.refreshPromise = this.doTokenRefresh(originalRequest.url as string).finally(() => {
+            this.refreshPromise = null;
+          });
+        }
+
+        try {
+          const newToken = await this.refreshPromise; //subsequent 401s wait until the first refresh promise is done
+          originalRequest.headers = { ...originalRequest.headers, Authorization: `Bearer ${newToken}` };
+          return this.client(originalRequest);
+        } catch {
+          return Promise.reject(error);
+        }
       },
     );
   }
@@ -160,6 +153,33 @@ export class TiledApiClient implements FinchTiledApi {
       this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       delete this.client.defaults.headers.common['Authorization'];
+    }
+  }
+
+  private async doTokenRefresh(requestUrl: string): Promise<string> {
+    const auth = getAuthFromLocalStorage();
+    if (!auth) {
+      this.authErrorCallback?.(null);
+      throw new Error('No stored auth tokens');
+    }
+
+    try {
+      const apiV1Index = requestUrl.indexOf('/api/v1');
+      const refreshBase = apiV1Index !== -1
+        ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
+        : this.baseUrl;
+
+      const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
+        refresh_token: auth.refreshToken,
+      });
+      const newAccessToken = refreshResponse.data.access_token as string;
+      saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
+      this.setBearerToken(newAccessToken);
+      return newAccessToken;
+    } catch (refreshError) {
+      clearAuthFromLocalStorage();
+      this.authErrorCallback?.(refreshError);
+      throw refreshError;
     }
   }
 
