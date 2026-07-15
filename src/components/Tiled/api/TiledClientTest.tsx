@@ -16,14 +16,15 @@ import {
   getTiledSearchByFullText,
   getTiledSearchByMetadataEquals,
   getTiledSearchByStructureFamily,
-  setGlobalApiKey
+  setGlobalApiKey,
+  setGlobalMaxArrayBytes
 } from './defaultTiledApiClient';
 import type { TiledArrayRequestOptions } from './TiledArrayApi';
 import type { TiledTableRequestOptions, TiledTableReturnType, TiledTableEndpoint } from './TiledTableApi';
 import type { TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import type { TiledSearchOptions, TiledSearchConfig } from './TiledSearchApi';
 
-//setGlobalApiKey("80d229b8992584115f086c281275138c287a77e156a3d9ba9ce1a3f8a8225d37")
+setGlobalMaxArrayBytes(5000);
 
 // ─── Shared input styles ──────────────────────────────────────────────────────
 

@@ -10,6 +10,7 @@ import type {
   TiledArrayReturnType,
   TiledArrayReturnMap,
   GetArrayAsOptionsMap,
+  TiledArrayRequestOptions,
 } from './TiledArrayApi';
 import { buildTiledArraySlice, buildTiledArraySliceAsync } from './TiledArrayApi';
 import type { StructureFetcher } from './TiledArrayApi';
@@ -30,6 +31,7 @@ export type TiledApiClientConfig = {
   initialPath?: string;
   apiKey?: string | null;
   signal?: AbortSignal;
+  maxArrayBytes?: number;
 };
 
 
@@ -39,6 +41,7 @@ export class TiledApiClient implements FinchTiledApi {
   private initialPath: string;
   private apiKey: string | null;
   private signal: AbortSignal | undefined;
+  private maxArrayBytes: number | undefined;
 
   constructor(config: TiledApiClientConfig = {}) {
     this.client =
@@ -51,6 +54,7 @@ export class TiledApiClient implements FinchTiledApi {
     this.initialPath = normalizeTiledPath(config.initialPath ?? '');
     this.apiKey = config.apiKey ?? null;
     this.signal = config.signal;
+    this.maxArrayBytes = config.maxArrayBytes;
 
     this.client.interceptors.request.use((requestConfig) => {
       if (this.apiKey && !requestConfig.headers.Authorization) {
@@ -99,6 +103,21 @@ export class TiledApiClient implements FinchTiledApi {
     return this.signal;
   }
 
+  setMaxArrayBytes(maxArrayBytes: number | undefined): void {
+    this.maxArrayBytes = maxArrayBytes;
+  }
+
+  getMaxArrayBytes(): number | undefined {
+    return this.maxArrayBytes;
+  }
+
+  private resolveArrayOptions<T extends TiledArrayRequestOptions>(options: T): T {
+    if (this.maxArrayBytes === undefined || options.maxBytesAllowed !== undefined) {
+      return options;
+    }
+    return { ...options, maxBytesAllowed: this.maxArrayBytes };
+  }
+
 async getArrayAs<T extends TiledArrayReturnType>(
   arrayPath: string,
   type: T,
@@ -140,6 +159,7 @@ async getArrayAsJSON<T = number[][]>(
   arrayPath: string,
   options: GetArrayAsOptionsMap['JSON'] = {},
 ): Promise<T> {
+  options = this.resolveArrayOptions(options);
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
 
@@ -158,6 +178,7 @@ async getArrayAsPng(
   arrayPath: string,
   options: GetArrayAsOptionsMap['PNG'] = {},
 ): Promise<Blob> {
+  options = this.resolveArrayOptions(options);
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'image/png';
   const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
@@ -173,6 +194,7 @@ async getArrayAsBuffer(
   arrayPath: string,
   options: GetArrayAsOptionsMap['BUFFER'] = {},
 ): Promise<ArrayBuffer> {
+  options = this.resolveArrayOptions(options);
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const format = options.format ?? 'application/octet-stream';
   const slice = await buildTiledArraySliceAsync(arrayPath, options, this.makeStructureFetcher(options));
@@ -188,6 +210,7 @@ getArrayAsImagePath(
   arrayPath: string,
   options: GetArrayAsOptionsMap['IMAGE_PATH'] = {},
 ): string {
+  options = this.resolveArrayOptions(options);
   const baseUrl = this.resolveBaseUrl(options);
   const endpoint = this.resolveArrayFullEndpoint(arrayPath, options);
   const url = new URL(`${baseUrl}${endpoint}`);

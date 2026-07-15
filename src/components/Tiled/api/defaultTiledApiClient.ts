@@ -46,6 +46,10 @@ export function setGlobalApiKey(apiKey: string | null): void {
   activeTiledApiClient.setApiKey(apiKey);
 }
 
+export function setGlobalMaxArrayBytes(maxBytes: number | undefined): void {
+  activeTiledApiClient.setMaxArrayBytes(maxBytes);
+}
+
 export function getTiledArrayAsJSON<T = number[][]>(
   arrayPath: string,
   options: GetArrayAsOptionsMap['JSON'] = {},
