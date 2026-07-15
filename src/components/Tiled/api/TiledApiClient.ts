@@ -4,6 +4,7 @@ import axios, {
   AxiosRequestConfig,
   ResponseType,
 } from 'axios';
+import { getAuthFromLocalStorage, saveAuthToLocalStorage, clearAuthFromLocalStorage } from '../utils';
 
 import type { FinchTiledApi } from './TiledFinchApi';
 import type {
@@ -25,6 +26,8 @@ type GetTableAsJSONOptions = GetTableAsOptionsMap['JSON'];
 type GetTableAsJSONSequenceOptions = GetTableAsOptionsMap['JSON_SEQ'];
 
 
+type AuthErrorCallback = (error: unknown) => void;
+
 export type TiledApiClientConfig = {
   client?: AxiosInstance;
   baseUrl?: string;
@@ -32,6 +35,7 @@ export type TiledApiClientConfig = {
   apiKey?: string | null;
   signal?: AbortSignal;
   maxArrayBytes?: number;
+  onAuthError?: AuthErrorCallback;
 };
 
 
@@ -42,6 +46,7 @@ export class TiledApiClient implements FinchTiledApi {
   private apiKey: string | null;
   private signal: AbortSignal | undefined;
   private maxArrayBytes: number | undefined;
+  private authErrorCallback: AuthErrorCallback | undefined;
 
   constructor(config: TiledApiClientConfig = {}) {
     this.client =
@@ -55,15 +60,50 @@ export class TiledApiClient implements FinchTiledApi {
     this.apiKey = config.apiKey ?? null;
     this.signal = config.signal;
     this.maxArrayBytes = config.maxArrayBytes;
+    this.authErrorCallback = config.onAuthError;
 
     this.client.interceptors.request.use((requestConfig) => {
       if (this.apiKey && !requestConfig.headers.Authorization) {
-        //only set the apiKey from config if we didn't have auth headers set via tiledRequestOptions
         requestConfig.headers.Authorization = `ApiKey ${this.apiKey}`;
       }
-
       return requestConfig;
     });
+
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error: unknown) => {
+        const axiosError = error as { config?: AxiosRequestConfig & { _retry?: boolean }; response?: { status?: number } };
+        const originalRequest = axiosError.config;
+
+        if (axiosError.response?.status === 401 && originalRequest && !originalRequest._retry) {
+          originalRequest._retry = true;
+          try {
+            const auth = getAuthFromLocalStorage();
+            if (auth) {
+              const requestUrl: string = (originalRequest.url as string) ?? '';
+              const apiV1Index = requestUrl.indexOf('/api/v1'); //Assume all tiled server urls include this, otherwise will break
+              const refreshBase = apiV1Index !== -1
+                ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
+                : this.baseUrl;
+
+              const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
+                refresh_token: auth.refreshToken,
+              });
+              const newAccessToken = refreshResponse.data.access_token as string;
+              saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
+              this.setBearerToken(newAccessToken);
+              return this.client(originalRequest);
+            } else {
+              this.authErrorCallback?.(null);
+            }
+          } catch (refreshError) {
+            clearAuthFromLocalStorage();
+            this.authErrorCallback?.(refreshError);
+          }
+        }
+        return Promise.reject(error);
+      },
+    );
   }
 
   setBaseUrl(baseUrl: string): void {
@@ -109,6 +149,18 @@ export class TiledApiClient implements FinchTiledApi {
 
   getMaxArrayBytes(): number | undefined {
     return this.maxArrayBytes;
+  }
+
+  setAuthErrorCallback(callback: AuthErrorCallback | undefined): void {
+    this.authErrorCallback = callback;
+  }
+
+  setBearerToken(token: string | null): void {
+    if (token) {
+      this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete this.client.defaults.headers.common['Authorization'];
+    }
   }
 
   private resolveArrayOptions<T extends TiledArrayRequestOptions>(options: T): T {
