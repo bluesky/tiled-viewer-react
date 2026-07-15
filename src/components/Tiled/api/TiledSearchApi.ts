@@ -27,8 +27,7 @@ export function buildSearchParams(
     if (o.pageLimit !== undefined) params['page[limit]'] = String(o.pageLimit);
     if (o.sort) params['sort'] = o.sort;
     if (o.selectMetadata) params['select_metadata'] = o.selectMetadata;
-    if (o.maxDepth !== undefined) params['max_depth'] = String(o.maxDepth);
-    if (o.omitLinks !== undefined) params['omit_links'] = String(o.omitLinks);
+if (o.omitLinks !== undefined) params['omit_links'] = String(o.omitLinks);
     if (o.includeDataSources !== undefined)
       params['include_data_sources'] = String(o.includeDataSources);
     if (o.fields?.length) params['fields'] = o.fields;
@@ -134,8 +133,6 @@ export interface TiledSearchOptions {
     pageLimit?: number;
     /** Sort field */
     sort?: string;
-    /** Maximum depth for nested structures */
-    maxDepth?: number;
     /** Whether to omit links in response */
     omitLinks?: boolean;
     /** Whether to include data sources */

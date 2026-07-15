@@ -16,11 +16,14 @@ import {
   getTiledSearchByFullText,
   getTiledSearchByMetadataEquals,
   getTiledSearchByStructureFamily,
+  setGlobalApiKey
 } from './defaultTiledApiClient';
 import type { TiledArrayRequestOptions } from './TiledArrayApi';
 import type { TiledTableRequestOptions, TiledTableReturnType, TiledTableEndpoint } from './TiledTableApi';
 import type { TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
 import type { TiledSearchOptions, TiledSearchConfig } from './TiledSearchApi';
+
+//setGlobalApiKey("80d229b8992584115f086c281275138c287a77e156a3d9ba9ce1a3f8a8225d37")
 
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
@@ -170,14 +173,12 @@ interface SearchOpts {
   pageOffset: string;
   pageLimit: string;
   sort: string;
-  maxDepth: string;
 }
 
 const defaultSearchOpts = (): SearchOpts => ({
   pageOffset: '',
   pageLimit: '',
   sort: '',
-  maxDepth: '',
 });
 
 function buildSearchOptions(opts: SearchOpts): TiledSearchOptions {
@@ -185,7 +186,6 @@ function buildSearchOptions(opts: SearchOpts): TiledSearchOptions {
   if (opts.pageOffset !== '') out.pageOffset = Number(opts.pageOffset);
   if (opts.pageLimit !== '') out.pageLimit = Number(opts.pageLimit);
   if (opts.sort !== '') out.sort = opts.sort;
-  if (opts.maxDepth !== '') out.maxDepth = Number(opts.maxDepth);
   return out;
 }
 
@@ -226,16 +226,6 @@ function SearchOptsInputs({
           placeholder="e.g. id or -id"
           value={opts.sort}
           onChange={(e) => onChange({ ...opts, sort: e.target.value })}
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className={labelCls}>maxDepth</label>
-        <input
-          type="number"
-          className={inputCls}
-          placeholder="e.g. 1"
-          value={opts.maxDepth}
-          onChange={(e) => onChange({ ...opts, maxDepth: e.target.value })}
         />
       </div>
     </div>
