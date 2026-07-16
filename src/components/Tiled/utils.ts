@@ -1,6 +1,5 @@
 import { tiledStructureIcons } from "./icons";
 import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure } from "./types";
-import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
 
 /**
@@ -18,7 +17,7 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
     const links= {...item.links};
-    const baseUrl = url ? url : getDefaultTiledUrl();
+    const baseUrl = url ?? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
     return links;

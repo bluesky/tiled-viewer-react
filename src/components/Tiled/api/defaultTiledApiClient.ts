@@ -136,6 +136,29 @@ export function setGlobalMaxArrayBytes(maxBytes: number | undefined): void {
 // ─── Arrays ───────────────────────────────────────────────────────────────────
 
 /**
+ * Fetches a Tiled array in the specified format.
+ *
+ * This is the generic dispatcher; prefer the typed convenience helpers
+ * (`getTiledArrayAsJSON`, `getTiledArrayAsPng`, etc.) for cleaner call sites.
+ *
+ * @param arrayPath - Tiled path to the array.
+ * @param type - Return format: `'JSON'`, `'PNG'`, `'BUFFER'`, or `'IMAGE_PATH'`. Defaults to `'BUFFER'`.
+ * @param options - Format-specific array request options.
+ * @returns A promise resolving to the array data in the requested format.
+ *
+ * @example
+ * const buf = await getTiledArrayAs('scans/run1/detector');
+ * const img = await getTiledArrayAs('scans/run1/detector', 'PNG', { stack: [0] });
+ */
+export function getTiledArrayAs<T extends TiledArrayReturnType = 'BUFFER'>(
+  arrayPath: string,
+  type: T = 'BUFFER' as T,
+  options: GetArrayAsOptionsMap[T] = {} as GetArrayAsOptionsMap[T],
+): Promise<TiledArrayReturnMap[T]> {
+  return activeTiledApiClient.getArrayAs(arrayPath, type, options);
+}
+
+/**
  * Fetches a Tiled array as JSON data.
  *
  * @param arrayPath - Tiled path to the array.
