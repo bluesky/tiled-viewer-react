@@ -6,6 +6,7 @@ import { isValidTiledInfoResponse, TiledInfoResponse, TiledSearchResult, TiledAu
 import { TiledSearchConfig, TiledSearchOptions } from './apiTypes';
 import { addBasicOptions, addSearchFilters } from './apiUtils';
 import { getApiKeyFromLocalStorage, getAuthFromLocalStorage, clearAuthFromLocalStorage, saveAuthToLocalStorage, cleanUrl } from "./utils";
+import { resetDefaultTiledApiClient } from "./api/defaultTiledApiClient";
 
 //if user calls getFirstSearchWithApiKey, it will set this variable and all subsequent calls to getSearchResults, getTabledata, and image paths will use this apikey
 let globalApiKey:string | null = null;
@@ -587,6 +588,7 @@ export const resetGlobalState = () => {
     globalApiKey = null;
     globalReverseSort = false;
     globalInitialPath = null;
+    resetDefaultTiledApiClient();
 };
 
 /**
