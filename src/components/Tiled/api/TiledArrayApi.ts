@@ -163,6 +163,17 @@ export function hasArrayStructure(
   return Boolean(resolveArrayStructure(options));
 }
 
+/**
+ * Computes the display dimensions (height, width, channels) for an array.
+ *
+ * For RGB arrays (`isRGB: true`), the last three dimensions are interpreted as
+ * `[height, width, channels]`. For all other arrays the last two dimensions are
+ * `[height, width]` with `channels = 1`.
+ *
+ * @param structure - The `ArrayStructure` from Tiled metadata.
+ * @param options - Array request options; `isRGB` affects channel interpretation.
+ * @returns An object with `height`, `width`, and `channels` numbers.
+ */
 export function getDisplayShape(
   structure: ArrayStructure,
   options: TiledArrayRequestOptions = {},
@@ -261,14 +272,32 @@ function formatSlice(
     : `${stackPrefix}::${stepY},::${stepX}`;
 }
 
-// Sync version — used by getArrayAsImagePath (cannot be async).
+/**
+ * Computes downsample step sizes synchronously using any structure already
+ * present in `options`. Used by `getArrayAsImagePath` which cannot be async.
+ *
+ * When neither `downSampleRatio` nor array structure is available, returns
+ * `{ stepX: 1, stepY: 1 }` (no downsampling).
+ *
+ * @param options - Array request options, optionally containing structure info.
+ * @returns An object with integer `stepX` and `stepY` downsample steps.
+ */
 export function generateStepsForArray(
   options: TiledArrayRequestOptions = {},
 ): { stepX: number; stepY: number } {
   return computeSteps(resolveArrayStructure(options), options);
 }
 
-// Async version — auto-fetches structure when not provided in options.
+/**
+ * Computes downsample step sizes, fetching array structure from the server
+ * when it is not already available in `options`.
+ *
+ * @param arrayPath - Tiled path to the array (used for the structure fetch).
+ * @param options - Array request options, optionally containing structure info.
+ * @param fetchStructure - Callback that fetches `ArrayStructure` for a path. If
+ *   omitted or if the fetch throws, step sizes default to `{ stepX: 1, stepY: 1 }`.
+ * @returns A promise resolving to integer `stepX` and `stepY` downsample steps.
+ */
 export async function generateStepsForArrayAsync(
   arrayPath: string,
   options: TiledArrayRequestOptions = {},
@@ -287,14 +316,33 @@ export async function generateStepsForArrayAsync(
   return computeSteps(structure, options);
 }
 
-// Sync slice builder — kept for getArrayAsImagePath.
+/**
+ * Builds the Tiled `slice` query-string parameter synchronously.
+ *
+ * Uses structure already present in `options`; does not fetch from the server.
+ * Prefer `buildTiledArraySliceAsync` when the caller can be async.
+ *
+ * @param options - Array request options used to compute step sizes and format the slice.
+ * @returns A slice string such as `"::2,::2"` or `"0,::4,::4"`.
+ */
 export function buildTiledArraySlice(
   options: TiledArrayRequestOptions = {},
 ): string {
   return formatSlice(options, generateStepsForArray(options));
 }
 
-// Async slice builder — used by getArrayAsJSON/PNG/Buffer in TiledApiClient.
+/**
+ * Builds the Tiled `slice` query-string parameter, fetching array structure
+ * from the server when it is not already in `options`.
+ *
+ * Used by `getArrayAsJSON`, `getArrayAsPng`, and `getArrayAsBuffer` inside
+ * `TiledApiClient` where async calls are fine.
+ *
+ * @param arrayPath - Tiled path to the array (used for the structure fetch).
+ * @param options - Array request options.
+ * @param fetchStructure - Optional callback to retrieve `ArrayStructure`.
+ * @returns A promise resolving to a slice string such as `"::2,::2"`.
+ */
 export async function buildTiledArraySliceAsync(
   arrayPath: string,
   options: TiledArrayRequestOptions = {},

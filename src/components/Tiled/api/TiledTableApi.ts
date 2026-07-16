@@ -98,12 +98,27 @@ export interface TiledTableApi {
   ): Promise<TiledTableRow[]>;
 }
 
+/**
+ * Returns the `TableStructure` from either `options.structure` or
+ * `options.tableItem.attributes.structure`, whichever is present.
+ *
+ * @param options - Table request options that may contain structure info.
+ * @returns The resolved `TableStructure`, or `undefined` if neither is present.
+ */
 export function resolveTableStructure(
   options: TiledTableRequestOptions = {},
 ): TableStructure | undefined {
   return options.structure ?? options.tableItem?.attributes.structure;
 }
 
+/**
+ * Returns `true` when the caller has already provided enough table structure
+ * information (via `options.structure` or `options.tableItem`) to skip a
+ * secondary metadata request.
+ *
+ * @param options - Table request options.
+ * @returns `true` if structure info is available, `false` otherwise.
+ */
 export function hasTableStructure(
   options: TiledTableRequestOptions = {},
 ): boolean {

@@ -10,10 +10,18 @@ export interface TiledSearchApi {
 }
 
 /**
- * Serializes a TiledSearchConfig into a flat params object with the
- * bracket-notation keys that the Tiled REST API expects.
+ * Serializes a `TiledSearchConfig` into a flat params object using the
+ * bracket-notation keys expected by the Tiled REST API.
  *
- * e.g. filter[fulltext][condition][text]=abc
+ * @param config - Search configuration including filters and pagination options.
+ * @returns A flat record suitable for use as Axios `params`.
+ *
+ * @example
+ * buildSearchParams({
+ *   searchFilters: { fulltext: { text: 'myrun' } },
+ *   searchOptions: { sort: '-', pageLimit: 10 },
+ * });
+ * // → { 'filter[fulltext][condition][text]': 'myrun', sort: '-', 'page[limit]': '10' }
  */
 export function buildSearchParams(
   config: TiledSearchConfig = {},

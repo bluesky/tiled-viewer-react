@@ -99,55 +99,98 @@ export class TiledApiClient implements FinchTiledApi {
     );
   }
 
+  /**
+   * Sets the Tiled server base URL and updates the underlying Axios instance.
+   * Must include the API version segment, e.g. `"https://server.example.com/api/v1"`.
+   * @param baseUrl - Full server base URL.
+   */
   setBaseUrl(baseUrl: string): void {
     this.baseUrl = normalizeBaseUrl(baseUrl);
     this.client.defaults.baseURL = this.baseUrl;
   }
 
+  /** Returns the current base URL. */
   getBaseUrl(): string {
     return this.baseUrl;
   }
 
+  /**
+   * Sets the initial path prefix prepended to all relative request paths.
+   * Leading/trailing slashes are normalised automatically.
+   * @param initialPath - Path prefix, e.g. `"data/project"`.
+   */
   setInitialPath(initialPath: string): void {
     this.initialPath = normalizeTiledPath(initialPath);
   }
 
+  /** Returns the current initial path prefix. */
   getInitialPath(): string {
     return this.initialPath;
   }
 
+  /**
+   * Sets the API key. The request interceptor attaches it as
+   * `Authorization: ApiKey <key>` to every request without an existing
+   * `Authorization` header.
+   * @param apiKey - API key string, or `null` to clear it.
+   */
   setApiKey(apiKey: string | null): void {
     this.apiKey = apiKey;
   }
 
+  /** Returns the current API key, or `null` if none is set. */
   getApiKey(): string | null {
     return this.apiKey;
   }
 
+  /** Returns the underlying Axios instance for low-level configuration. */
   getAxiosClient(): AxiosInstance {
     return this.client;
   }
 
+  /**
+   * Sets a default `AbortSignal` applied to every request made by this client.
+   * @param signal - An `AbortSignal`, or `undefined` to clear it.
+   */
   setSignal(signal: AbortSignal | undefined): void {
     this.signal = signal;
   }
 
+  /** Returns the current default abort signal, or `undefined` if none is set. */
   getSignal(): AbortSignal | undefined {
     return this.signal;
   }
 
+  /**
+   * Sets a global maximum payload size for array requests.
+   * When set, the client auto-computes a downsample step so the payload stays
+   * under this byte limit. Per-request `maxBytesAllowed` still takes precedence.
+   * @param maxArrayBytes - Byte limit, or `undefined` to disable.
+   */
   setMaxArrayBytes(maxArrayBytes: number | undefined): void {
     this.maxArrayBytes = maxArrayBytes;
   }
 
+  /** Returns the current global max array bytes limit, or `undefined` if none. */
   getMaxArrayBytes(): number | undefined {
     return this.maxArrayBytes;
   }
 
+  /**
+   * Registers a callback invoked when a token-refresh attempt fails.
+   * Use this to show a login prompt or redirect the user.
+   * @param callback - Function called with the error (or `null` if no stored tokens),
+   *   or `undefined` to clear any existing callback.
+   */
   setAuthErrorCallback(callback: AuthErrorCallback | undefined): void {
     this.authErrorCallback = callback;
   }
 
+  /**
+   * Sets or clears the bearer token on the Axios instance.
+   * Once set, all requests include `Authorization: Bearer <token>`.
+   * @param token - Bearer token string, or `null` to remove the header.
+   */
   setBearerToken(token: string | null): void {
     if (token) {
       this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -190,6 +233,18 @@ export class TiledApiClient implements FinchTiledApi {
     return { ...options, maxBytesAllowed: this.maxArrayBytes };
   }
 
+/**
+ * Generic array dispatcher. Fetches the array in the specified format and
+ * returns the strongly-typed result.
+ *
+ * Prefer the typed helpers (`getArrayAsJSON`, `getArrayAsPng`, etc.) for
+ * cleaner call sites.
+ *
+ * @param arrayPath - Tiled path to the array.
+ * @param type - Output format: `'JSON'`, `'PNG'`, `'BUFFER'`, or `'IMAGE_PATH'`.
+ * @param options - Format-specific options.
+ * @returns A promise resolving to the array data in the requested format.
+ */
 async getArrayAs<T extends TiledArrayReturnType>(
   arrayPath: string,
   type: T,
@@ -227,6 +282,12 @@ async getArrayAs<T extends TiledArrayReturnType>(
   }
 }
 
+/**
+ * Fetches a Tiled array as JSON data.
+ * @param arrayPath - Tiled path to the array.
+ * @param options - Array request options (stack, downsampling, maxBytesAllowed, etc.).
+ * @returns A promise resolving to the array data. Defaults to `number[][]`.
+ */
 async getArrayAsJSON<T = number[][]>(
   arrayPath: string,
   options: GetArrayAsOptionsMap['JSON'] = {},
@@ -246,6 +307,12 @@ async getArrayAsJSON<T = number[][]>(
   });
 }
 
+/**
+ * Fetches a Tiled array as a PNG `Blob`.
+ * @param arrayPath - Tiled path to the array.
+ * @param options - Array request options (stack, downsampling, etc.).
+ * @returns A promise resolving to a PNG `Blob`.
+ */
 async getArrayAsPng(
   arrayPath: string,
   options: GetArrayAsOptionsMap['PNG'] = {},
@@ -262,6 +329,12 @@ async getArrayAsPng(
   });
 }
 
+/**
+ * Fetches a Tiled array as a raw `ArrayBuffer`.
+ * @param arrayPath - Tiled path to the array.
+ * @param options - Array request options.
+ * @returns A promise resolving to an `ArrayBuffer` of raw bytes.
+ */
 async getArrayAsBuffer(
   arrayPath: string,
   options: GetArrayAsOptionsMap['BUFFER'] = {},
@@ -278,6 +351,17 @@ async getArrayAsBuffer(
   });
 }
 
+/**
+ * Builds and returns a full URL for a Tiled array image without making a
+ * network request. Suitable for use directly as an `<img src>` attribute.
+ *
+ * This method is synchronous and uses structure already present in `options`
+ * — it does not fetch metadata from the server.
+ *
+ * @param arrayPath - Tiled path to the array.
+ * @param options - Array request options (stack, format, downsampling, etc.).
+ * @returns A URL string pointing to the array image endpoint.
+ */
 getArrayAsImagePath(
   arrayPath: string,
   options: GetArrayAsOptionsMap['IMAGE_PATH'] = {},
@@ -298,6 +382,13 @@ getArrayAsImagePath(
   return url.toString();
 }
 
+/**
+ * Fetches Tiled item metadata for the given path.
+ * Returns the `TiledSearchItem` directly (not a `{ data, error }` wrapper).
+ * @param path - Tiled path to the item.
+ * @param options - Per-request options (baseUrl override, pathMode, etc.).
+ * @returns A promise resolving to the typed `TiledSearchItem`.
+ */
 async getMetadata<S extends TiledStructures = TiledStructures>(
   path: string,
   options: TiledRequestOptions = {},
@@ -309,6 +400,15 @@ async getMetadata<S extends TiledStructures = TiledStructures>(
   return response.data as TiledSearchItem<S>;
 }
 
+/**
+ * Generic table dispatcher. Fetches the table in the specified format and
+ * endpoint variant. Prefer the typed helpers for cleaner call sites.
+ * @param tablePath - Tiled path to the table.
+ * @param type - `'JSON'` for column-oriented or `'JSON_SEQ'` for row-oriented.
+ * @param endpoint - `'partition'` (single partition) or `'full'` (all partitions).
+ * @param options - Table request options.
+ * @returns A promise resolving to the table data.
+ */
 async getTableAs<T extends TiledTableReturnType>(
   tablePath: string,
   type: T = 'JSON' as T,
@@ -335,6 +435,12 @@ async getTableAs<T extends TiledTableReturnType>(
   }
 }
 
+/**
+ * Fetches a single partition of a Tiled table as column-oriented JSON.
+ * @param tablePath - Tiled path to the table.
+ * @param options - Options including `partition` index (defaults to `0`).
+ * @returns A promise resolving to a `Record<columnName, values[]>` object.
+ */
 async getTablePartitionAsJSON(
   tablePath: string,
   options: GetTableAsJSONOptions = {},
@@ -347,6 +453,12 @@ async getTablePartitionAsJSON(
   });
 }
 
+/**
+ * Fetches a single partition of a Tiled table as row-oriented JSON sequence.
+ * @param tablePath - Tiled path to the table.
+ * @param options - Options including `partition` index (defaults to `0`).
+ * @returns A promise resolving to an array of row objects.
+ */
 async getTablePartitionAsJSONSequence(
   tablePath: string,
   options: GetTableAsJSONSequenceOptions = {},
@@ -361,6 +473,12 @@ async getTablePartitionAsJSONSequence(
   return parseJsonSequenceTableResponse(response);
 }
 
+/**
+ * Fetches the full (all partitions) Tiled table as column-oriented JSON.
+ * @param tablePath - Tiled path to the table.
+ * @param options - Table request options.
+ * @returns A promise resolving to a `Record<columnName, values[]>` object.
+ */
 async getTableFullAsJSON(
   tablePath: string,
   options: GetTableAsJSONOptions = {},
@@ -373,6 +491,12 @@ async getTableFullAsJSON(
   });
 }
 
+/**
+ * Fetches the full (all partitions) Tiled table as row-oriented JSON sequence.
+ * @param tablePath - Tiled path to the table.
+ * @param options - Table request options.
+ * @returns A promise resolving to an array of row objects.
+ */
 async getTableFullAsJSONSequence(
   tablePath: string,
   options: GetTableAsJSONSequenceOptions = {},
@@ -440,6 +564,12 @@ async getTableFullAsJSONSequence(
     return `/array/block/${encodedPath}`;
   }
 
+  /**
+   * Fetches Tiled server information (auth providers, version, etc.).
+   * Returns `null` if the server is unreachable or the response is malformed.
+   * @param options - Per-request options (e.g. `baseUrl` override).
+   * @returns A promise resolving to `TiledInfoResponse` or `null`.
+   */
   async getServerInfo(options: TiledRequestOptions = {}): Promise<TiledInfoResponse | null> {
     try {
       const result = await this.get<TiledInfoResponse>('/', options, {
@@ -451,6 +581,13 @@ async getTableFullAsJSONSequence(
     }
   }
 
+  /**
+   * Performs a Tiled search at the given path with optional filters and options.
+   * @param searchPath - Container path to search within (empty string for root).
+   * @param config - Search configuration: `searchFilters` and `searchOptions`.
+   * @param requestOptions - Per-request HTTP options (baseUrl, initialPath, etc.).
+   * @returns A promise resolving to a `TiledSearchResult` with paginated items.
+   */
   async getSearch(
     searchPath: string,
     config: TiledSearchConfig = {},
@@ -503,6 +640,21 @@ async getTableFullAsJSONSequence(
     return `/table/partition/${encodedPath}`;
   }
 
+  /**
+   * Authenticates with the Tiled server using a username and password.
+   *
+   * Resolves the auth endpoint from `provider.links.auth_endpoint` or, if no
+   * provider is given, from the first password/internal provider in server info.
+   * On success, saves tokens to localStorage and sets the bearer token on this
+   * client instance.
+   *
+   * @param username - The user's login name.
+   * @param password - The user's password.
+   * @param url - Optional server URL override. Defaults to this client's base URL.
+   * @param provider - Optional pre-fetched auth provider.
+   * @returns A promise resolving to `{ access_token, refresh_token }` on success,
+   *   or `null` on failure.
+   */
   async loginWithUsernamePassword(
     username: string,
     password: string,
