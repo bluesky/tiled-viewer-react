@@ -54,6 +54,7 @@ export class TiledApiClient implements FinchTiledApi {
       config.client ??
       axios.create({
         baseURL: normalizeBaseUrl(config.baseUrl ?? ''),
+        withCredentials: true,
       });
 
     this.baseUrl = normalizeBaseUrl(config.baseUrl ?? '');
@@ -518,11 +519,9 @@ async getTableFullAsJSONSequence(
   ): Promise<T> {
     const client = this.resolveClient(options);
     const baseURL = this.resolveBaseUrl(options);
-    console.log({options})
 
     const apiKey = options.apiKey !== undefined ? options.apiKey : this.apiKey;
     const authHeader = apiKey ? { Authorization: `Apikey ${apiKey}` } : {};
-    console.log({authHeader})
 
     const response = await client.get<T>(endpoint, {
       ...config,
