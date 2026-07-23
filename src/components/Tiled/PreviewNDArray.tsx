@@ -73,13 +73,13 @@ export default function PreviewNDArray({
         <>
             <div className="flex flex-col w-full space-y-2">
                 <p className="text-sky-900 text-center">{arrayItem.id}</p>
-                <div className={`${sliderCount > 2 ? 'flex-wrap' : 'flex-col'} flex items-center justify-center w-full`}>
-                    <div className={`relative bg-slate-300 aspect-square m-auto ${isFullWidth ? 'w-7/12' : 'w-72'}`}>
+                <div className={`${sliderCount > 2 ? '' : ''} flex flex-col items-center justify-center w-full space-x-4`}>
+                    <div className={`relative bg-slate-300 aspect-square max-h-full min-w-72 ${isFullWidth ? 'w-7/12' : 'w-1/2'}`}>
                         {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500"><ArrowUpRight className="w-full h-full" /></div>}
                         {imageUrl && <img src={imageUrl} className="w-full h-full"/>}
                         <p className="text-sm text-center text-slate-500">{`True Dimensions:  [${arrayItem.attributes.structure.shape.join(', ')}]`}</p>
                     </div>
-                    <div className={`${sliderCount > 0 ? 'w-72' : 'hidden'} flex flex-col space-y-4 pt-6 px-4`}>
+                    <div className={`${sliderCount > 0 ? 'min-w-72 max-w-full w-1/2' : 'hidden'} flex flex-col space-y-4 pt-6 px-4`}>
                         {sliders.map((slider, index) => (slider.min !== slider.max ? <InputSlider key={index} showSideInput={false} min={slider.min} max={slider.max} value={slider.value} onChange={(newValue)=>handleSliderChange(newValue, slider)}/> : <p className="text-xs text-center">{slider.min}</p>))}
                     </div>
                 </div>
