@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import Tiled from '../../components/Tiled/Tiled';
 import { mockTiledResponse, mockTiledSearch2PageLimitResponse } from '../mocks/responses';
-import { resetGlobalState } from '../../components/Tiled/apiClient';
+import { resetDefaultTiledApiClient } from '../../components/Tiled/api/defaultTiledApiClient';
 
 const BASE_URL = 'https://test-server.example.com/api/v1';
 
@@ -13,14 +13,14 @@ const server = setupServer();
 beforeEach(() => {
   server.listen({ onUnhandledRequest: 'error' });
   localStorage.clear();
-  resetGlobalState();
+  resetDefaultTiledApiClient();
 });
 
 afterEach(() => {
   server.resetHandlers();
   server.close();
   localStorage.clear();
-  resetGlobalState();
+  resetDefaultTiledApiClient();
 });
 
 describe('Tiled row display mode', () => {
@@ -78,7 +78,7 @@ describe('Tiled row display mode', () => {
     }, { timeout: 3000 });
 
     unmount();
-    resetGlobalState();
+    resetDefaultTiledApiClient();
 
     server.use(
       http.get(`${BASE_URL}/search/*`, () => HttpResponse.json(mockTiledSearch2PageLimitResponse))

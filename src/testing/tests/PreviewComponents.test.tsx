@@ -23,13 +23,12 @@ import {
   TiledStructuredArrayData
 } from '../../components/Tiled/types';
 
-// Mock the API client functions
-vi.mock('../../components/Tiled/apiClient', () => ({
-  getAuthenticatedImage: vi.fn().mockResolvedValue('data:image/png;base64,mockimage'),
-  generateFullImagePngPath: vi.fn().mockReturnValue('http://mock-url/image.png'),
-  getTableDataAsSequence: vi.fn(),
-  getStructuredArrayData: vi.fn(),
-  getXArrayData: vi.fn(),
+// Mock the new API client functions
+vi.mock('../../components/Tiled/api/defaultTiledApiClient', () => ({
+  getTiledArrayAsPng: vi.fn().mockResolvedValue(new Blob(['mock-image'], { type: 'image/png' })),
+  getTiledArrayAsImagePath: vi.fn().mockReturnValue('http://mock-url/image.png'),
+  getTiledTablePartitionAsJSONSequence: vi.fn(),
+  getTiledArrayAsJSON: vi.fn(),
 }));
 
 // Mock utils functions
@@ -39,7 +38,6 @@ vi.mock('../../components/Tiled/utils', () => ({
   createSliders: vi.fn().mockReturnValue([
     { min: 0, max: 10, index: 0, value: 5 }
   ]),
-  generateStepsForImagePath: vi.fn().mockReturnValue({ stepX: 1, stepY: 1 }),
 }));
 
 // Mock server setup
@@ -48,6 +46,11 @@ const server = setupServer();
 // Start server before all tests
 beforeEach(() => {
   server.listen({ onUnhandledRequest: 'error' });
+
+  // jsdom doesn't implement URL.createObjectURL
+  global.URL.createObjectURL = vi.fn().mockReturnValue('blob:mock-url');
+  global.URL.revokeObjectURL = vi.fn();
+
   // Mock ResizeObserver for testing environment
   global.ResizeObserver = vi.fn().mockImplementation(() => ({
     observe: vi.fn(),
@@ -392,19 +395,15 @@ describe('Preview Components', () => {
 
   describe('PreviewStructuredArray Component', () => {
     beforeEach(async () => {
-      // Mock the API call to return structured array data
-      const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (_searchPath: string, _block: number, _url?: string, cb?: (parsedData: TiledStructuredArrayData) => void) => {
-        if (cb) cb(mockStructuredArrayData);
-        return mockStructuredArrayData;
-      });
+      const { getTiledArrayAsJSON } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledArrayAsJSON).mockResolvedValue(mockStructuredArrayData);
     });
 
     it('should render structured array item with table', async () => {
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} />);
-      
+
       expect(screen.getByText('test-structured-array')).toBeInTheDocument();
-      
+
       // Wait for data to load
       await waitFor(() => {
         expect(screen.getByRole('table')).toBeInTheDocument();
@@ -412,20 +411,17 @@ describe('Preview Components', () => {
     });
 
     it('should show loading state initially', async () => {
-      const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (/* _searchPath: string, _block: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
-        // Don't call callback to simulate loading
-        return Promise.resolve();
-      });
+      const { getTiledArrayAsJSON } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledArrayAsJSON).mockReturnValue(new Promise(() => {})); // Never resolves
 
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} />);
-      
+
       expect(screen.getByText('test-structured-array')).toBeInTheDocument();
     });
 
     it('should handle custom URL prop', async () => {
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} url="https://custom-url.com" />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('test-structured-array')).toBeInTheDocument();
       });
@@ -434,18 +430,17 @@ describe('Preview Components', () => {
 
   describe('PreviewTable Component', () => {
     beforeEach(async () => {
-      // Mock the API call to return table data
-      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
-        if (cb) cb(mockTableData);
-        return mockTableData;
-      });
+      const { getTiledTablePartitionAsJSONSequence } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledTablePartitionAsJSONSequence).mockResolvedValue(mockTableData);
     });
 
     it('should render table item with data', async () => {
       render(<PreviewTable tableItem={mockTableItem} />);
-      
-      expect(screen.getAllByText('test-table')).toHaveLength(2); // Table title and plot title
+
+      // Table title appears immediately; plot title appears after data loads
+      await waitFor(() => {
+        expect(screen.getAllByText('test-table')).toHaveLength(2);
+      });
       
       // Wait for data to load
       await waitFor(() => {
@@ -505,13 +500,8 @@ describe('Preview Components', () => {
 
   describe('PreviewXArray Component', () => {
     beforeEach(async () => {
-      // Mock the API call to return xarray data
-      const { getXArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getXArrayData).mockImplementation(async (_searchPath: string, _stack: number[], _url?: string, cb?: (parsedData: number[][]) => void) => {
-        const mockData = [[1, 2], [3, 4]]; // Mock 2D array data
-        if (cb) cb(mockData);
-        return mockData;
-      });
+      const { getTiledArrayAsJSON } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledArrayAsJSON).mockResolvedValue([[1, 2], [3, 4]]);
     });
 
     it('should render xarray item with dimensions info', async () => {
@@ -556,43 +546,31 @@ describe('Preview Components', () => {
 
   describe('Component Error Handling', () => {
     it('should handle API errors gracefully in PreviewTable', async () => {
-      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableDataAsSequence).mockImplementation(async (/* _searchPath: string, _partition: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
-        // Simulate API error by not calling callback
-        console.error('Mock API error');
-        return Promise.reject(new Error('Mock API error'));
-      });
+      const { getTiledTablePartitionAsJSONSequence } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledTablePartitionAsJSONSequence).mockRejectedValue(new Error('Mock API error'));
 
       render(<PreviewTable tableItem={mockTableItem} />);
-      
+
       expect(screen.getByText('test-table')).toBeInTheDocument();
       // Component should still render even if API fails
     });
 
     it('should handle API errors gracefully in PreviewStructuredArray', async () => {
-      const { getStructuredArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getStructuredArrayData).mockImplementation(async (/* _searchPath: string, _block: number, _url?: string, _cb?: (parsedData: unknown) => void */) => {
-        // Simulate API error by not calling callback
-        console.error('Mock API error');
-        return Promise.reject(new Error('Mock API error'));
-      });
+      const { getTiledArrayAsJSON } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledArrayAsJSON).mockRejectedValue(new Error('Mock API error'));
 
       render(<PreviewStructuredArray structuredArrayItem={mockStructuredArrayItem} />);
-      
+
       expect(screen.getByText('test-structured-array')).toBeInTheDocument();
       // Component should still render even if API fails
     });
 
     it('should handle API errors gracefully in PreviewXArray', async () => {
-      const { getXArrayData } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getXArrayData).mockImplementation(async (/* _searchPath: string, _stack: number[], _url?: string, _cb?: (parsedData: unknown) => void */) => {
-        // Simulate API error by not calling callback
-        console.error('Mock API error');
-        return Promise.reject(new Error('Mock API error'));
-      });
+      const { getTiledArrayAsJSON } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledArrayAsJSON).mockRejectedValue(new Error('Mock API error'));
 
       render(<PreviewXArray xarrayItem={mockXArrayItem} />);
-      
+
       expect(screen.getByText('test-xarray')).toBeInTheDocument();
       // Component should still render even if API fails
     });
@@ -633,12 +611,8 @@ describe('Preview Components', () => {
     });
 
     it('should handle empty data gracefully', async () => {
-      const { getTableDataAsSequence } = await import('../../components/Tiled/apiClient');
-      vi.mocked(getTableDataAsSequence).mockImplementation(async (_searchPath: string, _partition: number, _url?: string, cb?: (parsedData: TiledTableRow[]) => void) => {
-        const emptyData: TiledTableRow[] = []; // Empty data
-        if (cb) cb(emptyData);
-        return emptyData;
-      });
+      const { getTiledTablePartitionAsJSONSequence } = await import('../../components/Tiled/api/defaultTiledApiClient');
+      vi.mocked(getTiledTablePartitionAsJSONSequence).mockResolvedValue([]);
 
       render(<PreviewTable tableItem={mockTableItem} />);
       

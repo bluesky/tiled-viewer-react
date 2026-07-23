@@ -153,8 +153,9 @@ export const setAuthErrorCallback = (callback: AuthErrorCallback) => {
 
 // Automatically attempt to refresh tokens on 401 responses and retry the original request
 axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+    (response) => response,
+    async (error) => {
+      console.log('in old interceptor')
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

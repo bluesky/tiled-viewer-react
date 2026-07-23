@@ -1,10 +1,10 @@
 import { Breadcrumb } from "./types";
-import { getDefaultTiledUrl } from "./apiClient";
+import { getDefaultTiledApiClient } from "./api/defaultTiledApiClient";
 import blueskyLogo from "./bluesky_logo.png"
 import { CaretLeft, CaretRight, ArrowsIn, ArrowsOut } from "@phosphor-icons/react";
 import TiledSearchBar from "./TiledSearchBar";
 
-const defaultUrl = getDefaultTiledUrl();
+const defaultUrl = getDefaultTiledApiClient().getBaseUrl();
 
 
 type TiledHeaderProps = {

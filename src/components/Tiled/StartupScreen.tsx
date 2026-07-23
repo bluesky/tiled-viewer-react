@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import Button from '../Button';
-import { getServerInfo } from './apiClient';
+import { getTiledServerInfo } from './api/defaultTiledApiClient';
 
 type StartupScreenProps = {
     url: string | undefined,
@@ -19,7 +19,7 @@ export default function StartupScreen({
 
     const testTiledConnection = async (url:string | undefined) => {
         //ping the tiled server at the url and check if we get a response.
-        const res = await getServerInfo(url);
+        const res = await getTiledServerInfo({ baseUrl: url });
         if (res) {
             handleSubmit();
         } else {

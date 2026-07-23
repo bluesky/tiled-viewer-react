@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TiledSearchItem, StructuredArrayStructure, TiledStructuredArrayData } from "./types";
-import { getStructuredArrayData } from "./apiClient";
+import { getTiledArrayAsJSON } from "./api/defaultTiledApiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
 import SelectInteger from "../SelectInteger";
@@ -40,7 +40,9 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
 
     const handleBlockChange = useCallback((newValue: number) => {
         setIsLoading(true);
-        getStructuredArrayData(searchPath, newValue, url, updateStructuredArray);
+        getTiledArrayAsJSON<TiledStructuredArrayData>(searchPath, {
+            ...(url ? { baseUrl: url } : {}),
+        }).then(updateStructuredArray).catch(console.error);
         setBlock(newValue);
     }, [searchPath, url]);
 
@@ -49,7 +51,9 @@ export default function PreviewStructuredArray({ structuredArrayItem, url }: Pre
             tableContainerRef.current.scrollTop = 0;
         }
         setBlock(0);
-        getStructuredArrayData(searchPath, 0, url, updateStructuredArray);
+        getTiledArrayAsJSON<TiledStructuredArrayData>(searchPath, {
+            ...(url ? { baseUrl: url } : {}),
+        }).then(updateStructuredArray).catch(console.error);
     }, [structuredArrayItem, searchPath, url]);
 
     const loadMoreRows = useCallback(() => {

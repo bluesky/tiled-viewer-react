@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 
 import { TestItemCollection, ManualTestCollection } from "./types";
 import { initializeTestResults, writeTestResultsToLocalStorage } from "./utils";
-import { resetGlobalState } from "../Tiled/apiClient";
+import { resetDefaultTiledApiClient } from "../Tiled/api/defaultTiledApiClient";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 export type ManualTestProps = {
@@ -55,7 +55,7 @@ export default function ManualTest({ testItems }: ManualTestProps) {
 
     const handleTestChange = (newIndex: number) => {
         // Reset API client global state before switching tests
-        resetGlobalState();
+        resetDefaultTiledApiClient();
         setCurrentTestIndex(newIndex);
         //clear the tiled_csrf cookie to prevent auth issues when switching between tests that require different authentication states
         document.cookie = 'tiled_csrf=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -75,7 +75,7 @@ export default function ManualTest({ testItems }: ManualTestProps) {
 
     // Reset globals when component mounts or test items change
     useEffect(() => {
-        resetGlobalState();
+        resetDefaultTiledApiClient();
     }, [testItems]);   
 
 

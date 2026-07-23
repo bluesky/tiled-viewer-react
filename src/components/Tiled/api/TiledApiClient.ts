@@ -74,10 +74,8 @@ export class TiledApiClient implements FinchTiledApi {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: unknown) => {
-        console.log('in new request interceptor');
         const axiosError = error as { config?: AxiosRequestConfig & { _retry?: boolean }; response?: { status?: number } };
         const originalRequest = axiosError.config;
-        console.log({originalRequest});
 
         if (axiosError.response?.status !== 401 || !originalRequest || originalRequest._retry) {
           return Promise.reject(error);
