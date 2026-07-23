@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import InputSlider from "../InputSlider";
 import Button from "../Button";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
-import { generateSearchPath, onPopoutClick, createSliders, generateStepsForImagePath  } from './utils';
-import { generateFullImagePngPath, getAuthenticatedImage } from "./apiClient";
+import { generateSearchPath, onPopoutClick, createSliders } from './utils';
+import { getTiledArrayAsPng, getTiledArrayAsImagePath } from "./api/defaultTiledApiClient";
 import { ArrowUpRight } from "@phosphor-icons/react";
 
 
@@ -12,7 +12,7 @@ type PreviewNDArrayProps = {
     url?: string;
     isFullWidth?: boolean;
     handleSelectClick?: (item: TiledSearchItem<ArrayStructure>, currentSlice: number[]) => void;
-};    
+};
 
 export default function PreviewNDArray({
     arrayItem,
@@ -27,7 +27,7 @@ export default function PreviewNDArray({
     const shape = arrayItem.attributes.structure.shape;
     const dims = shape.length;
     const sliderCount = dims - 2; //2D array is an image, no slider needed, 3D array needs a single slider, etc.
-    
+
 
     const handleSliderChange = (newValue:number, slider:Slider) => {
         //make an API call to overwrite the current image
@@ -44,11 +44,19 @@ export default function PreviewNDArray({
     const searchPath = generateSearchPath(arrayItem);
 
     const updateImage = useCallback( async (stack?:number[]) => {
-        const { stepX, stepY } = generateStepsForImagePath(arrayItem);
-        const reducedImagePath = generateFullImagePngPath(searchPath, stepY, stepX, stack, url);
-        const authenticatedReducedImagePath = await getAuthenticatedImage(reducedImagePath);
-        setImageUrl(authenticatedReducedImagePath); 
-        const fullSizeImagePath = generateFullImagePngPath(searchPath, 1, 1, stack, url);
+        const requestOptions = {
+            stack,
+            arrayItem,
+            ...(url ? { baseUrl: url } : {}),
+        };
+
+        const blob = await getTiledArrayAsPng(searchPath, requestOptions);
+        setImageUrl(URL.createObjectURL(blob));
+
+        const fullSizeImagePath = getTiledArrayAsImagePath(searchPath, {
+            stack,
+            ...(url ? { baseUrl: url } : {}),
+        });
         setPopoutUrl(fullSizeImagePath);
     }, [arrayItem, searchPath, url]);
 
