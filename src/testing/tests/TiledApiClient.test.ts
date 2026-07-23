@@ -96,7 +96,7 @@ const mockInfoResponse = {
     links: {
       whoami: `${BASE_URL}/auth/whoami`,
       apikey: `${BASE_URL}/auth/apikey`,
-      refresh_session: `${BASE_URL}/auth/refresh`,
+      refresh_session: `${BASE_URL}/auth/session/refresh`,
       revoke_session: `${BASE_URL}/auth/revoke_session`,
       logout: `${BASE_URL}/auth/logout`,
     },
@@ -810,7 +810,7 @@ describe('401 and token refresh', () => {
         if (searchCallCount === 1) return new HttpResponse(null, { status: 401 });
         return HttpResponse.json(mockSearchResult);
       }),
-      http.post(`${BASE_URL}/auth/refresh`, () =>
+      http.post(`${BASE_URL}/auth/session/refresh`, () =>
         HttpResponse.json({ access_token: 'new-access-token' }),
       ),
     );
@@ -828,7 +828,7 @@ describe('401 and token refresh', () => {
   it('calls authErrorCallback and clears localStorage when refresh fails', async () => {
     server.use(
       http.get(`${BASE_URL}/search/`, () => new HttpResponse(null, { status: 401 })),
-      http.post(`${BASE_URL}/auth/refresh`, () =>
+      http.post(`${BASE_URL}/auth/session/refresh`, () =>
         new HttpResponse(null, { status: 401 }),
       ),
     );
@@ -854,7 +854,7 @@ describe('401 and token refresh', () => {
         if (searchCallCount <= 2) return new HttpResponse(null, { status: 401 });
         return HttpResponse.json(mockSearchResult);
       }),
-      http.post(`${BASE_URL}/auth/refresh`, () => {
+      http.post(`${BASE_URL}/auth/session/refresh`, () => {
         refreshCount++;
         return HttpResponse.json({ access_token: 'shared-new-token' });
       }),
