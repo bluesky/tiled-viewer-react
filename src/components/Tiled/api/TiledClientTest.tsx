@@ -790,7 +790,7 @@ export default function TiledClientTest() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 max-w-3xl">
+    <div className="flex flex-col gap-4 p-4 max-w-3xl m-auto">
       <h2 className="text-lg font-semibold text-slate-800">Tiled Client Test</h2>
 
       <StaticOptsPanel opts={staticOpts} onChange={setStaticOpts} />

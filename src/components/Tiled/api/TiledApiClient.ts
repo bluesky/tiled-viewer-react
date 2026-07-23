@@ -74,8 +74,10 @@ export class TiledApiClient implements FinchTiledApi {
     this.client.interceptors.response.use(
       (response) => response,
       async (error: unknown) => {
+        console.log('in new request interceptor');
         const axiosError = error as { config?: AxiosRequestConfig & { _retry?: boolean }; response?: { status?: number } };
         const originalRequest = axiosError.config;
+        console.log({originalRequest});
 
         if (axiosError.response?.status !== 401 || !originalRequest || originalRequest._retry) {
           return Promise.reject(error);
@@ -84,7 +86,7 @@ export class TiledApiClient implements FinchTiledApi {
         originalRequest._retry = true;
         //prevent concurrent 401s from attempting to refresh the token
         if (!this.refreshPromise) {
-          this.refreshPromise = this.doTokenRefresh(originalRequest.url as string).finally(() => {
+          this.refreshPromise = this.doTokenRefresh(originalRequest.baseURL as string).finally(() => {
             this.refreshPromise = null;
           });
         }
@@ -212,11 +214,23 @@ export class TiledApiClient implements FinchTiledApi {
       const refreshBase = apiV1Index !== -1
         ? requestUrl.slice(0, apiV1Index + '/api/v1'.length)
         : this.baseUrl;
-
-      const refreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
+      //the endpoint was changed in more recent Tiled versions from /auth/refresh to /auth/session/refresh
+      const refreshResponse = await axios.post(`${refreshBase}/auth/session/refresh`, {
         refresh_token: auth.refreshToken,
       });
-      const newAccessToken = refreshResponse.data.access_token as string;
+      let newAccessToken: string | undefined;
+      //in case the refreshResponse returns 404 which may indicate we are on an earlier Tiled server version, attempt /auth/refresh once
+      if (refreshResponse.status === 404) {
+        const fallbackRefreshResponse = await axios.post(`${refreshBase}/auth/refresh`, {
+          refresh_token: auth.refreshToken,
+        });
+        newAccessToken = fallbackRefreshResponse.data.access_token as string;
+      } else {
+        newAccessToken = refreshResponse.data.access_token as string;
+      }
+      if (!newAccessToken) {
+        throw new Error('No access token returned from refresh endpoint');
+      }
       saveAuthToLocalStorage(auth.refreshToken, newAccessToken);
       this.setBearerToken(newAccessToken);
       return newAccessToken;
