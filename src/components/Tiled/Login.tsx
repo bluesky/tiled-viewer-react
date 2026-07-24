@@ -8,7 +8,7 @@ import LoginHelp from "./LoginHelp";
 
 import { Warning } from "@phosphor-icons/react";
 
-import { getServerInfo } from "./apiClient";
+import { getTiledServerInfo } from "./api/defaultTiledApiClient";
 import { TiledAuthProvider, TiledInfoResponse } from "./types";
 
 
@@ -24,7 +24,7 @@ export default function Login({ onSuccess, url, oidcRedirectUrl }: LoginProps) {
 
     useEffect(() => {
         const fetchServerInfo = async () => {
-            const info = await getServerInfo(url);
+            const info = await getTiledServerInfo({ baseUrl: url });
             if (info !== null) {
                 setServerInfo(info as TiledInfoResponse);
                 setWarning(null);

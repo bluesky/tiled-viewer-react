@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
 import Tiled from '../../components/Tiled/Tiled';
 import { mockTiledResponse } from '../mocks/responses';
-import { resetGlobalState } from '../../components/Tiled/apiClient';
+import { resetDefaultTiledApiClient } from '../../components/Tiled/api/defaultTiledApiClient';
 
 // Mock server setup
 const server = setupServer();
@@ -14,8 +14,7 @@ beforeEach(() => {
   server.listen({ onUnhandledRequest: 'error' });
   // Clear any existing auth/api keys from localStorage
   localStorage.clear();
-  // Reset global state in apiClient
-  resetGlobalState();
+  resetDefaultTiledApiClient();
 });
 
 // Reset handlers and clean up after each test
@@ -24,7 +23,7 @@ afterEach(() => {
   server.close();
   localStorage.clear();
   // Reset global state again after each test
-  resetGlobalState();
+  resetDefaultTiledApiClient();
 });
 
 describe('Tiled Component Button Mode Configuration', () => {

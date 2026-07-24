@@ -8,7 +8,7 @@ import './Tiled.css'
 import { cn } from "@/lib/utils";
 import { TiledItemLinks, TiledItemSelectionData, TiledSearchItem, TiledStructures } from "./types";
 import { generateLinksForCallback, getApiKeyFromLocalStorage, getAuthFromLocalStorage } from "./utils";
-import { setAuthErrorCallback, setInitialPath } from "./apiClient";
+import { setDefaultAuthErrorCallback, setDefaultInitialPath } from "./api/defaultTiledApiClient";
 
 
 export type TiledProps = {
@@ -112,13 +112,13 @@ export default function Tiled({
     const [ showLogin, setShowLogin ] = useState<boolean>(false);
 
     //on 401 errors show the login component
-    setAuthErrorCallback((error) => {
+    setDefaultAuthErrorCallback((error) => {
         console.error("Authentication error:", error);
         setShowLogin(true);
     });
 
     if (initialPath) {
-        setInitialPath(initialPath);
+        setDefaultInitialPath(initialPath);
     }
 
     const handleLoginSuccess = useCallback(() => {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { TiledSearchItem, XArrayStructure, TiledTableRow } from "./types";
-import { getXArrayData } from "./apiClient";
+import { getTiledArrayAsJSON } from "./api/defaultTiledApiClient";
 import { generateSearchPath } from "./utils";
 import Table from "./Table";
 
@@ -75,7 +75,9 @@ export default function PreviewXArray({ xarrayItem, url }: PreviewXArrayProps) {
         if (tableContainerRef.current) {
             tableContainerRef.current.scrollTop = 0;
         }
-        getXArrayData(searchPath, [], url, updateXArray);
+        getTiledArrayAsJSON<number[][]>(searchPath, {
+            ...(url ? { baseUrl: url } : {}),
+        }).then(updateXArray).catch(console.error);
     }, [xarrayItem, searchPath, url, updateXArray]);
 
     const loadMoreRows = useCallback(() => {

@@ -1,6 +1,5 @@
 import { tiledStructureIcons } from "./icons";
 import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure } from "./types";
-import { getDefaultTiledUrl } from "./apiClient";
 import { Slider } from "./types";
 
 /**
@@ -18,7 +17,7 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
     const links= {...item.links};
-    const baseUrl = url ? url : getDefaultTiledUrl();
+    const baseUrl = url ?? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
     return links;
@@ -349,4 +348,50 @@ export const isItemBlueskyRun = (item:TiledSearchItem<TiledStructures>) => {
         }
     }
     return false;
+}
+
+
+/**
+ * Normalizes and validates a URL
+ * @param url - Raw URL that might be malformed
+ * @param label - Human-readable name for error messages
+ * @returns Cleaned URL or undefined if invalid
+ */
+export function cleanUrl(url: string | undefined, label: string): string | null {
+    if (!url || url.trim() === '') {
+        return null;
+    }
+
+    try {
+        let cleanedUrl = url.trim();
+
+        // Remove trailing slashes
+        cleanedUrl = cleanedUrl.replace(/\/+$/, '');
+
+        // Add protocol if missing (assume http for local development)
+        if (!cleanedUrl.match(/^https?:\/\//)) {
+            // Check if it looks like a local address
+            if (cleanedUrl.match(/^(localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)/)) {
+                cleanedUrl = `http://${cleanedUrl}`;
+            } else {
+                cleanedUrl = `https://${cleanedUrl}`;
+            }
+        }
+
+        // Validate by creating URL object
+        const urlObj = new URL(cleanedUrl);
+
+        // Only allow http and https protocols
+        if (!['http:', 'https:'].includes(urlObj.protocol)) {
+            console.warn(
+                `Invalid protocol for ${label}: ${urlObj.protocol}. Only http and https are allowed.`,
+            );
+            return null;
+        }
+
+        return urlObj.toString().replace(/\/$/, ''); // Remove trailing slash again
+    } catch (error) {
+        console.error(`Invalid URL format for ${label}: "${url}"`, error);
+        return null;
+    }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { TiledSearchItem, TableStructure, TiledTableRow } from "./types";
-import { getTableDataAsSequence } from "./apiClient";
+import { getTiledTablePartitionAsJSONSequence } from "./api/defaultTiledApiClient";
 import { generateSearchPath } from "./utils";
 import InputSliderRange from "../InputSliderRange";
 import VisxLinePlot from "../VisxLinePlot/VisxLinePlot";
@@ -37,17 +37,22 @@ export default function PreviewTable({ tableItem, url }: PreviewTableProps) {
 
     const handlePartitionChange = useCallback((newValue: number) => {
         setIsLoading(true);
-        getTableDataAsSequence(searchPath, newValue, url, updateTable);
+        getTiledTablePartitionAsJSONSequence(searchPath, {
+            partition: newValue,
+            ...(url ? { baseUrl: url } : {}),
+        }).then(updateTable).catch(console.error);
         setPartition(newValue);
     }, [searchPath, url]);
 
     useEffect(() => {
         if (tableContainerRef.current) {
-            tableContainerRef.current.scrollTop = 0
+            tableContainerRef.current.scrollTop = 0;
         }
         setPartition(0);
-        getTableDataAsSequence(searchPath, 0, url, updateTable);
-
+        getTiledTablePartitionAsJSONSequence(searchPath, {
+            partition: 0,
+            ...(url ? { baseUrl: url } : {}),
+        }).then(updateTable).catch(console.error);
     }, [tableItem, searchPath, url]);
 
     const loadMoreRows = useCallback(() => {
