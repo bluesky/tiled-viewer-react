@@ -939,7 +939,7 @@ describe('loginWithUsernamePassword', () => {
   it('returns null when provider has no auth_endpoint', async () => {
     const badProvider = { id: 'toy', mode: 'password' as const };
     const client = new TiledApiClient({ baseUrl: BASE_URL });
-    const tokens = await client.loginWithUsernamePassword('alice', 'secret', undefined, badProvider as any);
+    const tokens = await client.loginWithUsernamePassword('alice', 'secret', undefined, badProvider as unknown as import('../../components/Tiled/types').TiledAuthProvider);
 
     expect(tokens).toBeNull();
   });
