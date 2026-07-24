@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import InputSlider from "../InputSlider";
 import Button from "../Button";
 import { TiledSearchItem, ArrayStructure, Slider } from "./types";
-import { generateSearchPath, onPopoutClick, createSliders } from './utils';
+import { generateSearchPath, onPopoutClick, createSliders, detectRGBInfo } from './utils';
 import { getTiledArrayAsPng, getTiledArrayAsImagePath } from "./api/defaultTiledApiClient";
-import { ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRight, PaletteIcon } from "@phosphor-icons/react";
 
 
 type PreviewNDArrayProps = {
@@ -24,14 +24,17 @@ export default function PreviewNDArray({
     const [ imageUrl, setImageUrl ] = useState('');
     const [ popoutUrl, setPopoutUrl ] = useState('');
     const [ isLoading, setIsLoading ] = useState(true);
+    const [ userToggledRGB, setUserToggledRGB ] = useState(false);
 
     const shape = arrayItem.attributes.structure.shape;
-    const dims = shape.length;
-    const sliderCount = dims - 2; //2D array is an image, no slider needed, 3D array needs a single slider, etc.
+    const rgbInfo = detectRGBInfo(arrayItem, userToggledRGB);
 
+    // In RGB mode the channel dim is absorbed into the image, so one fewer slider
+    const sliderCount = rgbInfo.isRGB ? shape.length - 3 : shape.length - 2;
+    // For channelFirst arrays ([3, H, W, ...]) the first dim is channel — skip it for sliders
+    const shapeForSliders = rgbInfo.channelFirst ? shape.slice(1) : shape;
 
     const handleSliderChange = (newValue:number, slider:Slider) => {
-        //make an API call to overwrite the current image
         const stack = sliders.map((slider) => slider.value);
         stack[slider.index] = newValue;
         updateImage(stack);
@@ -50,6 +53,8 @@ export default function PreviewNDArray({
             stack,
             arrayItem,
             ...(url ? { baseUrl: url } : {}),
+            ...(rgbInfo.isRGB ? { isRGB: true } : {}),
+            ...(rgbInfo.channelFirst ? { channelFirst: true } : {}),
         };
 
         const blob = await getTiledArrayAsPng(searchPath, requestOptions);
@@ -59,18 +64,24 @@ export default function PreviewNDArray({
         const fullSizeImagePath = getTiledArrayAsImagePath(searchPath, {
             stack,
             ...(url ? { baseUrl: url } : {}),
+            ...(rgbInfo.isRGB ? { isRGB: true } : {}),
+            ...(rgbInfo.channelFirst ? { channelFirst: true } : {}),
         });
         setPopoutUrl(fullSizeImagePath);
-    }, [arrayItem, searchPath, url]);
+    }, [arrayItem, searchPath, url, rgbInfo.isRGB, rgbInfo.channelFirst]);
+
+    // Reset toggle when the viewed item changes
+    useEffect(() => {
+        setUserToggledRGB(false);
+    }, [arrayItem]);
 
     useEffect(() => {
-        //make an api call to fill the image
         if (!arrayItem) return;
 
-        const stack = shape.slice(0, sliderCount).map((dim) => Math.floor(dim/2));
-        setSliders(createSliders(sliderCount, shape));
+        const stack = shapeForSliders.slice(0, sliderCount).map((dim) => Math.floor(dim / 2));
+        setSliders(createSliders(sliderCount, shapeForSliders));
         updateImage(stack);
-    }, [arrayItem, sliderCount, shape, updateImage]);
+    }, [arrayItem, sliderCount, shapeForSliders, updateImage]);
 
     return (
         <>
@@ -79,6 +90,15 @@ export default function PreviewNDArray({
                 <div className={`${sliderCount > 2 ? '' : ''} flex flex-col items-center justify-center w-full space-x-4`}>
                     <div className={`relative bg-slate-300 aspect-square max-h-full min-w-72 ${isFullWidth ? 'w-7/12' : 'w-1/2'}`}>
                         {popoutUrl && <div onClick={()=>onPopoutClick(popoutUrl)} className="absolute top-2 right-2 w-6 aspect-square hover:cursor-pointer hover:text-slate-500"><ArrowUpRight className="w-full h-full" /></div>}
+                        {rgbInfo.canToggleRGB && (
+                            <div
+                                onClick={() => setUserToggledRGB((prev) => !prev)}
+                                title="Change view to RGB"
+                                className={`absolute top-9 right-2 w-6 aspect-square hover:cursor-pointer ${userToggledRGB ? 'text-sky-600' : 'hover:text-slate-500'}`}
+                            >
+                                <PaletteIcon className="w-full h-full" />
+                            </div>
+                        )}
                         {isLoading && (
                             <div className="absolute inset-0 flex items-center justify-center bg-slate-300 z-10">
                                 <svg className="animate-spin h-10 w-10 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
