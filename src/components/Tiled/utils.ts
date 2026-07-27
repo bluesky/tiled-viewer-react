@@ -2,6 +2,37 @@ import { tiledStructureIcons } from "./icons";
 import { TiledSearchItem, TiledStructures, ArrayStructure, isStructuredArrayStructure, isXArrayStructure } from "./types";
 import { Slider } from "./types";
 
+export type RGBInfo = {
+    autoRGB: boolean;       // metadata.color_mode === 'RGB'
+    canToggleRGB: boolean;  // shape looks RGB-like but metadata doesn't require it
+    isRGB: boolean;         // autoRGB OR user toggled
+    channelFirst: boolean;  // channel is dim[0] rather than dim[N-1]
+};
+
+export function detectRGBInfo(
+    arrayItem: TiledSearchItem<ArrayStructure>,
+    userToggledRGB: boolean,
+): RGBInfo {
+    const shape = arrayItem.attributes.structure.shape;
+    const dims = arrayItem.attributes.structure.dims;
+    const colorMode = arrayItem.attributes.metadata?.color_mode as string | undefined;
+
+    const autoRGB = colorMode === 'RGB';
+    const canToggleRGB = !autoRGB && shape.length >= 3 && shape[shape.length - 1] === 3;
+    const isRGB = autoRGB || (canToggleRGB && userToggledRGB);
+
+    let channelFirst = false;
+    if (isRGB) {
+        if (dims && dims.indexOf('channel') !== -1) {
+            channelFirst = dims.indexOf('channel') === 0;
+        } else {
+            channelFirst = shape[0] === 3 && shape[shape.length - 1] !== 3;
+        }
+    }
+
+    return { autoRGB, canToggleRGB, isRGB, channelFirst };
+}
+
 /**
  * Generates links for a TiledSearchItem, including a default link
  * @param item - The TiledSearchItem to generate links for

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { setupServer } from 'msw/node';
+import { detectRGBInfo } from '../../components/Tiled/utils';
 
 // Import all Preview components
 import PreviewNDArray from '../../components/Tiled/PreviewNDArray';
@@ -32,13 +33,17 @@ vi.mock('../../components/Tiled/api/defaultTiledApiClient', () => ({
 }));
 
 // Mock utils functions
-vi.mock('../../components/Tiled/utils', () => ({
-  generateSearchPath: vi.fn().mockReturnValue('/mock/path'),
-  onPopoutClick: vi.fn(),
-  createSliders: vi.fn().mockReturnValue([
-    { min: 0, max: 10, index: 0, value: 5 }
-  ]),
-}));
+vi.mock('../../components/Tiled/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../components/Tiled/utils')>();
+  return {
+    ...actual,
+    generateSearchPath: vi.fn().mockReturnValue('/mock/path'),
+    onPopoutClick: vi.fn(),
+    createSliders: vi.fn().mockReturnValue([
+      { min: 0, max: 10, index: 0, value: 5 }
+    ]),
+  };
+});
 
 // Mock server setup
 const server = setupServer();
@@ -573,6 +578,85 @@ describe('Preview Components', () => {
 
       expect(screen.getByText('test-xarray')).toBeInTheDocument();
       // Component should still render even if API fails
+    });
+  });
+
+  describe('RGB Support', () => {
+    const makeArrayItem = (shape: number[], colorMode?: string) => ({
+      ...mockArrayItem,
+      attributes: {
+        ...mockArrayItem.attributes,
+        metadata: colorMode ? { color_mode: colorMode } : {},
+        structure: { ...mockArrayItem.attributes.structure, shape },
+      },
+    });
+
+    describe('detectRGBInfo', () => {
+      it('returns autoRGB=true when metadata color_mode is RGB', () => {
+        const result = detectRGBInfo(makeArrayItem([256, 256, 3], 'RGB'), false);
+        expect(result.autoRGB).toBe(true);
+        expect(result.isRGB).toBe(true);
+        expect(result.canToggleRGB).toBe(false);
+        expect(result.channelFirst).toBe(false);
+      });
+
+      it('returns canToggleRGB=true when last dim is 3 and no metadata', () => {
+        const result = detectRGBInfo(makeArrayItem([256, 256, 3]), false);
+        expect(result.autoRGB).toBe(false);
+        expect(result.canToggleRGB).toBe(true);
+        expect(result.isRGB).toBe(false);
+      });
+
+      it('activates isRGB when user toggles a candidate', () => {
+        const result = detectRGBInfo(makeArrayItem([256, 256, 3]), true);
+        expect(result.isRGB).toBe(true);
+        expect(result.channelFirst).toBe(false);
+      });
+
+      it('detects channelFirst when first dim is 3 and last dim is not', () => {
+        const result = detectRGBInfo(makeArrayItem([3, 256, 256], 'RGB'), false);
+        expect(result.channelFirst).toBe(true);
+      });
+
+      it('returns no RGB info for a regular 2D array', () => {
+        const result = detectRGBInfo(makeArrayItem([100, 100]), false);
+        expect(result.autoRGB).toBe(false);
+        expect(result.canToggleRGB).toBe(false);
+        expect(result.isRGB).toBe(false);
+      });
+    });
+
+    describe('PreviewNDArray RGB rendering', () => {
+      it('shows palette toggle icon when last dim is 3 and no color_mode metadata', async () => {
+        render(<PreviewNDArray arrayItem={makeArrayItem([256, 256, 3])} />);
+        await waitFor(() => {
+          expect(screen.getByTitle('Change view to RGB')).toBeInTheDocument();
+        });
+      });
+
+      it('does not show palette icon when color_mode is RGB (auto mode)', async () => {
+        render(<PreviewNDArray arrayItem={makeArrayItem([256, 256, 3], 'RGB')} />);
+        await waitFor(() => {
+          expect(screen.getByText('test-array')).toBeInTheDocument();
+        });
+        expect(screen.queryByTitle('Change view to RGB')).not.toBeInTheDocument();
+      });
+
+      it('does not show palette icon for a normal 3D array without dim-3 last', async () => {
+        render(<PreviewNDArray arrayItem={makeArrayItem([10, 256, 256])} />);
+        await waitFor(() => {
+          expect(screen.getByText('test-array')).toBeInTheDocument();
+        });
+        expect(screen.queryByTitle('Change view to RGB')).not.toBeInTheDocument();
+      });
+
+      it('toggles palette icon active state on click', async () => {
+        render(<PreviewNDArray arrayItem={makeArrayItem([256, 256, 3])} />);
+        const icon = await screen.findByTitle('Change view to RGB');
+        expect(icon).not.toHaveClass('text-sky-600');
+        fireEvent.click(icon);
+        expect(icon).toHaveClass('text-sky-600');
+      });
     });
   });
 

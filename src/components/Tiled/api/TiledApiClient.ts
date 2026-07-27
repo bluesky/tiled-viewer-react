@@ -2,7 +2,6 @@
 import axios, {
   AxiosInstance,
   AxiosRequestConfig,
-  ResponseType,
 } from 'axios';
 import { getAuthFromLocalStorage, saveAuthToLocalStorage, clearAuthFromLocalStorage } from '../utils';
 
@@ -15,10 +14,10 @@ import type {
 } from './TiledArrayApi';
 import { buildTiledArraySlice, buildTiledArraySliceAsync } from './TiledArrayApi';
 import type { StructureFetcher } from './TiledArrayApi';
-import type { GetTableAsOptionsMap, TiledTableApi, TiledTableReturnMap, TiledTableReturnType, TiledTableEndpoint, TiledTableJSONResponse } from './TiledTableApi';
+import type { GetTableAsOptionsMap, TiledTableReturnMap, TiledTableReturnType, TiledTableEndpoint, TiledTableJSONResponse } from './TiledTableApi';
 import type { TiledSearchConfig } from './TiledSearchApi';
 import { buildSearchParams } from './TiledSearchApi';
-import type { TiledClientConfigApi, TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
+import type { TiledRequestOptions } from './TiledConfigApi';
 import { parseJsonSequenceTableResponse } from './TiledTableApi';
 import type { TiledTableRow, TiledSearchItem, TiledSearchMetadataResult, TiledStructures, ArrayStructure, TiledSearchResult, TiledInfoResponse, TiledAuthProvider } from '../types';
 import { isValidTiledInfoResponse } from '../types';
@@ -773,25 +772,6 @@ function encodeTiledPath(path: string): string {
     .join('/');
 }
 
-function formatTiledSlice(slice?: number[]): string | undefined {
-  if (!slice || slice.length === 0) {
-    return undefined;
-  }
-
-  return `${slice.join(',')},`;
-}
-
-function getResponseTypeForFormat(format: string): ResponseType {
-  if (format === 'application/json') {
-    return 'json';
-  }
-
-  if (format === 'image/png') {
-    return 'blob';
-  }
-
-  return 'arraybuffer';
-}
 
 function removeUndefinedValues<T extends Record<string, unknown>>(obj: T): T {
   return Object.fromEntries(

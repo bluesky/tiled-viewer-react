@@ -84,6 +84,14 @@ export interface TiledArrayRequestOptions extends TiledRequestOptions {
    * of grayscale frames.
    */
   isRGB?: boolean;
+
+  /**
+   * When isRGB is true and the channel dimension is the first axis rather than
+   * the last. Use for arrays shaped like [3, height, width] or [3, frames, height, width].
+   *
+   * When false (default), channel is assumed to be the last dimension: [height, width, 3].
+   */
+  channelFirst?: boolean;
 }
 
 /**
@@ -192,6 +200,14 @@ export function getDisplayShape(
     };
   }
 
+  if (options.isRGB && options.channelFirst && shape.length >= 3 && shape[0] === 3) {
+    return {
+      height: shape[1],
+      width: shape[2],
+      channels: 3,
+    };
+  }
+
   if (options.isRGB && shape.length >= 3 && shape[shape.length - 1] === 3) {
     return {
       height: shape[shape.length - 3],
@@ -267,9 +283,13 @@ function formatSlice(
   const { stepX, stepY } = steps;
   const stack = options.stack ?? [];
   const stackPrefix = stack.length > 0 ? `${stack.join(',')},` : '';
-  return options.isRGB
-    ? `${stackPrefix}::${stepY},::${stepX},:`
-    : `${stackPrefix}::${stepY},::${stepX}`;
+  if (options.isRGB && options.channelFirst) {
+    return `:,${stackPrefix}::${stepY},::${stepX}`;
+  }
+  if (options.isRGB) {
+    return `${stackPrefix}::${stepY},::${stepX},:`;
+  }
+  return `${stackPrefix}::${stepY},::${stepX}`;
 }
 
 /**

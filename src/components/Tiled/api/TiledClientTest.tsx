@@ -16,13 +16,12 @@ import {
   getTiledSearchByFullText,
   getTiledSearchByMetadataEquals,
   getTiledSearchByStructureFamily,
-  setGlobalApiKey,
   setGlobalMaxArrayBytes
 } from './defaultTiledApiClient';
 import type { TiledArrayRequestOptions } from './TiledArrayApi';
 import type { TiledTableRequestOptions, TiledTableReturnType, TiledTableEndpoint } from './TiledTableApi';
 import type { TiledRequestOptions, TiledPathMode } from './TiledConfigApi';
-import type { TiledSearchOptions, TiledSearchConfig } from './TiledSearchApi';
+import type { TiledSearchOptions } from './TiledSearchApi';
 
 setGlobalMaxArrayBytes(5000);
 

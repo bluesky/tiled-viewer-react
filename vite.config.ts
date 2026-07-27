@@ -37,6 +37,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ['tiled-test'],
       proxy: {
         '/api/qserver': {
           target: qserverRest,
