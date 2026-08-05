@@ -1,11 +1,11 @@
 import React, { useRef } from 'react';
-import { TiledTableRow, TiledStructuredArrayRow } from './types';
+import { TiledTableRow, TiledStructuredArrayRow, NullableRefObject } from './types';
 
 interface TableProps {
     isLoading: boolean;
     columns: string[];
     visibleData: (TiledTableRow | TiledStructuredArrayRow)[];
-    observerRef: React.RefObject<HTMLDivElement>;
+    observerRef: NullableRefObject<HTMLDivElement>;
     precision?: number;
     isStructuredArray?: boolean;
 }

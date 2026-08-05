@@ -9,6 +9,7 @@ import {
     AwkwardStructure,
     SparseStructure,
     ContainerStructure,
+    NullableRefObject,
 } from "./types";
 
 type TiledRowPreviewProps = {
@@ -17,7 +18,7 @@ type TiledRowPreviewProps = {
     previewSize: PreviewSize;
     handleSelectClick?: (item: TiledSearchItem<TiledStructures>, currentSlice?: number[]) => void;
     url?: string;
-    scrollContainerRef: React.RefObject<HTMLDivElement>;
+    scrollContainerRef: NullableRefObject<HTMLDivElement>;
 };
 
 export default function TiledRowPreview({

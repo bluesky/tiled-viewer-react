@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach, afterAll } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
@@ -23,10 +23,13 @@ const server = setupServer(
 describe('TiledSelectCallback Tests', () => {
   const mockSelectCallback = vi.fn();
 
+  beforeAll(() => {
+    server.listen();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    server.listen();
   });
 
   afterEach(() => {

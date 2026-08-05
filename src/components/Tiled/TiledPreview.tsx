@@ -20,7 +20,8 @@ import {
     isAwkwardStructure, 
     isSparseStructure, 
     isStructuredArrayStructure, 
-    isXArrayStructure
+    isXArrayStructure,
+    NullableRefObject
 } from './types';
 import TiledPreviewMetadata from './TiledPreviewMetadata';
 import { ArrowsIn, ArrowsOut, DownloadSimple } from "@phosphor-icons/react";
@@ -30,7 +31,7 @@ type TiledPreviewProps = {
     previewSize: PreviewSize;
     handleSelectClick?: (item: TiledSearchItem<TiledStructures>, currentSlice?: number[]) => void;
     url?: string;
-    scrollContainerRef: React.RefObject<HTMLDivElement>;
+    scrollContainerRef: NullableRefObject<HTMLDivElement>;
 }
 
 export default function TiledPreview({

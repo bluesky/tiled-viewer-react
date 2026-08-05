@@ -1,3 +1,15 @@
+import type { JSX } from "react";
+
+/**
+ * A ref object whose `current` may be null.
+ *
+ * Declared structurally instead of using `React.RefObject<T>` because that type
+ * changed shape between React 18 (`current: T | null`) and React 19
+ * (`current: T`), so neither spelling is assignable under both versions of
+ * `@types/react`. This alias is accepted by `ref={...}` in both.
+ */
+export type NullableRefObject<T> = { readonly current: T | null };
+
 export type PathItem = {
     id: string;
     structure: string;

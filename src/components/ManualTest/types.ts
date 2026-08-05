@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 export interface TestItem {
     name: string;
     element: JSX.Element;

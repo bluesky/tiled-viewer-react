@@ -2,7 +2,7 @@ import React from 'react';
 import { useMemo } from 'react';
 import PlotSettings from './PlotSettings';
 import CustomChartBackground from './CustomChartBackground';
-import ParentSize from "@visx/responsive/lib/components/ParentSize";
+import { ParentSize } from "@visx/responsive";
 //import Portal from '@visx/tooltip/lib/Portal';
 
 export type XYChartProps = {

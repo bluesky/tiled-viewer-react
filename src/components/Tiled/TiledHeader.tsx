@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Breadcrumb } from "./types";
 import { getDefaultTiledApiClient } from "./api/defaultTiledApiClient";
 import blueskyLogo from "./bluesky_logo.png"

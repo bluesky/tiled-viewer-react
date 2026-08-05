@@ -66,7 +66,22 @@ export default defineConfig(({ mode }) => {
         fileName: (format) => `tiled.${format}.js`,
       },
       rollupOptions: {
-        external: [...Object.keys(packageJson.peerDependencies)],
+        // Externalize peer deps AND their subpaths. Matching only the bare
+        // specifiers would bundle `react/jsx-runtime`, baking the build-time
+        // React's JSX runtime — and its version-specific internals — into dist,
+        // which then crashes against a consumer's other React major.
+        external: (id) =>
+          Object.keys(packageJson.peerDependencies).some(
+            (dep) => id === dep || id.startsWith(`${dep}/`),
+          ),
+        output: {
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM',
+            'react/jsx-runtime': 'jsxRuntime',
+            'react/jsx-dev-runtime': 'jsxDevRuntime',
+          },
+        },
       },
     },
     test: {

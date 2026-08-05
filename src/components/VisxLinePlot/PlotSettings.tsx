@@ -1,11 +1,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { lightTheme, darkTheme, XYChartTheme } from '@visx/xychart';
 import { PatternLines } from '@visx/pattern';
-import { GlyphProps } from '@visx/xychart/lib/types';
-import { AnimationTrajectory } from '@visx/react-spring/lib/types';
+import type { GlyphProps } from '@visx/xychart';
+import type { AnimationTrajectory } from '@visx/react-spring';
 import { GlyphCross, GlyphDot, GlyphStar } from '@visx/glyph';
 import { curveLinear, curveStep, curveCardinal } from '@visx/curve';
-import { RenderTooltipGlyphProps } from '@visx/xychart/lib/components/Tooltip';
+import type { GlyphRenderer, RenderTooltipGlyphProps, TooltipGlyphRenderer } from './types';
 import customTheme from './customTheme';
 import userPrefersReducedMotion from './userPrefersReducedMotion';
 import getAnimatedOrUnanimatedComponents from './getAnimatedOrUnanimatedComponents';
@@ -52,10 +52,10 @@ type ProvidedProps = {
   renderBarGroup: boolean;
   renderBarSeries: boolean;
   renderBarStack: boolean;
-  renderGlyph: React.FC<GlyphProps<DataPoint>>;
+  renderGlyph: GlyphRenderer<DataPoint>;
   renderGlyphSeries: boolean;
   enableTooltipGlyph: boolean;
-  renderTooltipGlyph: React.FC<RenderTooltipGlyphProps<DataPoint>>;
+  renderTooltipGlyph: TooltipGlyphRenderer<DataPoint>;
   renderHorizontally: boolean;
   renderLineSeries: boolean;
   sharedTooltip: boolean;
@@ -83,7 +83,6 @@ type PlotSettingsProps = {
 };
 
 export default function PlotSettings({ children, data, dataKeys, setSelectedDataKeys, domain }: PlotSettingsProps) {
-
   const [settings, setSettings] = useState({
     xAxisKey: Object.keys(data[0]).includes('time') ? 'time' : '__index' as string,
     theme: lightTheme,

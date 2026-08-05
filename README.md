@@ -268,6 +268,127 @@ npm run storybook
 ```
 Visit [localhost:6006](http://localhost:6006)
 
+## Tarball Smoke Test (before publishing)
+
+`npm pack` produces the exact artifact `npm publish` would upload, so you can install
+and run the package in a throwaway app without touching the npm registry. Do this
+before any release that changes the build, the dependencies, or the supported React
+range — the in-repo tests exercise `src/`, but this exercises `dist/` the way a
+consumer actually receives it.
+
+### 1. Build and pack
+
+```bash
+npm run build   # required: only dist/ ships, and there is no prepublishOnly hook
+npm pack        # -> blueskyproject-tiled-<version>.tgz
+```
+
+Sanity-check that no React internals got bundled — `dist` must *import* the JSX
+runtime from the consumer's React, never inline the build-time one:
+
+```bash
+grep -c "recentlyCreatedOwnerStacks\|__CLIENT_INTERNALS" dist/tiled.es.js  # -> 0
+grep -o 'from "react/jsx-runtime"' dist/tiled.es.js                        # -> present
+```
+
+If the first command is non-zero, `react/jsx-runtime` is being bundled and the package
+will crash against any React major other than the one it was built with. Check
+`build.rollupOptions.external` in `vite.config.ts` — it must match peer-dependency
+subpaths, not just the bare `react` / `react-dom` specifiers.
+
+### 2. Create a scratch app
+
+Keep it outside this repo so it never pollutes the working tree:
+
+```bash
+mkdir -p ~/Repos/tiled-scratch && cd ~/Repos/tiled-scratch
+npm create vite@latest react19 -- --template react-ts
+cd react19
+npm install
+npm install ~/Repos/tiled-viewer-react/blueskyproject-tiled-<version>.tgz
+```
+
+Install the **tarball**, not `npm link` or `file:../tiled-viewer-react`. Those symlink
+into this repo, so the app ends up with two copies of React and throws
+"invalid hook call" — a bug that does not exist in the published package.
+
+### 3. Render the component
+
+Replace `src/App.tsx` with:
+
+```tsx
+import { useState, version as reactVersion } from 'react';
+import { Tiled } from '@blueskyproject/tiled';
+import type { TiledProps } from '@blueskyproject/tiled';
+import '@blueskyproject/tiled/style.css';
+
+type SelectionData = Parameters<NonNullable<TiledProps['onSelectCallback']>>[0];
+
+export default function App() {
+  const [selected, setSelected] = useState<SelectionData | null>(null);
+  return (
+    <main style={{ padding: 24, fontFamily: 'system-ui, sans-serif' }}>
+      <p>React {reactVersion}</p>
+      {/* No tiledBaseUrl: falls back to <protocol>//<hostname>:8000/api/v1 */}
+      <Tiled onSelectCallback={setSelected} />
+      <pre>{selected ? JSON.stringify(selected, null, 2) : 'nothing selected yet'}</pre>
+    </main>
+  );
+}
+```
+
+Then start a local Tiled server on port 8000 (see
+[Getting this to work with a Tiled server](#getting-this-to-work-with-a-tiled-server),
+and make sure its CORS config allows `http://localhost:5173`) and run:
+
+```bash
+npx tsc -b --noEmit   # typechecks your app against the shipped .d.ts files
+npm run build         # proves the package resolves in a production build
+npm run dev           # http://localhost:5173
+```
+
+If you would rather point at the public demo server than run one locally, pass the URL
+explicitly: `<Tiled tiledBaseUrl="https://tiled-demo.blueskyproject.io/api/v1" />`.
+
+### 4. Repeat against the other supported React version
+
+The package supports React 18 and 19, so check both. Copy the app, swap the React
+version, reinstall the tarball, and run it on a second port:
+
+```bash
+cd ~/Repos/tiled-scratch
+cp -R react19 react18 && cd react18
+rm -rf node_modules dist package-lock.json
+npm install
+npm install react@^18.3.1 react-dom@^18.3.1
+npm install -D @types/react@^18.3.17 @types/react-dom@^18.3.5
+npm install ~/Repos/tiled-viewer-react/blueskyproject-tiled-<version>.tgz
+npx tsc -b --noEmit && npm run dev -- --port 5174
+```
+
+The typecheck is the important half here: it is what catches React types that only
+exist in one major version (for example the global `JSX` namespace, dropped in React
+19, or `React.RefObject<T>`, whose shape differs between 18 and 19).
+
+### 5. What to check in the browser
+
+- The viewer renders and lists containers from the Tiled server
+- Navigating into a container and previewing an array / table works
+- Selecting an item fires `onSelectCallback` and the payload appears
+- The browser console is free of React errors — especially "invalid hook call"
+  (duplicate React) and missing-stylesheet layout breakage
+
+### 6. Clean up
+
+```bash
+rm ~/Repos/tiled-viewer-react/blueskyproject-tiled-<version>.tgz
+rm -rf ~/Repos/tiled-scratch
+```
+
+To inspect what would ship without building a whole app, use `npm pack --dry-run`,
+or trigger the `Publish package on npm` workflow via `workflow_dispatch` — that runs
+lint, tests, build, and `npm pack --dry-run`, and skips publishing entirely.
+
 ## Publishing Updates
 
 For maintainers publishing to npm:
