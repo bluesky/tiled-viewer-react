@@ -48,7 +48,9 @@ export const generateLinksForCallback = (item: TiledSearchItem<TiledStructures>,
     //this function will create a set of links
     //var exampleLink = "http://127.0.0.1:8000/api/v1/metadata/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image";
     const links= {...item.links};
-    const baseUrl = url ?? `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+    const baseUrl = url ?? (typeof window === 'undefined'
+        ? ''
+        : `${window.location.protocol}//${window.location.hostname}:8000/api/v1`);
     const path = generateSearchPath(item);
     links.default = baseUrl + '/' + path; //add another link which is the direct path ex)http://127.0.0.1:8000/api/v1/rec20230606_152011_jong-seto_fungal-mycelia_flat-AQ_fungi2_fast/scale3/image
     return links;
@@ -170,6 +172,7 @@ export const numpyTypeSizesBytes: Record<string, number> = {
  * ```
  */
 export const onPopoutClick =(popoutUrl:string) => {
+    if (typeof window === 'undefined') return;
     //open a new tab with the specified URL
     window.open(popoutUrl, '_blank', 'noopener,noreferrer');
 };
@@ -215,6 +218,7 @@ export const createSliders = (sliderCount:number, shape:number[]) => {
  * ```
  */
 export const getLastSearchFromLocalStorage = () => {
+    if (typeof window === 'undefined') return undefined;
     const lastSearch = localStorage.getItem('lastSearchHistory');
     if (lastSearch) {
         return lastSearch;
@@ -236,6 +240,7 @@ export const getLastSearchFromLocalStorage = () => {
  * ```
  */
 export const writeSearchPathToLocalStorage = (item:TiledSearchItem<TiledStructures> | '') => {
+    if (typeof window === 'undefined') return;
     if (typeof item === 'string' || !item) {
         localStorage.setItem('lastSearchHistory', '');
     } else if (item) {
@@ -255,6 +260,7 @@ export const writeSearchPathToLocalStorage = (item:TiledSearchItem<TiledStructur
  * ```
  */
 export const getApiKeyFromLocalStorage = () => {
+    if (typeof window === 'undefined') return undefined;
     const apiKey = localStorage.getItem('tiledApiKey');
     if (apiKey) {
         if (apiKey.length === 0) {
@@ -279,6 +285,7 @@ export const getApiKeyFromLocalStorage = () => {
  * ```
  */
 export const getAuthFromLocalStorage = () => {
+    if (typeof window === 'undefined') return undefined;
     const refreshToken = localStorage.getItem('tiledRefreshToken');
     const accessToken = localStorage.getItem('tiledAccessToken');
     if (refreshToken && accessToken) {
@@ -304,6 +311,7 @@ export const getAuthFromLocalStorage = () => {
  * ```
  */
 export const clearAuthFromLocalStorage = () => {
+    if (typeof window === 'undefined') return;
     localStorage.removeItem('tiledRefreshToken');
     localStorage.removeItem('tiledAccessToken');
     localStorage.removeItem('tiledApiKey');
@@ -320,6 +328,7 @@ export const clearAuthFromLocalStorage = () => {
  * ```
  */
 export const saveAuthToLocalStorage = (refreshToken:string, accessToken:string) => {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('tiledRefreshToken', refreshToken);
     localStorage.setItem('tiledAccessToken', accessToken);
 };
